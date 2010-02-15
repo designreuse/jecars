@@ -1,0 +1,13 @@
+AvoidFinalLocalVariable
+CollapsibleIfStatements
+ShortVariable
+CyclomaticComplexity
+AvoidInstantiatingObjectsInLoops
+MethodNamingConventions
+DataflowAnomalyAnalysis
+UnnecessaryReturn
+IfElseStmtsMustUseBraces
+IfStmtsMustUseBraces
+LongVariable
+OnlyOneReturn
+UnnecessaryConstructor
