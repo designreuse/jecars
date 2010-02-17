@@ -420,7 +420,7 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
 //          try {
           final String path = pNode.getPath();
           pNode.remove();
-          parent.setProperty( CARS_ActionContext.gDefModified, cal );
+          parent.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
           parent.save();
           if (forced) {
             // **** Check path properties
@@ -434,7 +434,7 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
                 CARS_Utils.removeMultiProperty( n, "jecars:GroupMembers", path );
                 if (!n.hasProperty( "jecars:GroupMembers" )) {
                   n.remove();
-                  n.getParent().setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+                  n.getParent().setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
                 }
                 n.save();
               }
@@ -512,7 +512,7 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
   protected Node synchronizeNode_AddNewNode( Node pParentNode, Node pSourceNode, String pNewNodeTypeName ) throws Exception {
     Node n = pParentNode.addNode( pSourceNode.getName(), pNewNodeTypeName );
     Calendar c = Calendar.getInstance();
-    n.setProperty( CARS_ActionContext.gDefModified, c );
+    n.setProperty( CARS_ActionContext.DEF_MODIFIED, c );
     n.setProperty( CARS_ActionContext.gDefLastAccessed, Calendar.getInstance() );
     return n;
   }

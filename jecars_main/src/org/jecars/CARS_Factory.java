@@ -263,9 +263,9 @@ public class CARS_Factory {
 //          try {
 //            ntreg.registerNodeType(ntd);
 //          } catch (InvalidNodeTypeDefException de) {
-//            gLog.log( Level.INFO, de.getMessage() );
+//            LOG.log( Level.INFO, de.getMessage() );
 //          } catch (RepositoryException re) {
-//            gLog.log( Level.INFO, re.getMessage() );
+//            LOG.log( Level.INFO, re.getMessage() );
 //          }
 //        }
         isr.close();
@@ -958,7 +958,7 @@ public class CARS_Factory {
       pContext.setError( pnfe );
     } catch (Exception e) {
       gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "READ", e, null );
-//      gLog.log( Level.INFO, null, e );
+//      LOG.log( Level.INFO, null, e );
       pContext.setErrorCode( HttpURLConnection.HTTP_INTERNAL_ERROR );
       pContext.setError( e );
     } finally {
@@ -1081,7 +1081,7 @@ public class CARS_Factory {
       pContext.setErrorCode( HttpURLConnection.HTTP_INTERNAL_ERROR );
     } catch (Exception e) {
       gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "UPDATE", e, null );
-//      gLog.log( Level.INFO, null, e );
+//      LOG.log( Level.INFO, null, e );
       pContext.setError( e );
       pContext.setErrorCode( HttpURLConnection.HTTP_INTERNAL_ERROR );
     } finally {
@@ -1135,7 +1135,7 @@ public class CARS_Factory {
       pContext.setError( pnfe );
     } catch (Exception e) {
       gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "DELETE", e, null );
-//      gLog.log( Level.INFO, null, e );
+//      LOG.log( Level.INFO, null, e );
       pContext.setError( e );
       pContext.setErrorCode( HttpURLConnection.HTTP_INTERNAL_ERROR );
     } finally {

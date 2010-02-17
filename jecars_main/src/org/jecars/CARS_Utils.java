@@ -139,12 +139,12 @@ public class CARS_Utils {
         if (!al.contains(newVal)) {
           al.add( newVal );
           prop.setValue( al.toArray(new Value[0]) );
-          pNode.setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+          pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
         }
       } else {
         al.add( newVal );
         prop.setValue( al.toArray(new Value[0]) );
-        pNode.setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+        pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
       }
     } else {
       // **** New property
@@ -161,7 +161,7 @@ public class CARS_Utils {
         sv[0] = pNode.getSession().getValueFactory().createValue( pValue, pd.getRequiredType() );
       }
       pNode.setProperty( pPropName, sv );
-      pNode.setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+      pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
     }
     return;
   }
@@ -181,7 +181,7 @@ public class CARS_Utils {
       if (al.contains(newVal)) {
         al.remove( newVal );
         prop.setValue( al.toArray(new Value[0]) );
-        pNode.setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+        pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
       }
     }
     return;
@@ -355,7 +355,7 @@ public class CARS_Utils {
    */
   static public void setCurrentModificationDate( final Node pNode ) throws RepositoryException {
     final Calendar c = Calendar.getInstance();
-    pNode.setProperty( CARS_ActionContext.gDefModified, c );
+    pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, c );
     if (pNode.hasProperty( "jcr:lastModified" )) {
       pNode.setProperty( "jcr:lastModified", c );
     }

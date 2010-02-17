@@ -205,7 +205,7 @@ public class CARS_EventManager {
           final String path = String.valueOf( pWhen.get( Calendar.YEAR  )  );
           if (!storeEvents.hasNode( path )) {
             storeEvents.addNode( path, "jecars:EventsStoreFolder" );
-            storeEvents.setProperty( CARS_ActionContext.gDefModified, cal );
+            storeEvents.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
           }
           storeEvents = storeEvents.getNode( path );
           if (pExpire!=null) {
@@ -221,7 +221,7 @@ public class CARS_EventManager {
           final String path = String.valueOf( pWhen.get( Calendar.MONTH  )+1 );
           if (storeEvents.hasNode( path )==false) {
             storeEvents.addNode( path, "jecars:EventsStoreFolder" );
-            storeEvents.setProperty( CARS_ActionContext.gDefModified, cal );
+            storeEvents.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
           }
           storeEvents = storeEvents.getNode( path );
           if (pExpire!=null) {
@@ -237,7 +237,7 @@ public class CARS_EventManager {
           final String path = String.valueOf( pWhen.get( Calendar.DAY_OF_MONTH  )  );
           if (!storeEvents.hasNode( path )) {
             storeEvents.addNode( path, "jecars:EventsStoreFolder" );
-            storeEvents.setProperty( CARS_ActionContext.gDefModified, cal );
+            storeEvents.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
           }
           storeEvents = storeEvents.getNode( path );
           if (pExpire!=null) {
@@ -253,7 +253,7 @@ public class CARS_EventManager {
           final String path = String.valueOf( pWhen.get( Calendar.HOUR_OF_DAY )  );
           if (!storeEvents.hasNode( path )) {
             storeEvents.addNode( path, "jecars:EventsStoreFolder" );
-            storeEvents.setProperty( CARS_ActionContext.gDefModified, cal );
+            storeEvents.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
           }
           storeEvents = storeEvents.getNode( path );
           if (pExpire!=null) {
@@ -269,7 +269,7 @@ public class CARS_EventManager {
           final String path = String.valueOf( pWhen.get( Calendar.MINUTE )  );
           if (!storeEvents.hasNode( path )) {
             storeEvents.addNode( path, "jecars:EventsStoreFolder" );
-            storeEvents.setProperty( CARS_ActionContext.gDefModified, cal );
+            storeEvents.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
           }
           storeEvents = storeEvents.getNode( path );
           if (pExpire!=null) {
@@ -553,7 +553,7 @@ public class CARS_EventManager {
         if (CARS_Factory.getLastFactory()!=null) {
           e.printStackTrace();
         }
-//      gLog.log( Level.SEVERE, null, e );
+//      LOG.log( Level.SEVERE, null, e );
       }
     return;
   }

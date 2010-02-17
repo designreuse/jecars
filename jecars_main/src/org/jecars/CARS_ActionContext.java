@@ -61,7 +61,7 @@ import org.jecars.version.CARS_VersionManager;
  */
 public class CARS_ActionContext {
 
-  static protected Logger gLog = Logger.getLogger( "org.jecars" );
+  static final protected Logger LOG = Logger.getLogger( "org.jecars" );
   
   final public static long MAX_NO_GETOBJECTS = 10000000L;
   
@@ -75,50 +75,50 @@ public class CARS_ActionContext {
   final private static JD_Taglist gVersionManagers  = new JD_Taglist();
   
   // ****
-  public final static String gDefNS = CARS_Main.DEFAULTNS;
-  public final static String gDefPublished    = gDefNS + "Published";
-  public final static String gDefModified     = gDefNS + "Modified";
-  public final static String gDefLastAccessed = gDefNS + "LastAccessed";
-  public final static String gDefExpireDate   = gDefNS + "ExpireDate";
-  public final static String gDefActions      = gDefNS + "Actions";
-  public final static String gDefTitle        = gDefNS + "Title";
-  public final static String gDefBody         = gDefNS + "Body";
-  public final static String gDefURLResource  = gDefNS + "urlresource";
-  public final static String gDefURL          = gDefNS + "URL";
+  public final static String DEF_NS = CARS_Main.DEFAULTNS;
+  public final static String gDefPublished    = DEF_NS + "Published";
+  public final static String DEF_MODIFIED     = DEF_NS + "Modified";
+  public final static String gDefLastAccessed = DEF_NS + "LastAccessed";
+  public final static String gDefExpireDate   = DEF_NS + "ExpireDate";
+  public final static String gDefActions      = DEF_NS + "Actions";
+  public final static String gDefTitle        = DEF_NS + "Title";
+  public final static String gDefBody         = DEF_NS + "Body";
+  public final static String gDefURLResource  = DEF_NS + "urlresource";
+  public final static String gDefURL          = DEF_NS + "URL";
 
-  public final static String gDefFullText     = gDefNS + "q";
-  public final static String gDefAlt          = gDefNS + "alt";
-  public final static String gDefXPath        = gDefNS + "xpath";
-  public final static String gDefSQL          = gDefNS + "sql";
-  public final static String gDefReferences   = gDefNS + "references";
-  public final static String gDefRights       = gDefNS + "rights";
-  public final static String gDefKeywords     = gDefNS + "keywords";
-  public final static String gDefChildNodeDefs= gDefNS + "childnodedefs";
-  public final static String gDefDeep         = gDefNS + "deep";
-  public final static String gDefUpdatedMin   = gDefNS + "updated-min";
-  public final static String gDefUpdatedMax   = gDefNS + "updated-max";
-  public final static String gDefPublishedMin = gDefNS + "published-min";
-  public final static String gDefPublishedMax = gDefNS + "published-max";
-  public final static String gDefCreatedMin   = gDefNS + "created-min";
-  public final static String gDefCreatedMax   = gDefNS + "created-max";
-  public final static String gDefMaxResults   = gDefNS + "max-results";  
-  public final static String gDefStartIndex   = gDefNS + "start-index";
-  public final static String gDefThisNode     = gDefNS + "this-node";
-  public final static String gDefOrderBy      = gDefNS + "orderby";
-  public final static String gDefOrderByType  = gDefNS + "orderbytype";
-  public final static String gDefWhere        = gDefNS + "where";
-  public final static String gDefGQL          = gDefNS + "gql";   // **** GQL is a simple fulltext query language, which supports field prefixes similar to Lucene or Google queries.
-  public final static String gDefNamePattern  = gDefNS + "namePattern";
-  public final static String gIncludeBinary   = gDefNS + "includeBinary";
+  public final static String gDefFullText     = DEF_NS + "q";
+  public final static String gDefAlt          = DEF_NS + "alt";
+  public final static String gDefXPath        = DEF_NS + "xpath";
+  public final static String gDefSQL          = DEF_NS + "sql";
+  public final static String gDefReferences   = DEF_NS + "references";
+  public final static String gDefRights       = DEF_NS + "rights";
+  public final static String gDefKeywords     = DEF_NS + "keywords";
+  public final static String gDefChildNodeDefs= DEF_NS + "childnodedefs";
+  public final static String gDefDeep         = DEF_NS + "deep";
+  public final static String gDefUpdatedMin   = DEF_NS + "updated-min";
+  public final static String gDefUpdatedMax   = DEF_NS + "updated-max";
+  public final static String gDefPublishedMin = DEF_NS + "published-min";
+  public final static String gDefPublishedMax = DEF_NS + "published-max";
+  public final static String gDefCreatedMin   = DEF_NS + "created-min";
+  public final static String gDefCreatedMax   = DEF_NS + "created-max";
+  public final static String gDefMaxResults   = DEF_NS + "max-results";
+  public final static String gDefStartIndex   = DEF_NS + "start-index";
+  public final static String gDefThisNode     = DEF_NS + "this-node";
+  public final static String gDefOrderBy      = DEF_NS + "orderby";
+  public final static String gDefOrderByType  = DEF_NS + "orderbytype";
+  public final static String gDefWhere        = DEF_NS + "where";
+  public final static String gDefGQL          = DEF_NS + "gql";   // **** GQL is a simple fulltext query language, which supports field prefixes similar to Lucene or Google queries.
+  public final static String gDefNamePattern  = DEF_NS + "namePattern";
+  public final static String gIncludeBinary   = DEF_NS + "includeBinary";
 
 
   /** Versioning parameters
    */
   public final static String gDefaultVCS    = "jcr";
-  public final static String gDefVCS        = gDefNS + "vcs";
-  public final static String gDefVCSCmd     = gDefNS + "vcs-cmd";
-  public final static String gDefVCSLabel   = gDefNS + "vcs-label";
-  public final static String gDefVCSHistory = gDefNS + "vcs-history";
+  public final static String gDefVCS        = DEF_NS + "vcs";
+  public final static String gDefVCSCmd     = DEF_NS + "vcs-cmd";
+  public final static String gDefVCSLabel   = DEF_NS + "vcs-label";
+  public final static String gDefVCSHistory = DEF_NS + "vcs-history";
   
   /** Action parameters
    */
@@ -175,17 +175,17 @@ public class CARS_ActionContext {
       synchronized( gOutputGenerators ) {
         gOutputGenerators.clear();
         gOutputGenerators.replaceData( "atom", new CARS_OutputGenerator_Atom() );
-        gLog.info( "OutputGenerator 'atom' added" );
+        LOG.info( "OutputGenerator 'atom' added" );
         gOutputGenerators.replaceData( "html", new CARS_OutputGenerator_HTML() );
-        gLog.info( "OutputGenerator 'html' added" );
+        LOG.info( "OutputGenerator 'html' added" );
         gOutputGenerators.replaceData( "textentries", new CARS_OutputGenerator_TextEntries() );
-        gLog.info( "OutputGenerator 'textentries' added" );
+        LOG.info( "OutputGenerator 'textentries' added" );
         gOutputGenerators.replaceData( "properties", new CARS_OutputGenerator_Properties() );
-        gLog.info( "OutputGenerator 'properties' added" );
+        LOG.info( "OutputGenerator 'properties' added" );
         gOutputGenerators.replaceData( "backup", new CARS_OutputGenerator_Backup() );
-        gLog.info( "OutputGenerator 'backup' added" );
+        LOG.info( "OutputGenerator 'backup' added" );
         gOutputGenerators.replaceData( "json", new CARS_OutputGenerator_JSON() );
-        gLog.info( "OutputGenerator 'json' added" );
+        LOG.info( "OutputGenerator 'json' added" );
       }
     }
     if (gVersionManagers.isEmpty()) {
@@ -216,7 +216,7 @@ public class CARS_ActionContext {
                       "<service xmlns=\"http://purl.org/atom/app#\" xmlns:atom=\"http://www.w3.org/2005/Atom\">\n";
       }
     } catch( Exception e ) {
-      gLog.log( Level.SEVERE, null, e );
+      LOG.log( Level.SEVERE, null, e );
     }
     return gServiceHeader;
   }
@@ -250,7 +250,7 @@ public class CARS_ActionContext {
         gFeedHeader += ">\n";
       }
     } catch( Exception e ) {
-      gLog.log( Level.SEVERE, null, e );
+      LOG.log( Level.SEVERE, null, e );
     }
     return gFeedHeader;
   }
@@ -1027,8 +1027,8 @@ public class CARS_ActionContext {
    */
   public String getUpdatedDate( final Node pNode ) throws Exception {
     String upd;
-    if (pNode.hasProperty( gDefModified )) {
-      upd = pNode.getProperty( gDefModified ).getString();        
+    if (pNode.hasProperty( DEF_MODIFIED )) {
+      upd = pNode.getProperty( DEF_MODIFIED ).getString();
     } else {
       upd = getPublishedDate( pNode );
     }
@@ -1060,8 +1060,8 @@ public class CARS_ActionContext {
    * @throws java.lang.Exception
    */
   public long getUpdatedDateTime( Node pNode ) throws RepositoryException {
-    if (pNode.hasProperty( gDefModified )) {
-      return pNode.getProperty( gDefModified ).getDate().getTimeInMillis();        
+    if (pNode.hasProperty( DEF_MODIFIED )) {
+      return pNode.getProperty( DEF_MODIFIED ).getDate().getTimeInMillis();
     } else {
       return getPublishedDateTime( pNode );
     }
@@ -1276,7 +1276,7 @@ public class CARS_ActionContext {
       if (getCategoryFilter()!=null) {
         String catF = getCategoryFilter();
         if (catF.indexOf( ":" )==-1) {
-          query += gDefNS + catF;
+          query += DEF_NS + catF;
         } else {
           query += catF;
         }
@@ -1372,7 +1372,7 @@ public class CARS_ActionContext {
       } else {
         // **** Do normal query call
         try {
-          Query q = mThisNode.getSession().getWorkspace().getQueryManager().createQuery( query, Query.SQL );
+          final Query q = mThisNode.getSession().getWorkspace().getQueryManager().createQuery( query, Query.SQL );
           ni = q.execute().getNodes();
           CARS_Factory.getEventManager().addEvent( mMain, mMain.getLoginUser(), mThisNode, null, "URL", "QUERY",
                 "JCR SQL query = " + query + " result = " + ni.getSize() );
@@ -1713,7 +1713,7 @@ public class CARS_ActionContext {
         Property p;
         while( pi.hasNext() ) {
           p = pi.nextProperty();
-          if (p.getName().startsWith( gDefNS )) {
+          if (p.getName().startsWith( DEF_NS )) {
             if (p.getDefinition().isMultiple()) {
               Value[] vals = p.getValues();
               for( int val=0; val<vals.length; val++ ) {
@@ -1740,7 +1740,7 @@ public class CARS_ActionContext {
         Property p;
         while( pi.hasNext() ) {
           p = pi.nextProperty();
-          if (p.getName().startsWith( gDefNS )) {
+          if (p.getName().startsWith( DEF_NS )) {
             if (p.getDefinition().isMultiple()) {
               Value[] vals = p.getValues();
               for( int val=0; val<vals.length; val++ ) {
@@ -1818,7 +1818,7 @@ public class CARS_ActionContext {
       setErrorCode( HttpURLConnection.HTTP_BAD_REQUEST );
       setError( e );
       createError( pReply );
-      gLog.log( Level.INFO, null, e );
+      LOG.log( Level.INFO, null, e );
     } finally {
       pReply.append( createFooter( alt, false ) );
     }
@@ -1842,7 +1842,7 @@ public class CARS_ActionContext {
       setErrorCode( HttpURLConnection.HTTP_BAD_REQUEST );
       setError( e );
       createError( pReply );
-      gLog.log( Level.INFO, null, e );
+      LOG.log( Level.INFO, null, e );
     } finally {
       pReply.append( createFooter( alt, false ) );
     }
@@ -1943,7 +1943,7 @@ public class CARS_ActionContext {
       setErrorCode( HttpURLConnection.HTTP_BAD_REQUEST );
       setError( e );
       createError( pReply );
-//      gLog.log( Level.WARNING, null, e );
+//      LOG.log( Level.WARNING, null, e );
     } finally {
       if (outputGen!=null) {
         outputGen.createFooter( this, pReply );
@@ -1982,7 +1982,7 @@ public class CARS_ActionContext {
       }
 
     } catch (Exception e) {
-      gLog.log( Level.SEVERE, null, e );
+      LOG.log( Level.SEVERE, null, e );
     }
     return "application/atom+xml";
   }
@@ -2010,7 +2010,7 @@ public class CARS_ActionContext {
           mCanBeCachedResult = true;
         }
       } catch( RepositoryException re ) {
-        gLog.log( Level.WARNING, re.getMessage(), re );
+        LOG.log( Level.WARNING, re.getMessage(), re );
       }
     }
     return;
@@ -2144,7 +2144,7 @@ public class CARS_ActionContext {
     String p = null;
     if ("jcr:primaryType".equals( pProperty )) {
       if (pValue.indexOf( ':' )!=-1) {
-        if (!pValue.startsWith( gDefNS )) {
+        if (!pValue.startsWith( DEF_NS )) {
           if (!isValidNamespace( pValue.substring( 0, pValue.indexOf(':' )))) {
             p = pValue.replace( pValue.substring( 0, pValue.indexOf( ':' )), CARS_Main.DEFAULTNS1 );
           } else {
@@ -2154,7 +2154,7 @@ public class CARS_ActionContext {
           p = pValue;              
         }
       } else {
-        p = gDefNS + pValue;
+        p = DEF_NS + pValue;
       }
     } else {
       p = pValue;
@@ -2172,7 +2172,7 @@ public class CARS_ActionContext {
     if (pProperty.indexOf( ':' )!=-1) {
       p = pProperty.replace( pProperty.substring( 0, pProperty.indexOf( ':' )), CARS_Main.DEFAULTNS1 );
     } else {
-      p = gDefNS + pProperty;
+      p = DEF_NS + pProperty;
     }
     return p;
   }

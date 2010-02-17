@@ -759,6 +759,7 @@ public class CARS_AccessManager extends DefaultAccessManager implements AccessMa
             } catch (Exception e) {
               throw new RepositoryException(e);
             }
+//              System.out.println("NOT ALLOWED!!! ");
             return false;
           }
         } catch (ItemNotFoundException infe) {

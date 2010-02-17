@@ -70,7 +70,7 @@ import org.jecars.CARS_Main;
  */
 public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolInstanceListener {
 
-  static final protected Logger gLog = Logger.getLogger( "org.jecars.tools" );
+  static final protected Logger LOG = Logger.getLogger( "org.jecars.tools" );
 
   static final protected String             LF = "\r\n";
   static final public    String NEWTOOL_FOLDER = "new";
@@ -214,53 +214,53 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
         toolExit();
         if (!isScheduledTool()) moveToolTo( "closed" );
       } catch( InterruptedException ie ) {
-        gLog.log( Level.WARNING, null, ie );
+        LOG.log( Level.WARNING, null, ie );
         reportException( ie, Level.WARNING );
         setState( CARS_ToolInterface.STATE_CLOSED_ABNORMALCOMPLETED_ABORTED );
         try {
           setExpireDateTool( getTool(), getClosedExpireMinutes() );
         } catch (Exception ee) {
-          gLog.log( Level.WARNING, null, ee );
+          LOG.log( Level.WARNING, null, ee );
         }
       } catch (CARS_ToolException te) {
 //        try {
-        gLog.log( Level.WARNING, mToolPath, te );
+        LOG.log( Level.WARNING, mToolPath, te );
         reportException( te, Level.WARNING );
 //        } catch( Exception ee ) {
-//          gLog.log( Level.WARNING, null, te );
+//          LOG.log( Level.WARNING, null, te );
 //          reportException( ee, Level.WARNING );
 //        }
         setState( CARS_ToolInterface.STATE_CLOSED_ABNORMALCOMPLETED );
       } catch (Exception e) {
         // **** Exception
 //        try {
-        gLog.log( Level.WARNING, mToolPath, e );
+        LOG.log( Level.WARNING, mToolPath, e );
         reportException( e, Level.WARNING );
 //        } catch( Exception ee ) {
-//          gLog.log( Level.WARNING, null, ee );
+//          LOG.log( Level.WARNING, null, ee );
 //          reportException( ee, Level.WARNING );
 //        }
         setState( CARS_ToolInterface.STATE_CLOSED_ABNORMALCOMPLETED );
         try {
           setExpireDateTool( getTool(), getClosedExpireMinutes() );
         } catch (Exception ee) {
-          gLog.log( Level.WARNING, null, ee );
+          LOG.log( Level.WARNING, null, ee );
           reportException( ee, Level.WARNING );
         }
       } catch (Throwable e) {
         // **** Throwable
         try {
-          gLog.log( Level.SEVERE, mToolPath, e );
+          LOG.log( Level.SEVERE, mToolPath, e );
           reportException( e, Level.SEVERE );
         } catch( Exception ee ) {
-          gLog.log( Level.WARNING, null, ee );
+          LOG.log( Level.WARNING, null, ee );
           reportException( ee, Level.WARNING );
         }
         setState( CARS_ToolInterface.STATE_CLOSED_ABNORMALCOMPLETED );
         try {
           setExpireDateTool( getTool(), getClosedExpireMinutes() );
         } catch (Exception ee) {
-          gLog.log( Level.WARNING, null, ee );
+          LOG.log( Level.WARNING, null, ee );
           reportException( ee, Level.WARNING );
         }
       } finally {
@@ -271,12 +271,12 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
           }
           getTool().save();
         } catch (Exception e) {
-          gLog.log( Level.WARNING, null, e );
+          LOG.log( Level.WARNING, null, e );
           reportException( e, Level.WARNING );
           try {
             getTool().refresh(false);
           } catch (Exception ex) {
-            gLog.log( Level.SEVERE, null, ex );
+            LOG.log( Level.SEVERE, null, ex );
             reportException( ex, Level.SEVERE );
           }
         }
@@ -290,7 +290,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
             mRebuildToolSession = false;
           }
         } catch( Exception e ) {
-          gLog.log( Level.WARNING, null, e );
+          LOG.log( Level.WARNING, null, e );
         }
 //        if (newSession!=null) {
 //          newSession.logout();
@@ -407,7 +407,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     if (replaceEvents()) {
       if (mToolNode.hasNode( "jecars:Events" )) {
         mToolNode.getNode( "jecars:Events" ).remove();
-        mToolNode.setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+        mToolNode.setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
         mToolNode.save();
       }
     }
@@ -598,7 +598,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @throws Exception when an error occurs
    */
   @Override
-  public Node   getTool() throws Exception {
+  public Node   getTool() {
     return mToolNode;
   }
 
@@ -730,13 +730,13 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
 
     if (pStateRequest.equals(STATEREQUEST_START)) {
       if (isScheduledTool()) {
-        gLog.info( "Running as scheduled executor: " + this );
+        LOG.info( "Running as scheduled executor: " + this );
         mScheduledFuture = gScheduledExecutorService.scheduleWithFixedDelay( new ToolRunnable(), getDelayInSecs(), getDelayInSecs(), TimeUnit.SECONDS );
       } else if (isSingleTool()) {
-        gLog.info( "Running as single executor: " + this );
+        LOG.info( "Running as single executor: " + this );
         mFuture = gSingleExecutorService.submit( new ToolRunnable() );
       } else {
-        gLog.info( "Running as executor: " + this );
+        LOG.info( "Running as executor: " + this );
         mFuture = gExecutorService.submit( new ToolRunnable() );
       }
     } else if (pStateRequest.equals(STATEREQUEST_STOP)) {
@@ -790,7 +790,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
       reportToInstanceListeners( 
          CARS_DefaultToolInstanceEvent.createEventState( this, pState ));
     } catch (Exception e) {
-      gLog.log( Level.WARNING, null, e );
+      LOG.log( Level.WARNING, null, e );
     }
     return;
   }
@@ -1080,7 +1080,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
   protected void clearOutputs() throws Exception {
     Collection<Node> ni = getOutputs();
     for (Node node : ni) {
-      node.getParent().setProperty( CARS_ActionContext.gDefModified, Calendar.getInstance() );
+      node.getParent().setProperty( CARS_ActionContext.DEF_MODIFIED, Calendar.getInstance() );
       node.remove();
     }
     return;
@@ -1140,7 +1140,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
             // **** - jecars:URL            (String)
             // **** - jecars:QueryPart      (String)
             if (n.hasProperty( "jecars:URL" )) {
-              gLog.info( getTool().getPath() + ": Reading URL = " + n.getProperty( "jecars:URL" ).getString() );
+              LOG.info( getTool().getPath() + ": Reading URL = " + n.getProperty( "jecars:URL" ).getString() );
               final URL u = new URL( n.getProperty( "jecars:URL" ).getString() );
               col.add( u.openStream() );
             } else if (n.isNodeType( "nt:resource")) {
@@ -1293,12 +1293,12 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
         }
       }
     } catch( Exception e ) {
-      gLog.log( Level.SEVERE, "", e );
+      LOG.log( Level.SEVERE, "", e );
     } finally {
       try {
         getTool().save();
       } catch (Exception ex) {
-        gLog.log( Level.SEVERE, "", ex );
+        LOG.log( Level.SEVERE, "", ex );
       }
     }
 
@@ -1729,9 +1729,9 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
         try {
           rb = ResourceBundle.getBundle( rs, gToolLocale );
         } catch (Exception rbe) {
-          gLog.log( Level.SEVERE, "Missing resource: " + rs + " locale:" + gToolLocale, rbe );
+          LOG.log( Level.SEVERE, "Missing resource: " + rs + " locale:" + gToolLocale, rbe );
         }
-        gLog.config( "Load bundle: " + rs + " locale:" + gToolLocale );
+        LOG.config( "Load bundle: " + rs + " locale:" + gToolLocale );
         gToolResourceBundles.add( rb );
       }    
     }
@@ -1742,7 +1742,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
       } catch ( MissingResourceException mse ) {
       }
     }
-    if (s==null) gLog.log( Level.WARNING, "Missing resource key: " + pString );
+    if (s==null) LOG.log( Level.WARNING, "Missing resource key: " + pString );
     return s;
   }
 

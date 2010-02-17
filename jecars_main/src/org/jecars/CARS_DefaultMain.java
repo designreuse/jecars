@@ -43,7 +43,8 @@ public class CARS_DefaultMain implements CARS_Main {
   static final public Logger LOG = Logger.getLogger( "org.jecars" );
 
   static final private String CARS_INTERFACE     = "CARS_Interface";
-  static final public  String DEF_INTERFACECLASS = DEFAULTNS + "InterfaceClass";
+  static final public  String INTERFACECLASS     = "InterfaceClass";
+  static final public  String DEF_INTERFACECLASS = DEFAULTNS + INTERFACECLASS;
 
   static final String UNSTRUCT_PREFIX_DOUBLE = "!#!D";
   static final private Value[] VALUE0 = new Value[0];
@@ -121,7 +122,7 @@ public class CARS_DefaultMain implements CARS_Main {
     }
 
     // **** Update the Modified property in the parent
-    pParent.setProperty( CARS_ActionContext.gDefModified, cal );
+    pParent.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
 
 //    Calendar cal = Calendar.getInstance();
 //    node.setProperty( "jecars:Created", cal );
@@ -1237,7 +1238,7 @@ koasdkaso
         if (mayChangeNode( cnode )) {
           CARS_Utils.setCurrentModificationDate( cnode );
 //          final Calendar c = Calendar.getInstance();
-//          cnode.setProperty( CARS_ActionContext.gDefModified, c );
+//          cnode.setProperty( CARS_ActionContext.DEF_MODIFIED, c );
 //          if (cnode.hasProperty( "jcr:lastModified" )) {
 //            cnode.setProperty( "jcr:lastModified", c );
 //          }
@@ -1419,16 +1420,15 @@ koasdkaso
       Node           interfaceClass = null;
       if (removeNodeTags.getData( CARS_INTERFACE )!=null) {
         cars = (CARS_Interface)removeNodeTags.getData( CARS_INTERFACE );
-        interfaceClass = (Node)removeNodeTags.getData( "InterfaceClass" );
+        interfaceClass = (Node)removeNodeTags.getData( INTERFACECLASS );
       }
 
       synchronized( NODEMUTATION_LOCK ) {
-        if (cars!=null) {
-          cars.removeNode( this, interfaceClass, cnode, pTags );
-  //        cnode.save();
-        } else {
-          CARS_DefaultInterface di = new CARS_DefaultInterface();
+        if (cars==null) {
+          final CARS_DefaultInterface di = new CARS_DefaultInterface();
           di.removeNode( this, null, cnode, pTags );
+        } else {
+          cars.removeNode( this, interfaceClass, cnode, pTags );
         }
       }
       
