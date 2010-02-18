@@ -381,4 +381,57 @@ public class JC_DefaultNodeTest {
       return;
     }
 
+    @Test
+    public void expireNodeTest() throws JC_Exception, InterruptedException {
+      final JC_Nodeable n = mClient_Admin.getNode( "/JeCARS/default/Data" );
+      if (n.hasNode( "testexpireNodeTest1" )) {
+        n.getNode( "testexpireNodeTest1" ).removeNode();
+        n.save();
+      }
+      if (n.hasNode( "testexpireNodeTest2" )) {
+        n.getNode( "testexpireNodeTest2" ).removeNode();
+        n.save();
+      }
+      if (n.hasNode( "testexpireNodeTest3" )) {
+        n.getNode( "testexpireNodeTest3" ).removeNode();
+        n.save();
+      }
+      if (n.hasNode( "testexpireNodeTest4" )) {
+        n.getNode( "testexpireNodeTest4" ).removeNode();
+        n.save();
+      }
+      if (n.hasNode( "testexpireNodeTest5" )) {
+        n.getNode( "testexpireNodeTest5" ).removeNode();
+        n.save();
+      }
+      if (n.hasNode( "testexpireNodeTest6" )) {
+        n.getNode( "testexpireNodeTest6" ).removeNode();
+        n.save();
+      }
+      JC_Nodeable newn = n.addNode( "testexpireNodeTest1", "jecars:datafile" );
+      newn.setExpireDate( 1 );
+      newn.save();
+      newn = n.addNode( "testexpireNodeTest2", "jecars:datafile" );
+      newn.setExpireDate( 1 );
+      newn.save();
+      newn = n.addNode( "testexpireNodeTest3", "jecars:datafile" );
+      newn.setExpireDate( 1 );
+      newn.save();
+      newn = n.addNode( "testexpireNodeTest4", "jecars:datafile" );
+      newn.setExpireDate( 1 );
+      newn.save();
+      newn = n.addNode( "testexpireNodeTest5", "jecars:datafile" );
+      newn.setExpireDate( 1 );
+      newn.save();
+      newn = n.addNode( "testexpireNodeTest6", "jecars:datafile" );
+      newn.setExpireDate( 1 );
+      newn.save();
+      System.out.println("waiting for expired node");
+      Thread.sleep( 2* 60 * 1000 );
+      n.refresh();
+      assertFalse( n.hasNode( "testexpireNodeTest2" ) );
+      return;
+    }
+
+
 }
