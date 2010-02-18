@@ -142,15 +142,9 @@
   <!--                       pages.  See the jasper documentation for more  -->
   <!--                       information.                                   -->
   <!--                                                                      -->
-  <!--   compilerSourceVM    Compiler source VM                             -->
-  <!--                       default is System.properties                   -->
-  <!--                        java.specification.version > 1.4              -->
-  <!--                        [1.5] else [1.4]                              -->
+  <!--   compilerSourceVM    Compiler source VM. [1.5]                      -->
   <!--                                                                      -->
-  <!--   compilerTargetVM    Compiler target VM                             -->
-  <!--                       default is System.properties                   -->
-  <!--                        java.specification.version > 1.4              -->
-  <!--                        [1.5] else [1.4]                              -->
+  <!--   compilerTargetVM    Compiler target VM. [1.5]                      -->
   <!--                                                                      -->
   <!--   development         Is Jasper used in development mode? If true,   -->
   <!--                       the frequency at which JSPs are checked for    -->
@@ -312,7 +306,7 @@
   <!--   debug                Debugging detail level for messages logged    -->
   <!--                        by this servlet.  [0]                         -->
   <!--                                                                      -->
-  <!--   executable           Name of the exectuable used to run the        -->
+  <!--   executable           Name of the executable used to run the        -->
   <!--                        script. [perl]                                -->
   <!--                                                                      -->
   <!--   parameterEncoding    Name of parameter encoding to be used with    -->
@@ -321,6 +315,10 @@
   <!--                                                                      -->
   <!--   passShellEnvironment Should the shell environment variables (if    -->
   <!--                        any) be passed to the CGI script? [false]     -->
+  <!--                                                                      -->
+  <!--   stderrTimeout        The time (in milliseconds) to wait for the    -->
+  <!--                        reading of stderr to complete before          -->
+  <!--                        terminating the CGI process. [2000]           -->
   <!--
     <servlet>
         <servlet-name>cgi</servlet-name>
@@ -870,7 +868,11 @@
   </mime-mapping>
   <mime-mapping>
     <extension>ppt</extension>
-    <mime-type>application/powerpoint</mime-type>
+    <mime-type>application/vnd.ms-powerpoint</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>pps</extension>
+    <mime-type>application/vnd.ms-powerpoint</mime-type>
   </mime-mapping>
   <mime-mapping>
     <extension>ps</extension>
@@ -959,6 +961,14 @@
     <mime-type>application/x-sv4crc</mime-type>
   </mime-mapping>
   <mime-mapping>
+    <extension>svg</extension>
+    <mime-type>image/svg+xml</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>svgz</extension>
+    <mime-type>image/svg+xml</mime-type>
+  </mime-mapping>
+  <mime-mapping>
     <extension>swf</extension>
     <mime-type>application/x-shockwave-flash</mime-type>
   </mime-mapping>
@@ -1031,6 +1041,10 @@
     <mime-type>application/xhtml+xml</mime-type>
   </mime-mapping>
   <mime-mapping>
+    <extension>xls</extension>
+    <mime-type>application/vnd.ms-excel</mime-type>
+  </mime-mapping>
+  <mime-mapping>
     <extension>xml</extension>
     <mime-type>application/xml</mime-type>
   </mime-mapping>
@@ -1055,20 +1069,12 @@
     <mime-type>image/x-xwindowdump</mime-type>
   </mime-mapping>
   <mime-mapping>
-    <extension>wav</extension>
-    <mime-type>audio/x-wav</mime-type>
-  </mime-mapping>
-  <mime-mapping>
-    <extension>svg</extension>
-    <mime-type>image/svg+xml</mime-type>
-  </mime-mapping>
-  <mime-mapping>
-    <extension>svgz</extension>
-    <mime-type>image/svg+xml</mime-type>
-  </mime-mapping>
-  <mime-mapping>
     <extension>vsd</extension>
     <mime-type>application/x-visio</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>wav</extension>
+    <mime-type>audio/x-wav</mime-type>
   </mime-mapping>
   <mime-mapping>
     <!-- Wireless Bitmap -->
@@ -1118,18 +1124,6 @@
   <mime-mapping>
     <extension>zip</extension>
     <mime-type>application/zip</mime-type>
-  </mime-mapping>
-  <mime-mapping>
-    <extension>xls</extension>
-    <mime-type>application/vnd.ms-excel</mime-type>
-  </mime-mapping>
-  <mime-mapping>
-    <extension>doc</extension>
-    <mime-type>application/vnd.ms-word</mime-type>
-  </mime-mapping>
-  <mime-mapping>
-    <extension>ppt</extension>
-    <mime-type>application/vnd.ms-powerpoint</mime-type>
   </mime-mapping>
   <!-- ==================== Default Welcome File List ===================== -->
   <!-- When a request URI refers to a directory, the default servlet looks  -->

@@ -42,10 +42,6 @@ rem
 rem   JAVA_OPTS       (Optional) Java runtime options used when the "start",
 rem                   "stop", or "run" command is executed.
 rem
-rem   JSSE_HOME       (Optional) May point at your Java Secure Sockets Extension
-rem                   (JSSE) installation, whose JAR files will be added to the
-rem                   system class path used to start Tomcat.
-rem
 rem   JPDA_TRANSPORT  (Optional) JPDA transport used when the "jpda start"
 rem                   command is executed. The default is "dt_shmem".
 rem
@@ -72,9 +68,14 @@ rem   LOGGING_MANAGER (Optional) Override Tomcat's logging manager
 rem                   Example (all one line)
 rem                   set LOGGING_CONFIG="-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager"
 rem
+rem   TITLE           (Optional) Specify the title of Tomcat window. The default
+rem                   TITLE is Tomcat if it's not specified.
+rem                   Example (all one line)
+rem                   set TITLE=Tomcat.Cluster#1.Server#1 [%DATE% %TIME%]
 rem
 rem
-rem $Id: catalina.bat,v 1.1 2009/07/24 09:10:41 weertj Exp $
+rem
+rem $Id: catalina.bat 898474 2010-01-12 19:20:59Z kkolinko $
 rem ---------------------------------------------------------------------------
 
 rem Guess CATALINA_HOME if not defined
@@ -91,6 +92,10 @@ echo The CATALINA_HOME environment variable is not defined correctly
 echo This environment variable is needed to run this program
 goto end
 :okHome
+
+rem Ensure that any user defined CLASSPATH variables are not used on startup,
+rem but allow them to be specified in setenv.bat, in rare case when it is needed.
+set CLASSPATH=
 
 rem Get standard environment variables
 if "%CATALINA_BASE%" == "" goto gotSetenvHome
@@ -110,12 +115,6 @@ set BASEDIR=%CATALINA_HOME%
 call "%CATALINA_HOME%\bin\setclasspath.bat" %1
 if errorlevel 1 goto end
 
-rem Add on extra jar files to CLASSPATH
-if "%JSSE_HOME%" == "" goto noJsse
-set CLASSPATH=%CLASSPATH%;%JSSE_HOME%\lib\jcert.jar;%JSSE_HOME%\lib\jnet.jar;%JSSE_HOME%\lib\jsse.jar
-:noJsse
-set CLASSPATH=%CLASSPATH%;%CATALINA_HOME%\bin\bootstrap.jar
-
 if not "%CATALINA_BASE%" == "" goto gotBase
 set CATALINA_BASE=%CATALINA_HOME%
 :gotBase
@@ -123,6 +122,21 @@ set CATALINA_BASE=%CATALINA_HOME%
 if not "%CATALINA_TMPDIR%" == "" goto gotTmpdir
 set CATALINA_TMPDIR=%CATALINA_BASE%\temp
 :gotTmpdir
+
+rem Add tomcat-juli.jar and bootstrap.jar to classpath
+rem tomcat-juli.jar can be over-ridden per instance
+rem Note that there are no quotes as we do not want to introduce random
+rem quotes into the CLASSPATH
+if "%CLASSPATH%" == "" goto emptyClasspath
+set CLASSPATH=%CLASSPATH%;
+:emptyClasspath
+if "%CATALINA_BASE%" == "%CATALINA_HOME%" goto juliClasspathHome
+if not exist "%CATALINA_BASE%\bin\tomcat-juli.jar" goto juliClasspathHome
+set CLASSPATH=%CLASSPATH%%CATALINA_BASE%\bin\tomcat-juli.jar;%CATALINA_HOME%\bin\bootstrap.jar
+goto juliClasspathDone
+:juliClasspathHome
+set CLASSPATH=%CLASSPATH%%CATALINA_HOME%\bin\bootstrap.jar
+:juliClasspathDone
 
 if not "%LOGGING_CONFIG%" == "" goto noJuliConfig
 set LOGGING_CONFIG=-Dnop
@@ -147,6 +161,7 @@ goto java_dir_displayed
 :use_jdk
 echo Using JAVA_HOME:       %JAVA_HOME%
 :java_dir_displayed
+echo Using CLASSPATH:       %CLASSPATH%
 
 set _EXECJAVA=%_RUNJAVA%
 set MAINCLASS=org.apache.catalina.startup.Bootstrap
@@ -212,7 +227,8 @@ goto execCmd
 :doStart
 shift
 if not "%OS%" == "Windows_NT" goto noTitle
-set _EXECJAVA=start "Tomcat" %_RUNJAVA%
+if "%TITLE%" == "" set TITLE=Tomcat
+set _EXECJAVA=start "%TITLE%" %_RUNJAVA%
 goto gotTitle
 :noTitle
 set _EXECJAVA=start %_RUNJAVA%
