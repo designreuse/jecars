@@ -15,20 +15,17 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN"
-                            "http://jackrabbit.apache.org/dtd/repository-1.5.dtd">
+
+<!DOCTYPE Repository
+          PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN"
+          "http://jackrabbit.apache.org/dtd/repository-2.0.dtd">
+
 <!-- Example Repository Configuration File
      Used by
      - org.apache.jackrabbit.core.config.RepositoryConfigTest.java
      -
 -->
 <Repository>
-
-    <DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
-        <param name="path" value="${rep.home}/repository/datastore"/>
-        <param name="minRecordLength" value="100"/>
-    </DataStore>
-
     <!--
         virtual file system where the repository stores global state
         (e.g. registered namespaces, custom node types, etc.)
@@ -36,6 +33,14 @@
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
         <param name="path" value="${rep.home}/repository"/>
     </FileSystem>
+
+    <!--
+        data store configuration
+    -->
+    <DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
+        <param name="path" value="${rep.home}/repository/datastore"/>
+        <param name="minRecordLength" value="100"/>
+    </DataStore>
 
     <!--
         security configuration
@@ -66,12 +71,10 @@
            <!-- anonymous user name ('anonymous' is the default value) -->
            <param name="anonymousId" value="anonymous"/>
            <!--
-              default user name to be used instead of the anonymous user
-              when no login credentials are provided (unset by default)
-           -->
+              administrator user id (default value if param is missing is 'admin')
+            -->
            <!-- <param name="defaultUserId" value="superuser"/> -->
         </LoginModule>
-
     </Security>
 
     <!--
@@ -94,7 +97,7 @@
             persistence manager of the workspace:
             class: FQN of class implementing the PersistenceManager interface
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
           <param name="schemaObjectPrefix" value="${wsp.name}_"/>
           <param name="externalBLOBs" value="true"/>
@@ -105,8 +108,6 @@
         -->
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="path" value="${wsp.home}/index"/>
-            <param name="textFilterClasses" value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.extractor.MsWordTextExtractor,org.apache.jackrabbit.extractor.MsExcelTextExtractor,org.apache.jackrabbit.extractor.MsPowerPointTextExtractor,org.apache.jackrabbit.extractor.PdfTextExtractor,org.apache.jackrabbit.extractor.OpenOfficeTextExtractor,org.apache.jackrabbit.extractor.RTFTextExtractor,org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/>
-            <param name="extractorPoolSize" value="2"/>
             <param name="supportHighlighting" value="true"/>
         </SearchIndex>
     </Workspace>
@@ -129,7 +130,7 @@
             a 'normal' persistence manager, but this could change in future
             implementations.
         -->
-        <PersistenceManager class="org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager">
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager">
           <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
           <param name="schemaObjectPrefix" value="version_"/>
         </PersistenceManager>
@@ -141,8 +142,6 @@
     -->
     <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
         <param name="path" value="${rep.home}/repository/index"/>
-        <param name="textFilterClasses" value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.extractor.MsWordTextExtractor,org.apache.jackrabbit.extractor.MsExcelTextExtractor,org.apache.jackrabbit.extractor.MsPowerPointTextExtractor,org.apache.jackrabbit.extractor.PdfTextExtractor,org.apache.jackrabbit.extractor.OpenOfficeTextExtractor,org.apache.jackrabbit.extractor.RTFTextExtractor,org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/>
-        <param name="extractorPoolSize" value="2"/>
         <param name="supportHighlighting" value="true"/>
     </SearchIndex>
 </Repository>

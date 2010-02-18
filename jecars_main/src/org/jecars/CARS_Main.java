@@ -26,14 +26,12 @@ import nl.msd.jdots.JD_Taglist;
  */
 public interface CARS_Main {
   
-//  final static String VERSION_ID = "v1.2.-94";
-//  final static String PRODUCTNAME = "JeCARS 'Babaco'";
-  final static String VERSION_ID = "v1.3.-100";
-  final static String PRODUCTNAME = "JeCARS 'Araza'";
-  final static String VERSION = PRODUCTNAME + " " + VERSION_ID;
-  final static String MAINFOLDER = "JeCARS";
-  final static String DEFAULTNS1 = "jecars";
-  final static String DEFAULTNS  = "jecars:";
+  final static String VERSION_ID    = "v1.3.-99";
+  final static String PRODUCTNAME   = "JeCARS 'Araza'";
+  final static String VERSION       = PRODUCTNAME + " " + VERSION_ID;
+  final static String MAINFOLDER    = "JeCARS";
+  final static String DEFAULTNS1    = "jecars";
+  final static String DEFAULTNS     = "jecars:";
   final static String DEFAULTAUTHOR = "jecars.org";
   final static String DEFAULTRIGHTS = "(C) 2010";
   
