@@ -166,6 +166,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       if (node!=null) {
         copyToNode( node );
         destroy( false );
+        node.initPropertyMembers();
         return node;
       }
     }
@@ -1189,10 +1190,16 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
    * @throws org.jecars.client.JC_Exception
    */
   @Override
-  public JC_PermissionNode addPermissionNode( final String pName, JC_Nodeable pPrincipal, Collection<String>pRights ) throws JC_Exception {
-    JC_PermissionNode perm = (JC_PermissionNode)addNode( pName, "jecars:Permission" ).morphToNodeType();
-    if ((pPrincipal!=null) && (pRights!=null)) {
+  public JC_PermissionNode addPermissionNode( final String pName, final JC_Nodeable pPrincipal, final Collection<String>pRights ) throws JC_Exception {
+    final JC_PermissionNode perm;
+    if (pName==null) {
+      perm = (JC_PermissionNode)addNode( "P_" + pPrincipal.getName(), "jecars:Permission" ).morphToNodeType();
       perm.addRights( pPrincipal, pRights );
+    } else {
+      perm = (JC_PermissionNode)addNode( pName, "jecars:Permission" ).morphToNodeType();
+      if ((pPrincipal!=null) && (pRights!=null)) {
+        perm.addRights( pPrincipal, pRights );
+      }
     }
     return perm;
   }
@@ -1319,7 +1326,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
    */
   @Override
   public void addMixin( final String pMixin ) throws JC_Exception {
-    setProperty( "jcr:mixinTypes", pMixin );
+    setProperty( "jcr:mixinTypes", "+" + pMixin );
     return;
   }
 
@@ -1452,11 +1459,10 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       if (prop instanceof JC_MultiValueProperty) {
         // **** Is multi value property
         if (pValue instanceof String) {
-          String value = (String)pValue;
+          final String value = (String)pValue;
           if (value.startsWith( "+" )) {
             prop.addValue( value.substring(1), true );
-          }
-          if (value.startsWith( "-" )) {
+          } else if (value.startsWith( "-" )) {
             prop.removeValue( value.substring(1) );
           }
           setChanged( true );
@@ -1739,7 +1745,15 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     return this;
   }
 
-  
+
+  /** initPropertyMembers
+   * 
+   * @throws JC_Exception
+   */
+  protected void initPropertyMembers() throws JC_Exception {
+    return;
+  }
+
     /* populateProperties
      * Set node properties originating from its feed
      * 
@@ -1785,6 +1799,9 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
             }
             throw e;
           }
+          // **** Let the subclasses do their initialisation
+          setSynchronized( true );
+          initPropertyMembers();
         } catch( JC_HttpException he ) {
           throw he;
         } catch( FeedException fe ) {
