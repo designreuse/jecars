@@ -57,7 +57,14 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
    */
   @Override
   protected void toolInput() throws Exception {
-    final Node config = getConfigNode();
+    Node config = getConfigNode();
+
+    // **** Copy the config node to the current tool
+    if (!hasConfigNode()) {
+      copyConfigNodeToTool( config );
+    }
+    config = getConfigNode();
+
     if (config.hasProperty( WORKINGDIRECTORY )) {
 
       // ******************************
@@ -65,7 +72,9 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       mWorkingDirectory = new File( config.getProperty( WORKINGDIRECTORY ).getString() );
       final boolean unique = "true".equals( config.getProperty( GENERATEUNIQUEWORKINGDIRECTORY ).getValue().getString());
       if (unique) {
-        mWorkingDirectory = new File( mWorkingDirectory, "wd_" + System.currentTimeMillis() );
+        final long id = System.currentTimeMillis();
+        getTool().setProperty( "jecars:Id", id );
+        mWorkingDirectory = new File( mWorkingDirectory, "wd_" + id );
         if (!mWorkingDirectory.mkdirs()) {
           throw new IOException( "Cannot create directory: " + mWorkingDirectory.getAbsolutePath() );
         }

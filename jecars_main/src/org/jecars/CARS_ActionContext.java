@@ -1255,11 +1255,11 @@ public class CARS_ActionContext {
    * @param pOrder
    * @return
    */
-  static final public String checkAndConvert_ordertype( final String pOrderType ) throws Exception {
-    String o = pOrderType;
-    if ((pOrderType.equalsIgnoreCase( "DESC" )==true) ||
-        (pOrderType.equalsIgnoreCase( "ASC" )==true)) return o;
-    throw new Exception( "[ORDERBYTYPE] Only DESC|ASC as values allowed" );
+  static final public String checkAndConvert_ordertype( final String pOrderType ) {
+    final String o = pOrderType;
+    if ((pOrderType.equalsIgnoreCase( "DESC" )) ||
+        (pOrderType.equalsIgnoreCase( "ASC" ))) return o;
+    throw new IllegalArgumentException( "[ORDERBYTYPE] Only DESC|ASC as values allowed" );
   }
  
   /** Retrieve the rangeiterator with possible filter and other...
@@ -1271,86 +1271,82 @@ public class CARS_ActionContext {
     final JD_Taglist params = getQueryPartsAsTaglist();
     if (mustConstructQuery( params )) {
       // **** We must use the JCR QueryManager
-      String query = "SELECT * FROM ";
+      final StringBuilder query = new StringBuilder( "SELECT * FROM " );
 
       if (getCategoryFilter()!=null) {
-        String catF = getCategoryFilter();
-        if (catF.indexOf( ":" )==-1) {
-          query += DEF_NS + catF;
-        } else {
-          query += catF;
+        final String catF = getCategoryFilter();
+        if (catF.indexOf( ':' )==-1) {
+          query.append( DEF_NS );
         }
+        query.append( catF );
       } else {
-        query += "nt:base";
-      }
-      
-      query += " WHERE ";
-
-
-//      JD_Taglist params = getQueryPartsAsTaglist();
+        query.append( "nt:base" );
+      }      
+      query.append( " WHERE " );
 
       String orderBy = "";
       
       if ((params.getData( gDefDeep )!=null) &&
           ((String)params.getData( gDefDeep )).compareToIgnoreCase( "true" )==0) {
-        if (mThisNode.getPath().equals( "/" )==false) {
-          query += " (jcr:path LIKE '" + mThisNode.getPath() + "/%')";
+        if ("/".equals( mThisNode.getPath() )) {
+          query.append( " (jcr:path LIKE '%')" );
         } else {
-          query += " (jcr:path LIKE '%')";            
+          query.append( " (jcr:path LIKE '" ).append( mThisNode.getPath() ).append( "/%')" );
         }
       } else {
-        query += " (jcr:path LIKE '" + mThisNode.getPath() + "/%' AND NOT jcr:path LIKE '" + mThisNode.getPath() + "/%/%')";
+        query.append( " (jcr:path LIKE '" ).append( mThisNode.getPath() ).append( "/%' AND NOT jcr:path LIKE '" ).append( mThisNode.getPath() ).append( "/%/%')" );
       }
 
       String param = "?", pvalue;
       try {
         if ((pvalue=(String)params.getData( gDefCreatedMin ))!=null) {
           param = gDefCreatedMin;
-          String date = getDateFromParam( pvalue );
-          query += " AND jcr:created >= TIMESTAMP '" + date + "'";
+          final String date = getDateFromParam( pvalue );
+          query.append( " AND jcr:created >= TIMESTAMP '" ).append( date ).append( "'" );
         }
         if (params.getData( gDefCreatedMax )!=null) {
           param = gDefCreatedMax;
-          String date = getDateFromParam( (String)params.getData( gDefCreatedMax ) );
-          query += " AND jcr:created <= TIMESTAMP '" + date + "'";
+          final String date = getDateFromParam( (String)params.getData( gDefCreatedMax ) );
+          query.append( " AND jcr:created <= TIMESTAMP '" ).append( date ).append( "'" );
         }
         if (params.getData( gDefUpdatedMin )!=null) {
           param = gDefUpdatedMin;
-          String date = getDateFromParam( (String)params.getData( gDefUpdatedMin ) );
-          query += " AND jecars:Modified >= TIMESTAMP '" + date + "'";
+          final String date = getDateFromParam( (String)params.getData( gDefUpdatedMin ) );
+          query.append( " AND jecars:Modified >= TIMESTAMP '" ).append( date ).append( "'" );
         }
         if (params.getData( gDefUpdatedMax )!=null) {
           param = gDefUpdatedMax;
-          String date = getDateFromParam( (String)params.getData( gDefUpdatedMax ) );
-          query += " AND jecars:Modified <= TIMESTAMP '" + date + "'";
+          final String date = getDateFromParam( (String)params.getData( gDefUpdatedMax ) );
+          query.append( " AND jecars:Modified <= TIMESTAMP '" ).append( date ).append( "'" );
         }
         if (params.getData( gDefPublishedMin )!=null) {
           param = gDefPublishedMin;
-          String date = getDateFromParam( (String)params.getData( gDefUpdatedMin ) );
-          query += " AND jecars:Published >= TIMESTAMP '" + date + "'";
+          final String date = getDateFromParam( (String)params.getData( gDefUpdatedMin ) );
+          query.append( " AND jecars:Published >= TIMESTAMP '" ).append( date ).append( "'" );
         }
         if (params.getData( gDefPublishedMax )!=null) {
           param = gDefPublishedMax;
-          String date = getDateFromParam( (String)params.getData( gDefPublishedMax ) );
-          query += " AND jecars:Published <= TIMESTAMP '" + date + "'";
+          final String date = getDateFromParam( (String)params.getData( gDefPublishedMax ) );
+          query.append( " AND jecars:Published <= TIMESTAMP '" ).append( date ).append( "'" );
         }
         if (params.getData( gDefWhere )!=null) {
           param = gDefWhere;
-          query += " AND (" + (String)params.getData( gDefWhere ) + ")";
+          query.append( " AND (" ).append( (String)params.getData( gDefWhere ) ).append( ")" );
         }
       } catch (Exception e) {
-        CARS_Factory.getEventManager().addException( mMain, mMain.getLoginUser(), mThisNode, null, "URL", "QUERY",
-              e, "query param error " + param + " = " + query );
+        CARS_Factory.getEventManager().addException( mMain, mMain.getLoginUser(), mThisNode, null,
+                    CARS_EventManager.EVENTCAT_URL, CARS_EventManager.EVENTTYPE_QUERY,
+                    e, "query param error " + param + " = " + query );
         throw e;
       }
 
       if (params.getData( gDefKeywords )!=null) {
-        query += " AND (jecars:Keywords LIKE '" + (String)params.getData( gDefKeywords ) + "')";
+        query.append( " AND (jecars:Keywords LIKE '" ).append( (String)params.getData( gDefKeywords ) ).append( "')" );
       }
       
       if (params.getData( gDefFullText )!=null) {
-        String qtext = (String)params.getData( gDefFullText );
-        query += " AND CONTAINS(*, '" + checkAndConvert_Q(qtext) + "')";
+        final String qtext = (String)params.getData( gDefFullText );
+        query.append( " AND CONTAINS(*, '" ).append( checkAndConvert_Q(qtext) ).append( "')" );
         orderBy = " ORDER BY jcr:score DESC";
       }
 
@@ -1363,7 +1359,7 @@ public class CARS_ActionContext {
         }
       }
       
-      query += orderBy;
+      query.append( orderBy );
       
       if ((pvalue=(String)params.getData( gDefGQL ))!=null) {
         // **** Google Query Language (Jackrabbit v1.5 and higher)
@@ -1372,13 +1368,15 @@ public class CARS_ActionContext {
       } else {
         // **** Do normal query call
         try {
-          final Query q = mThisNode.getSession().getWorkspace().getQueryManager().createQuery( query, Query.SQL );
+          final Query q = mThisNode.getSession().getWorkspace().getQueryManager().createQuery( query.toString(), Query.SQL );
           ni = q.execute().getNodes();
-          CARS_Factory.getEventManager().addEvent( mMain, mMain.getLoginUser(), mThisNode, null, "URL", "QUERY",
-                "JCR SQL query = " + query + " result = " + ni.getSize() );
+          CARS_Factory.getEventManager().addEvent( mMain, mMain.getLoginUser(), mThisNode, null,
+                    CARS_EventManager.EVENTCAT_URL, CARS_EventManager.EVENTTYPE_QUERY,
+                    "JCR SQL query = " + query + " result = " + ni.getSize() );
         } catch (Exception e) {
-          CARS_Factory.getEventManager().addException( mMain, mMain.getLoginUser(), mThisNode, null, "URL", "QUERY",
-                e, "JCR SQL query = " + query );
+          CARS_Factory.getEventManager().addException( mMain, mMain.getLoginUser(), mThisNode, null,
+                    CARS_EventManager.EVENTCAT_URL, CARS_EventManager.EVENTTYPE_QUERY,
+                    e, "JCR SQL query = " + query );
           throw e;
         }
       }
@@ -1519,6 +1517,12 @@ public class CARS_ActionContext {
     return ni;
   }
 
+  /** getAtomID
+   *
+   * @param pNode
+   * @return
+   * @throws Exception
+   */
   public String getAtomID( Node pNode ) throws Exception {
     try {
 //      return "urn:uuid:" + pNode.getUUID();
@@ -1860,21 +1864,21 @@ public class CARS_ActionContext {
     long maxResult = MAX_NO_GETOBJECTS;
     CARS_OutputGenerator outputGen = null;
     try {
-      JD_Taglist params = getQueryPartsAsTaglist();
+      final JD_Taglist params = getQueryPartsAsTaglist();
       if (params.getData( gDefAlt )!=null) alt = (String)params.getData( gDefAlt );
       outputGen = (CARS_OutputGenerator)gOutputGenerators.getData( alt );
       
       if (outputGen!=null) {
         outputGen.createHeader( this, pReply );
       } else {
-        if (alt.equals( "atom_entry" ) || alt.equals( "atomsvc" )) isFeed = false;
+        if ("atom_entry".equals( alt ) || "atomsvc".equals( alt )) isFeed = false;
         pReply.append( createHeader( alt, isFeed ) );
       }
       
       // **** Get result nodes
       long fromNode = 0L, toNode = maxResult;
 //      boolean paging = false;
-      RangeIterator getNodesResult = getRangeIterator();
+      final RangeIterator getNodesResult = getRangeIterator();
       if (getNodesResult!=null) {
         if (getNodesResult.getSize()>maxResult) {
           fromNode = 1L;
@@ -1900,7 +1904,7 @@ public class CARS_ActionContext {
       // **** Check for paging (max-results)
       if (params.getData( gDefMaxResults )!=null) {
         try {
-          long maxresults = Long.parseLong( (String)params.getData( gDefMaxResults ) );
+          final long maxresults = Long.parseLong( (String)params.getData( gDefMaxResults ) );
           if (maxResult>maxresults) {
             maxResult = maxresults;
             if (fromNode==0L) fromNode = 1L;
@@ -1921,21 +1925,33 @@ public class CARS_ActionContext {
       }
       if (!"atom_entry".equals( alt )) {
         if (getNodesResult instanceof NodeIterator) {
-          NodeIterator ni = (NodeIterator)getNodesResult;
-//     System.out.println( "size = " + ni.getSize() );
+          final NodeIterator ni = (NodeIterator)getNodesResult;
+
+          int count = 0;
+          while( ni.hasNext() ) {
+            count++;
+            if (count>maxResult) break;
+            final Node n = ni.nextNode();
+            addNodeEntry( pReply, n, null, alt, false, isFeed, 0L, 0L, count, outputGen );
+          }
+          // **** TODO, Issue #1, Result paging implementation
+
           // **** Skipping to start-index
+      /*
           if ((fromNode-1)<ni.getSize()) {
             if ((fromNode-1)>0) ni.skip( fromNode-1 );
             int count = 0;
             while( ni.hasNext() ) {
               count++;
               if (count>maxResult) break;
-              Node n = ni.nextNode();
+              final Node n = ni.nextNode();
               addNodeEntry( pReply, n, null, alt, false, isFeed, 0L, 0L, count, outputGen );
             }
           }
+       *
+       */
         } else if (getNodesResult instanceof PropertyIterator) {
-          PropertyIterator pi = (PropertyIterator)getNodesResult;
+          final PropertyIterator pi = (PropertyIterator)getNodesResult;
           addMultiPropertyEntry( pReply, mThisNode, pi, alt );
         }
       }
@@ -1945,10 +1961,10 @@ public class CARS_ActionContext {
       createError( pReply );
 //      LOG.log( Level.WARNING, null, e );
     } finally {
-      if (outputGen!=null) {
-        outputGen.createFooter( this, pReply );
-      } else {
+      if (outputGen==null) {
         pReply.append( createFooter( alt, isFeed ) );
+      } else {
+        outputGen.createFooter( this, pReply );
       }
     }
     return;

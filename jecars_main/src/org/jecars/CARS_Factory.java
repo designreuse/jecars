@@ -54,6 +54,8 @@ public class CARS_Factory {
 //  static private HashMap<String, Session> gSessionPool = new HashMap<String, Session>();
   
   static final public String     JECARSPROPERTIESNAME = "jecars.properties";
+  // **** If not null then gJecarsPropertiesPath overrules the properties location
+  static       public String     gJecarsPropertiesPath = null;
   static final public Properties gJecarsProperties = new Properties();
   static public String        gConfigFile       = "";
   static public String        gRepHome          = "";
@@ -81,6 +83,15 @@ public class CARS_Factory {
   /** Creates a new instance of CARS_Factory */
   public CARS_Factory() {
     gLastFactory   = this;
+    return;
+  }
+
+  /** setJecarsPropertiesPath
+   * 
+   * @param pPath
+   */
+  static public void setJecarsPropertiesPath( final String pPath ) {
+    gJecarsPropertiesPath = pPath;
     return;
   }
 
@@ -147,24 +158,34 @@ public class CARS_Factory {
   static private void initJeCARSProperties() {
     try {
       if (gJecarsProperties.isEmpty()) {
-        gLog.log( Level.INFO, "Trying to read jecars properties as system resource " + JECARSPROPERTIESNAME );
-        final InputStream sis = ClassLoader.getSystemResourceAsStream( "/" + JECARSPROPERTIESNAME );
-        if (sis!=null) {
-          gJecarsProperties.load( sis );
-          sis.close();
-        } else {
-          // **** Read jecars property file
-          final File f = new File( JECARSPROPERTIESNAME );
-          gLog.log( Level.INFO, "Trying to read file: " + f.getCanonicalPath() );
-          if (f.exists()) {
-            final FileInputStream fis = new FileInputStream(f);
-            try {
-              gJecarsProperties.load( fis );
-            } finally {
-              fis.close();
-            }
+        if (gJecarsPropertiesPath==null) {
+          gLog.log( Level.INFO, "Trying to read jecars properties as system resource " + JECARSPROPERTIESNAME );
+          final InputStream sis = ClassLoader.getSystemResourceAsStream( "/" + JECARSPROPERTIESNAME );
+          if (sis!=null) {
+            gJecarsProperties.load( sis );
+            sis.close();
           } else {
-            gLog.log( Level.SEVERE, "Cannot find " + f.getCanonicalPath()  );
+            // **** Read jecars property file
+            final File f = new File( JECARSPROPERTIESNAME );
+            gLog.log( Level.INFO, "Trying to read file: " + f.getCanonicalPath() );
+            if (f.exists()) {
+              final FileInputStream fis = new FileInputStream(f);
+              try {
+                gJecarsProperties.load( fis );
+              } finally {
+                fis.close();
+              }
+            } else {
+              gLog.log( Level.SEVERE, "Cannot find " + f.getCanonicalPath()  );
+            }
+          }
+        } else {
+          gLog.log( Level.INFO, "Trying to read jecars properties from path " + gJecarsPropertiesPath );
+          final FileInputStream jfis = new FileInputStream( gJecarsPropertiesPath );
+          try {
+            gJecarsProperties.load( jfis );
+          } finally {
+            jfis.close();
           }
         }
       }
@@ -331,8 +352,8 @@ public class CARS_Factory {
    */
   public void initLogging() throws Exception {
     File f = new File( gRepLogHome );
-    if (f.exists()==false) {
-      if (f.mkdirs()==false) {
+    if (!f.exists()) {
+      if (!f.mkdirs()) {
         throw new Exception( "Cannot create directory: " + f.getCanonicalPath() );
       }
     }
@@ -828,7 +849,7 @@ public class CARS_Factory {
 //              gRefreshSystemAccessSession = gRefreshSystemAccessSession_Times;
 //            }
 //            gRefreshSystemAccessSession--;
-            final Node source = sas.getRootNode().getNode( user.getProperty( "jecars:Source" ).getString().substring(1) );
+            final Node source = sas.getNode( user.getProperty( "jecars:Source" ).getString().substring(1) );
             if (source.hasProperty( "jecars:ChangePasswordURL" )) {
               throw new CredentialExpiredException( source.getProperty( "jecars:ChangePasswordURL" ).getString() );
             }

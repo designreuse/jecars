@@ -553,7 +553,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     reportOutput( null );
     Node t = getTool();
     t.save();
-    if (t.isLocked()==true) {
+    if (t.isLocked()) {
       t.unlock();
 //      SessionImpl appSession = (SessionImpl)CARS_Factory.getSystemApplicationSession();
 //      synchronized( appSession ) {
@@ -887,6 +887,27 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     mConfigNode = pNode;
     return;
   }
+
+  /** hasConfigNode
+   * 
+   * @return
+   * @throws RepositoryException
+   */
+  public boolean hasConfigNode() throws RepositoryException {
+    return getTool().hasNode( "jecars:Config" );
+  }
+
+  /** copyConfigNodeToTool
+   *
+   * @param pConfigNode
+   * @throws RepositoryException
+   */
+  public void copyConfigNodeToTool( final Node pConfigNode ) throws RepositoryException {
+    pConfigNode.getSession().getWorkspace().copy( pConfigNode.getPath(), getTool().getPath() + "/jecars:Config" );
+    mConfigNode = null;
+    return;
+  }
+
 
   /** getConfigNode
    *

@@ -314,10 +314,10 @@
 // **** JeCARS Main
 
 [jecars:main] > jecars:root
-- jecars:MajorVersion    (Long)='1'    mandatory autocreated
-- jecars:MinorVersion    (Long)='2'    mandatory autocreated
-- jecars:BuildVersion    (Long)='1125' mandatory autocreated
-- jecars:CurrentId       (Long)='0'    mandatory autocreated
+- jecars:MajorVersion    (Long)='1'         mandatory autocreated
+- jecars:MinorVersion    (Long)='3'         mandatory autocreated
+- jecars:BuildVersion    (Long)='20100219'  mandatory autocreated
+- jecars:CurrentId       (Long)='0'         mandatory autocreated
 - jecars:Started         (Date)
 + *
 + jecars:Trashcans (jecars:Trashcans)=jecars:Trashcans autocreated

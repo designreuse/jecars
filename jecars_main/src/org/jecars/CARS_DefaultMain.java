@@ -1069,7 +1069,7 @@ koasdkaso
                 newNode.removeMixin( mixinType.substring(1) );
               } else if (mixinType.startsWith( "+" )) {
                 // **** The mixin type must removed
-                cnode.addMixin( mixinType.substring(1) );
+                newNode.addMixin( mixinType.substring(1) );
               } else {
                 newNode.addMixin( mixinType );
               }
@@ -1234,14 +1234,8 @@ koasdkaso
       
       // **** Are there modifications?
       if (modified) {
-//        if (cnode.isLocked()==false) cnode.setProperty( "jecars:Modified", Calendar.getInstance() );
         if (mayChangeNode( cnode )) {
           CARS_Utils.setCurrentModificationDate( cnode );
-//          final Calendar c = Calendar.getInstance();
-//          cnode.setProperty( CARS_ActionContext.DEF_MODIFIED, c );
-//          if (cnode.hasProperty( "jcr:lastModified" )) {
-//            cnode.setProperty( "jcr:lastModified", c );
-//          }
         }
       }
       

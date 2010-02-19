@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 NLR - National Aerospace Laboratory
+ * Copyright 2007-2010 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -339,9 +339,11 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
       }
       try { // just trying
         if (pMain.mayChangeNode( pNewNode )) {
-          pNewNode.setProperty( "jcr:lastModified", Calendar.getInstance() );
+          CARS_Utils.setCurrentModificationDate( pNewNode );
         }
-      } catch (Exception e) {};
+      } catch (RepositoryException re) {
+        // **** modification not allowed
+      }
       return;
     }
 
@@ -400,28 +402,31 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
      * @param pInterfaceNode the Node which defines the application source or NULL
      * @param pNode the node which has to be removed
      * @param pParams list of parameters
-     */ 
-    protected void removeJeCARSNode( final CARS_Main pMain, final Node pInterfaceNode, final Node pNode, final JD_Taglist pParams ) throws Exception {
+     * @throws RepositoryException
+     */
+    protected void removeJeCARSNode( final CARS_Main pMain, final Node pInterfaceNode, final Node pNode, final JD_Taglist pParams ) throws RepositoryException {
       String force = null, tc = null;
       final boolean forced;
-      if (pParams!=null) {
-        force = (String)pParams.getData( "jecars:force" );
-        tc    = (String)pParams.getData( "jecars:trashcan" );
-        forced = "true".equals( force );
-      } else {
+      if (pParams==null) {
         forced = false;
+      } else {
+        force  = (String)pParams.getData( "jecars:force" );
+        tc     = (String)pParams.getData( "jecars:trashcan" );
+        forced = "true".equals( force );
       }
       try {
         if (tc!=null) throw new Exception( "move to trashcan" );
         final Node parent = pNode.getParent();
-        final Calendar cal = Calendar.getInstance();
         synchronized( CARS_AccessManager.EXCLUSIVE_CONTROL ) {
-//          CARS_AccessManager.RUNNING_IN_EXCLUSIVE_MODE = true;
-//          try {
           final String path = pNode.getPath();
           pNode.remove();
-          parent.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
-          parent.save();
+          pNode.save();
+          try {
+            CARS_Utils.setCurrentModificationDate( parent );
+            parent.save();
+          } catch( RepositoryException re ) {
+            // **** Just trying to write the parent modified date
+          }
           if (forced) {
             // **** Check path properties
             final Session appSession = CARS_Factory.getSystemApplicationSession();
@@ -440,9 +445,6 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
               }
             }
           }
-//          } finally {
-//            CARS_AccessManager.RUNNING_IN_EXCLUSIVE_MODE = false;
-//          }
         }
       } catch( Exception cve ) {
         // **** Cannot remove object, check other parameters
@@ -455,14 +457,14 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
                 // **** Use default trashcan
                 Node fromParent = pNode.getParent();
                 trashcan = appSession.getRootNode().getNode( "JeCARS/jecars:Trashcans/jecars:General" );
-                String fromPath = pNode.getPath();
-                String toPath   = trashcan.getPath() + "/(" + trashcan.getProperty( "jecars:ObjectCount" ).getLong() + ")_" + pNode.getName();
+                final String fromPath = pNode.getPath();
+                final String toPath   = trashcan.getPath() + "/(" + trashcan.getProperty( "jecars:ObjectCount" ).getLong() + ")_" + pNode.getName();
                 trashcan.setProperty( "jecars:ObjectCount", trashcan.getProperty( "jecars:ObjectCount" ).getLong()+1 );
 //                fromParent = appSession.getNodeByUUID( fromParent.getUUID() );
                 fromParent = appSession.getRootNode().getNode( fromParent.getPath().substring(1) );
                 appSession.getWorkspace().move( fromPath, toPath );
 //              fromParent.save();
-                Node to = appSession.getRootNode().getNode( toPath.substring(1) );
+                final Node to = appSession.getRootNode().getNode( toPath.substring(1) );
                 to.addMixin( "jecars:trashed");
                 to.setProperty( "jecars:RestorePath", fromPath );            
 //            System.out.println( "saving:: " + fromParent.getPath() );
