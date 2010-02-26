@@ -126,7 +126,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final String pName, final boolean pValue ) throws JC_Exception;
+  JC_Propertyable            setProperty( final String pName, final boolean pValue ) throws JC_Exception;
 
   /** setProperty
    * @param pName
@@ -134,7 +134,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final String pName, final long pValue ) throws JC_Exception;
+  JC_Propertyable            setProperty( final String pName, final long pValue ) throws JC_Exception;
 
   /** setProperty
    * 
@@ -143,7 +143,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable setProperty( final String pName, final double pValue ) throws JC_Exception;
+  JC_Propertyable setProperty( final String pName, final double pValue ) throws JC_Exception;
   
   /** setProperty
    * @param pName
@@ -151,7 +151,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final String pName, final String pValue ) throws JC_Exception;
+  JC_Propertyable            setProperty( final String pName, final String pValue ) throws JC_Exception;
 
   /** setProperty
    * @param pName
@@ -159,7 +159,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final String pName, final Calendar pValue ) throws JC_Exception;
+  JC_Propertyable            setProperty( final String pName, final Calendar pValue ) throws JC_Exception;
 
   /** setProperty
    * 
@@ -168,7 +168,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final String pName, final JC_Nodeable pNode ) throws JC_Exception;
+  JC_Propertyable            setProperty( final String pName, final JC_Nodeable pNode ) throws JC_Exception;
 
   /** setProperty
    * @param pName
@@ -176,14 +176,14 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final String pName, final JC_Streamable pValue ) throws JC_Exception;
+  JC_Propertyable            setProperty( final String pName, final JC_Streamable pValue ) throws JC_Exception;
 
   /** setProperty
    * @param pValue
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            setProperty( final JC_Streamable pValue ) throws JC_Exception;
+  JC_Propertyable            setProperty( final JC_Streamable pValue ) throws JC_Exception;
 
   /** replaceMultiValueProperty
    * @param pName
@@ -233,7 +233,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Nodeable                getNode( final String pName )     throws JC_Exception;
+  JC_Nodeable                getNode( final String pName )     throws JC_Exception;
 
   /** getNode
    * 
@@ -242,7 +242,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Nodeable                getNode( final String pName, final boolean pRetrieve )     throws JC_Exception;
+  JC_Nodeable                getNode( final String pName, final boolean pRetrieve )     throws JC_Exception;
     
   /** getNode
    * 
@@ -251,7 +251,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Nodeable getNode( final String pName, JC_Params pParams ) throws JC_Exception;
+  JC_Nodeable getNode( final String pName, JC_Params pParams ) throws JC_Exception;
 
   /** getNode
    * 
@@ -261,7 +261,7 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Nodeable getNode( final String pName, final boolean pRetrieve, JC_Params pParams ) throws JC_Exception;
+  JC_Nodeable getNode( final String pName, final boolean pRetrieve, JC_Params pParams ) throws JC_Exception;
 
   /** getResolvedNode
    *
@@ -323,14 +323,14 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public Collection<? extends JC_Nodeable> getNodesExt( JC_Params pParams, JC_Filter pFilter, JC_Query pQuery ) throws JC_Exception;
+  Collection<? extends JC_Nodeable> getNodesExt( JC_Params pParams, JC_Filter pFilter, JC_Query pQuery ) throws JC_Exception;
 
   /** getProperty
    * @param pName
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            getProperty( final String pName ) throws JC_Exception;
+  JC_Propertyable            getProperty( final String pName ) throws JC_Exception;
 
   /** getProperty
    * 
@@ -339,13 +339,32 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    * @return
    * @throws org.jecars.client.JC_Exception
    */
-  public JC_Propertyable            getProperty( final String pName, boolean pRetrieve ) throws JC_Exception;
+  JC_Propertyable            getProperty( final String pName, final boolean pRetrieve ) throws JC_Exception;
+
+  /** getProperty
+   * 
+   * @param pName
+   * @param pParams
+   * @return
+   * @throws JC_Exception
+   */
+  JC_Propertyable            getProperty( final String pName, final JC_Params pParams ) throws JC_Exception;
+
+  /** getProperty
+   *
+   * @param pName
+   * @param pRetrieve
+   * @param pParams
+   * @return
+   * @throws JC_Exception
+   */
+  JC_Propertyable            getProperty( final String pName, final boolean pRetrieve, final JC_Params pParams ) throws JC_Exception;
 
   /** hasProperty
    * @param pName
    * @return
    */
-  public boolean hasProperty( String pName ) throws JC_Exception;
+  boolean hasProperty( String pName ) throws JC_Exception;
   
   /** hasNode
    * When the node isn't found in the cache a HEAD call will be performed to check

@@ -835,7 +835,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
    * @throws org.jecars.client.JC_Exception
    */
   @Override
-  public JC_Nodeable getNode( final String pName, JC_Params pParams ) throws JC_Exception {
+  public JC_Nodeable getNode( final String pName, final JC_Params pParams ) throws JC_Exception {
     return getNode( pName, true, pParams );    
   }
 
@@ -905,7 +905,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       for (JC_Nodeable node : nodes ) {
         boolean or = pName.equals(node.getName());
         if (!or) {
-          final JC_Propertyable prop = node.getProperty( JC_Defs.ATOM_TITLE, pRetrieve );
+          final JC_Propertyable prop = node.getProperty( JC_Defs.ATOM_TITLE, pRetrieve, pParams );
           if ((prop!=null) && (pName.equals( prop.getValue() ) )) {
             or = true;
           }
@@ -914,7 +914,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
           if (node.isSynchronized()) {
             return node;
           } else {
-            JC_DefaultNode dnode = (JC_DefaultNode)node;
+            final JC_DefaultNode dnode = (JC_DefaultNode)node;
             dnode.populateProperties( pParams );
             return dnode;
           }
@@ -1141,11 +1141,30 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
    * @throws org.jecars.client.JC_Exception
    */
   @Override
-  public JC_Propertyable getProperty( String pName, boolean pRetrieve ) throws JC_Exception {
-    if (pRetrieve==false) {
+  public JC_Propertyable getProperty( final String pName, final boolean pRetrieve ) throws JC_Exception {
+    if (!pRetrieve) {
       return _getProperty( pName );
     }
     return getProperty( pName );
+  }
+
+  @Override
+  public JC_Propertyable getProperty( final String pName, final boolean pRetrieve, final JC_Params pParams ) throws JC_Exception {
+    if (!pRetrieve) {
+      return _getProperty( pName );
+    }
+    return getProperty( pName, pParams );
+  }
+
+  /** getProperty
+   *
+   * @param pName
+   * @return
+   * @throws JC_Exception
+   */
+  @Override
+  public JC_Propertyable getProperty( final String pName ) throws JC_Exception {
+    return getProperty( pName, null );
   }
 
 
@@ -1155,11 +1174,11 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
    * @throws org.jecars.client.JC_Exception
    */
   @Override
-  public JC_Propertyable getProperty( final String pName ) throws JC_Exception {
+  public JC_Propertyable getProperty( final String pName, final JC_Params pParams ) throws JC_Exception {
     JC_Propertyable prop;
     if (mProperties==null) {
       if (!isNew()) {
-        populateProperties( null );
+        populateProperties( pParams );
       }
     } else {
       prop = _getProperty( pName );
@@ -1169,7 +1188,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       if ((!isNew()) && (!isSynchronized())) {
         mProperties.clear();
         mProperties = null;
-        populateProperties( null );
+        populateProperties( pParams );
       }
     }
     prop = _getProperty( pName );
