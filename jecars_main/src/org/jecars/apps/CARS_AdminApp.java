@@ -18,12 +18,16 @@ package org.jecars.apps;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.logging.Level;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -44,6 +48,7 @@ import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.jecars.CARS_AccessManager;
 import org.jecars.CARS_ActionContext;
+import org.jecars.CARS_DefaultMain;
 import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
@@ -51,6 +56,7 @@ import org.jecars.CARS_Utils;
 import org.jecars.backup.JB_ExportData;
 import org.jecars.backup.JB_Options;
 import org.jecars.jaas.CARS_PasswordService;
+import org.jecars.output.CARS_InputStream;
 import org.jecars.tools.*;
 
 /**
@@ -162,7 +168,19 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     if (pParentNode.isNodeType( "jecars:CARS_Interface" )) {
       // **** Hey!.... it the root....
       if (!pParentNode.hasNode( "Init_JeCARS_(!WARNING!)")) {
-        pParentNode.addNode( "Init_JeCARS_(!WARNING!)", "jecars:root" );
+        pParentNode.addNode( "Init_JeCARS_(!WARNING!)", CARS_ActionContext.NTJ_ROOT );
+      }
+      if (!pParentNode.hasNode( "ObservationServer" )) {
+        pParentNode.addNode( "ObservationServer", "jecars:Obs_Server" );
+
+        // **** test
+        final Node os = pParentNode.getNode( "ObservationServer" );
+        final Node tudp = os.addNode( "testUDP" );
+        tudp.setProperty( "jecars:Obs_Address", "davn188w" );
+        tudp.setProperty( "jecars:Obs_Path", "/JeCARS/default" );
+        tudp.setProperty( "jecars:Obs_Port", 4444 );
+        tudp.setProperty( "jecars:Obs_IsDeep", true );
+
       }
       if (!pParentNode.hasNode( "BackupFacility")) {
         pParentNode.addNode( "BackupFacility", "jecars:backup" );
@@ -183,22 +201,25 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
         pParentNode.save();
       }
       if (!pParentNode.hasNode( "Config")) {
-        pParentNode.addNode( "Config", "jecars:root" );
+        pParentNode.addNode( "Config", CARS_ActionContext.NTJ_ROOT );
       }
       if (!pParentNode.hasNode( "GC")) {
-        pParentNode.addNode( "GC", "jecars:root" );
+        pParentNode.addNode( "GC", CARS_ActionContext.NTJ_ROOT );
       }
       if (!pParentNode.hasNode( "CleanAndGC")) {
-        pParentNode.addNode( "CleanAndGC", "jecars:root" );
+        pParentNode.addNode( "CleanAndGC", CARS_ActionContext.NTJ_ROOT );
+      }
+      if (!pParentNode.hasNode( "OpenStreams")) {
+        pParentNode.addNode( "OpenStreams", "jecars:datafolder" );
       }
       if (!pParentNode.hasNode( "AccessManager")) {
         pParentNode.addNode( "AccessManager", "jecars:datafolder" );
       }
       if (!pParentNode.hasNode( "AccessManager/status")) {
-        pParentNode.addNode( "AccessManager/status", "jecars:root" );
+        pParentNode.addNode( "AccessManager/status", CARS_ActionContext.NTJ_ROOT );
       }
       if (!pParentNode.hasNode( "AccessManager/clear")) {
-        pParentNode.addNode( "AccessManager/clear", "jecars:root" );
+        pParentNode.addNode( "AccessManager/clear", CARS_ActionContext.NTJ_ROOT );
       }
     } else {
       if (pLeaf.equals( "/AdminApp/Init_JeCARS_(!WARNING!)" )) {
@@ -216,6 +237,8 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
         backupFacility( pLeaf, pParentNode.getParent() );
       } else if (pLeaf.equals( "/AdminApp/Config" )) {
         jecars_Config( pMain );
+      } else if (pLeaf.equals( "/AdminApp/ObservationServer" )) {
+        jecars_ObservationServer( pMain, pParentNode );
       } else if (pLeaf.equals( "/AdminApp/GC" )) {
         jecars_GC( pMain );
       } else if (pLeaf.equals( "/AdminApp/CleanAndGC" )) {
@@ -226,6 +249,9 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
         pParentNode.save();
       } else if (pLeaf.equals( "/AdminApp/AccessManager/clear" )) {
         adminApp_AccessManager_clear( pMain, pInterfaceNode, pParentNode );
+      } else if ("/AdminApp/OpenStreams".equals( pLeaf )) {
+        CARS_Utils.setCurrentModificationDate( pParentNode );
+        adminApp_OpenStreams( pMain );
       }
     }
 
@@ -316,15 +342,52 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     return;
   }
 
+  /** jecars_ObservationServer
+   *
+   * @param pMain
+   */
+  protected void jecars_ObservationServer( final CARS_Main pMain, final Node pOBS ) throws RepositoryException, UnknownHostException, SocketException {
 
-  
+    final CARS_ActionContext ac = pMain.getContext();
+    ac.setErrorCode( HttpURLConnection.HTTP_OK );
+    String report;
+    report  = "JeCARS Observation Server\n================================\n\n";
+    report  = "  Definitions: " + pOBS.getPath() + "\n";
+    report += CARS_ObservationServer.startObservation( pOBS ) + '\n';
+    final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
+    ac.setContentsResultStream( bais, "text/plain" );
+
+    return;
+  }
+
+  /** adminApp_OpenStreams
+   *
+   * @param pMain
+   */
+  protected void adminApp_OpenStreams( final CARS_Main pMain ) throws RepositoryException {
+    final CARS_ActionContext ac = pMain.getContext();
+    ac.setErrorCode( HttpURLConnection.HTTP_OK );
+    final StringBuilder report = new StringBuilder();
+    report.append( "OPENSTREAMS\n====================================\n\n" );
+    final List<CARS_InputStream>gos = CARS_InputStream.getOpenStreams();
+    for( final CARS_InputStream gis : gos ) {
+      report.append( "CARS_InputStream - " ).append( gis.getClass() ).append( "\n" );
+      report.append( "  Node\t=\t" ).append( gis.getNode().getPath() ).append( "\n" );
+      report.append( "  File\t=\t" ).append( gis.getFile().getAbsoluteFile() ).append( "\n" );
+      report.append( "  Readen\t=\t" ).append( gis.getBytesReaden() ).append( "\n" );
+    }
+    final ByteArrayInputStream bais = new ByteArrayInputStream( report.toString().getBytes() );
+    ac.setContentsResultStream( bais, "text/plain" );
+    return;
+  }
+
   /** adminApp_AccessManager_status
    * 
    * @param pMain
    */
   protected void adminApp_AccessManager_status( final CARS_Main pMain ) {
           
-    CARS_ActionContext ac = pMain.getContext();
+    final CARS_ActionContext ac = pMain.getContext();
     ac.setErrorCode( HttpURLConnection.HTTP_OK );
     String report;
     report  = "ACCESSMANAGER\n==================================\n\n";
@@ -348,7 +411,7 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
       report += c + '\n';
     }
     
-    ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
+    final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
     ac.setContentsResultStream( bais, "text/plain" );
       
     return;

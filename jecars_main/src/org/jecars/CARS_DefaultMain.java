@@ -46,7 +46,7 @@ public class CARS_DefaultMain implements CARS_Main {
   static final public  String INTERFACECLASS     = "InterfaceClass";
   static final public  String DEF_INTERFACECLASS = DEFAULTNS + INTERFACECLASS;
 
-  static final String UNSTRUCT_PREFIX_DOUBLE = "!#!D";
+  static final private String UNSTRUCT_PREFIX_DOUBLE = "!#!D";
   static final private Value[] VALUE0 = new Value[0];
 
   private final transient CARS_Factory  mFactory;
@@ -993,7 +993,7 @@ koasdkaso
       Node           interfaceClass = null;
       if (addNodeTags.getData( CARS_INTERFACE )!=null) {
         cars = (CARS_Interface)addNodeTags.getData( CARS_INTERFACE );
-        interfaceClass = (Node)addNodeTags.getData( "InterfaceClass" );
+        interfaceClass = (Node)addNodeTags.getData( INTERFACECLASS );
       }
       
       // ********************************

@@ -35,11 +35,24 @@ public class CARS_SimpleCalcTool extends CARS_DefaultToolInterface {
   @Override
   protected void toolInit() throws Exception {
     System.out.println( " SIMPLE CALC TOOL INIT" );
+    CARS_ToolSignalManager.addToolSignalListener( this );
     mResults.clear();
     super.toolInit();
     return;
   }
-  
+
+  /** toolFinally
+   *
+   */
+  @Override
+  protected void toolFinally() {
+    CARS_ToolSignalManager.removeToolSignalListener( this );
+    super.toolFinally();
+    return;
+  }
+
+
+
   /** toolRun
    * @throws java.lang.Exception
    */
@@ -77,82 +90,6 @@ public class CARS_SimpleCalcTool extends CARS_DefaultToolInterface {
         setState( STATE_OPEN_ABORTING );
       }
 
-
-/*
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      compl += 10;
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      getTool().save();
-      Thread.sleep( 1000 );
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      System.out.println( "CALC " + no1 + " + " + no2 + " = " + (no1+no2) );
-      mResults.add( (no1+no2) );
-      compl += 10;
-      getTool().setProperty( "jecars:Body", "<HTML>Een simpele test tool: " + compl + "% completed\n</HTML>" );      
-      reportMessage( Level.INFO, "Tool completion = " + compl + "%\n", false );
-      reportOutput( "(OUTPUT) Tool completion = " + compl + "%\n" );
-      reportProgress( compl/100.0 );
-      getTool().save();
- */
     }
     super.toolRun();
     return;
@@ -171,6 +108,22 @@ public class CARS_SimpleCalcTool extends CARS_DefaultToolInterface {
     super.toolOutput();
     return;
   }
+
+  /** signal
+   *
+   * @param pToolPath
+   * @param pSignal
+   */
+  @Override
+  public void signal( final String pToolPath, final CARS_ToolSignal pSignal ) {
+    switch( pSignal ) {
+      case REFRESH_OUTPUTS: {
+        System.out.println( "REFRESH_OUTPUTS : " + pToolPath );
+      }
+    }
+    super.signal(pToolPath, pSignal);
+  }
   
-    
+
+
 }

@@ -243,7 +243,7 @@ public interface CARS_ToolInterface {
    * @param pOutput
    * @throws java.lang.Exception
    */
-  public void addOutput( InputStream pOutput ) throws Exception;
+  Node addOutput( InputStream pOutput ) throws Exception;
 
   /** addOutput
    *
@@ -251,7 +251,7 @@ public interface CARS_ToolInterface {
    * @param pOutputName
    * @throws java.lang.Exception
    */
-  public void addOutput( InputStream pOutput, String pOutputName ) throws Exception;
+  Node addOutput( InputStream pOutput, String pOutputName ) throws Exception;
 
   /** Get an iterator with outputs nodes (jecars:Output.*)
    * @return the parameters

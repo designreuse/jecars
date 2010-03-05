@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 NLR - National Aerospace Laboratory
+ * Copyright 2007-2010 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -41,6 +40,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -68,7 +68,7 @@ import org.jecars.CARS_Main;
  * 
  * @version $Id: CARS_DefaultToolInterface.java,v 1.32 2009/07/02 07:43:44 weertj Exp $
  */
-public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolInstanceListener {
+public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolInstanceListener, CARS_ToolSignalListener {
 
   static final protected Logger LOG = Logger.getLogger( "org.jecars.tools" );
 
@@ -95,7 +95,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
   private transient List<CARS_ToolInstanceListener>   mListeners    = null;
   private transient String                            mUUID         = null;
   private transient Node                              mConfigNode   = null;
-  private transient HashMap<String,String>            mToolArgs     = null;
+  private transient Map<String,String>                mToolArgs     = null;
   private transient boolean                           mStoreEvents   = false;
   private transient boolean                           mReplaceEvents = false;
   private transient boolean                           mIsScheduled   = false;
@@ -112,8 +112,8 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
   private transient String                            mToolPath = "";
   private transient boolean                           mRebuildToolSession = true;
 
-  private CARS_Main mMain     = null; 
-  private Node      mToolNode = null;
+  private transient CARS_Main mMain     = null;
+  private transient Node      mToolNode = null;
 
   static protected Locale gToolLocale = Locale.getDefault();
 
@@ -175,12 +175,8 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
 //        getTool().save();
         if (mRebuildToolSession) {
           newSession = createToolSession();
-//          newSession = (SessionImpl)((SessionImpl)getTool().getSession()).createSession( getTool().getSession().getWorkspace().getName() );  // TODO, must change (Jackrabbit v1.5.5)
-//        SessionImpl newSession = (SessionImpl)((SessionImpl)getTool().getSession()).createSession( getTool().getSession().getWorkspace().getName() );  // TODO, must change (Jackrabbit v1.5.5)
           mToolNode = newSession.getNode( mToolPath );
         }
-//        mToolNode = newSession.getNode( getTool().getPath() );
-//        toolPath = getTool().getPath();
         // **** TODO When the tools is renamed or rewritten there is a InvalidItemStateException.... reread the tool
         setExpireDateTool( getTool(), getRunningExpireMinutes() );
         moveToolTo( "open" );
@@ -264,6 +260,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
           reportException( ee, Level.WARNING );
         }
       } finally {
+        toolFinally();
         try {
           if (!isScheduledTool()) {
             getTool().setProperty( "jecars:StateRequest", STATEREQUEST_STOP );
@@ -566,6 +563,13 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     t.save();
     return;
   }
+
+  /** toolFinally, called when a tool is entered the finally {} part
+   *
+   */
+  protected void toolFinally() {
+    return;
+  }
  
   
   /** Returns an unique identifier on this system.
@@ -576,7 +580,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     return mUUID;
   }
   
-  protected void setUUID( String pUuid ) {
+  protected void setUUID( final String pUuid ) {
     mUUID = pUuid;
     return;
   }
@@ -652,8 +656,8 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    */
   @Override
   public String getTitle() throws Exception {
-    Node n = getTool();
-    if (n.hasProperty( CARS_ActionContext.gDefTitle )==true) {
+    final Node n = getTool();
+    if (n.hasProperty( CARS_ActionContext.gDefTitle )) {
       return n.getProperty( CARS_ActionContext.gDefTitle ).getString();
     }
     return getName();
@@ -721,7 +725,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @throws Exception when an error occurs
    */
   @Override
-  public Property setStateRequest( String pStateRequest ) throws Exception {
+  public Property setStateRequest( final String pStateRequest ) throws Exception {
     final Property p = getTool().setProperty( "jecars:StateRequest", pStateRequest );
     getTool().save();
     mToolPath = getTool().getPath();
@@ -826,7 +830,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @return true when paused
    */
   protected boolean pauseCheck() throws Exception {
-    if (getState().equals(mPauseAtState)==true) {
+    if (getState().equals(mPauseAtState)) {
       setState( getState() + STATE_PAUSED );
 //      reportToInstanceListeners( LPF_DefaultToolInstanceEvent.createEventState( this, getState() ));
       return true;
@@ -1004,33 +1008,71 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     return;
   }
 
+  /** replaceOutput
+   *
+   * @param pNodeName
+   * @param pOutput
+   * @throws RepositoryException
+   */
+  protected void replaceOutput( final String pNodeName, final String pOutput ) throws RepositoryException {
+    final Node n = getTool();
+    if (!n.hasNode( pNodeName )) {
+      n.addNode( pNodeName, "jecars:outputresource" );
+    }
+    final Node output = n.getNode( pNodeName );
+    output.setProperty( "jcr:mimeType", "text/plain" );
+    output.setProperty( "jcr:data", pOutput );
+    output.setProperty( "jcr:lastModified", Calendar.getInstance() );
+    return;
+  }
+
   
   /** addOutput
+   *
    * @param pOutput
-   * @throws java.lang.Exception
+   * @return
+   * @throws RepositoryException
    */
   @Override
-  public void addOutput( InputStream pOutput ) throws Exception {
-    addOutput( pOutput, "jecars:Output" );
-    return;
+  public Node addOutput( InputStream pOutput ) throws RepositoryException {
+    return addOutput( pOutput, "jecars:Output" );
   }
   
   /** addOutput
-   * 
+   *
    * @param pOutput
    * @param pOutputName
-   * @throws java.lang.Exception
+   * @return
+   * @throws RepositoryException
    */
   @Override
-  public void addOutput( InputStream pOutput, String pOutputName ) throws Exception {
-    Node n = getTool();
-    Node output = n.addNode( pOutputName, "jecars:outputresource" );
+  public Node addOutput( final InputStream pOutput, final String pOutputName ) throws RepositoryException {
+    final Node n = getTool();
+    if (!n.hasNode( pOutputName )) {
+      n.addNode( pOutputName, "jecars:outputresource" );
+    }
+    final Node output = n.getNode( pOutputName );
+    final boolean isLink;
+    if (output.hasProperty( "jecars:IsLink" )) {
+      isLink = output.getProperty( "jecars:IsLink" ).getBoolean();
+    } else {
+      isLink = false;
+    }
     output.setProperty( "jcr:mimeType", "text/plain" );
-    output.setProperty( "jcr:data", pOutput );
-    Calendar c = Calendar.getInstance();
+    if (isLink || (pOutput==null)) {
+      final ByteArrayInputStream bais = new ByteArrayInputStream( "".getBytes() );
+      final Binary bin = output.getSession().getValueFactory().createBinary( bais );
+      output.setProperty( "jcr:data", bin );
+      output.setProperty( "jecars:Partial", true );
+    } else {
+      final Binary bin = output.getSession().getValueFactory().createBinary( pOutput );
+      output.setProperty( "jcr:data", bin );
+      output.setProperty( "jecars:Partial", false );
+    }
+    final Calendar c = Calendar.getInstance();
     output.setProperty( "jcr:lastModified", c );
     n.save();
-    return;
+    return output;
   }
   
   /** getFuture
@@ -1219,21 +1261,21 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     pNode.setProperty( "jecars:Value",     pEvent.getEventStringValue() );
     pNode.setProperty( "jecars:DValue",    pEvent.getEventValue() );
     pNode.setProperty( "jecars:Modified", Calendar.getInstance() );
-    if (pEvent.getEventBlocking()==true) {
+    if (pEvent.getEventBlocking()) {
       pNode.setProperty( "jecars:Blocking", true );
     }
-    if (pNode.isNodeType( "jecars:ToolEventException" )==true) {
+    if (pNode.isNodeType( "jecars:ToolEventException" )) {
       if (pEvent.getEventException()!=null) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
         pEvent.getEventException().printStackTrace(pw);
         pNode.setProperty( "jecars:Body", sw.getBuffer().toString() );
-        ByteArrayOutputStream dos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream( dos );
+        final ByteArrayOutputStream dos = new ByteArrayOutputStream();
+        final ObjectOutputStream oos = new ObjectOutputStream( dos );
         oos.writeObject( pEvent.getEventException() );
         oos.close();
         dos.close();
-        ByteArrayInputStream bais = new ByteArrayInputStream( dos.toByteArray() );
+        final ByteArrayInputStream bais = new ByteArrayInputStream( dos.toByteArray() );
         pNode.setProperty( "jecars:Exception", bais );
         bais.close();
       }
@@ -1248,7 +1290,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
   protected void reportToInstanceListeners( CARS_ToolInstanceEvent pEvent ) {
     try {
       // **** Check for storing events
-      CARS_EventManager em = CARS_Factory.getEventManager();
+      final CARS_EventManager em = CARS_Factory.getEventManager();
       if (storeEvents() && (mToolNode.hasNode( "jecars:Events" ))) {
         /*
           final static public int EVENTTYPE_UNKNOWN               = 0x00;
@@ -1323,7 +1365,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
       }
     }
 
-    Collection<CARS_ToolInstanceListener> til = getInstanceListeners();    
+    final Collection<CARS_ToolInstanceListener> til = getInstanceListeners();
     if (til!=null) {
       for (CARS_ToolInstanceListener ti : til) {
         if (pEvent.getEventType()==pEvent.EVENTTYPE_STATECHANGED) {
@@ -1359,7 +1401,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @param pListener A listener to be removed
    */
   @Override
-  public void removeInstanceListener( CARS_ToolInstanceListener pListener ) {
+  public void removeInstanceListener( final CARS_ToolInstanceListener pListener ) {
     if (mListeners!=null) {
       while( mListeners.remove( pListener ) ) {        
       }
@@ -1372,7 +1414,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @param pProgress [0.0-1.0]
    */
   @Override
-  public void reportProgress( double pProgress ) throws Exception {
+  public void reportProgress( final double pProgress ) throws Exception {
     getTool().setProperty( "jecars:PercCompleted", 100.0*pProgress );
     getTool().setProperty( "jecars:Modified", Calendar.getInstance() );
     getTool().save();
@@ -1543,13 +1585,13 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @return
    * @throws javax.jcr.RepositoryException
    */
-  public Property getResolvedToolProperty( Node pTool, final String pPropName ) throws RepositoryException {
+  public Property getResolvedToolProperty( final Node pTool, final String pPropName ) throws RepositoryException {
     if (pTool.hasProperty( pPropName )) {
       return pTool.getProperty( pPropName );
     }
     if (pTool.hasProperty( "jecars:ToolTemplate" )) {
-      String path = pTool.getProperty( "jecars:ToolTemplate" ).getString();
-      Node pn = pTool.getSession().getRootNode().getNode(path.substring(1) );
+      final String path = pTool.getProperty( "jecars:ToolTemplate" ).getString();
+      final Node pn = pTool.getSession().getNode( path );
       return getResolvedToolProperty( pn, pPropName );
     }
     return null;
@@ -1767,6 +1809,15 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     return s;
   }
 
+
+  /** signal
+   * 
+   * @param pSignal
+   */
+  @Override
+  public void signal( final String pToolPath, final CARS_ToolSignal pSignal ) {
+    return;
+  }
   
   
 }

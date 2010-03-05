@@ -21,7 +21,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,6 +48,8 @@ import org.jecars.backup.JB_ImportData;
 import org.jecars.backup.JB_Options;
 import org.jecars.support.CARS_Mime;
 import org.jecars.tools.CARS_ToolNode;
+import org.jecars.tools.CARS_ToolSignal;
+import org.jecars.tools.CARS_ToolSignalManager;
 
 /**
  * CARS_DefaultInterface
@@ -283,7 +284,7 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
      * @throws java.lang.Exception
      */
     @Override
-    public void getNodes( CARS_Main pMain, Node pInterfaceNode, Node pParentNode, String pLeaf ) throws CARS_RESTMethodHandled, Exception {
+    public void getNodes( final CARS_Main pMain, final Node pInterfaceNode, final Node pParentNode, final String pLeaf ) throws CARS_RESTMethodHandled, Exception {
       return;
     }
 
@@ -500,7 +501,10 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
         if (resultProp!=null) {
           return resultProp;
         }
-      }     
+        if ("jecars:LastToolSignal".equals( pPropName )) {
+          CARS_ToolSignalManager.sendSignal( pNode.getPath(), CARS_ToolSignal.valueOf( pValue ) );
+        }
+      }
       return pMain.setParamProperty( pNode, pPropName, pValue );
     }
     

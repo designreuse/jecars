@@ -14,8 +14,6 @@
 // * limitations under the License.
 // *
 
-// * @version $Id: jecars.cnd,v 1.41 2009/07/31 09:31:14 weertj Exp $
-
 
 <nt = 'http://www.jcp.org/jcr/nt/1.0'>
 <mix = 'http://www.jcp.org/jcr/mix/1.0'>
@@ -148,6 +146,8 @@
 [jecars:inputresource] > jecars:datafile
 
 [jecars:outputresource] > jecars:datafile
+- jecars:IsLink     (Boolean)
+- jecars:Partial    (Boolean)
 
 [jecars:datafolder] > jecars:dataresource
 + * (jecars:datafolder)
@@ -316,7 +316,7 @@
 [jecars:main] > jecars:root
 - jecars:MajorVersion    (Long)='1'         mandatory autocreated
 - jecars:MinorVersion    (Long)='3'         mandatory autocreated
-- jecars:BuildVersion    (Long)='20100219'  mandatory autocreated
+- jecars:BuildVersion    (Long)='20100226'  mandatory autocreated
 - jecars:CurrentId       (Long)='0'         mandatory autocreated
 - jecars:Started         (Date)
 + *
@@ -387,7 +387,9 @@
 - jecars:IsSingle               (Boolean)
 - jecars:ToolTemplate           (Path)
 - jecars:ToolClass              (String)
-- jecars:StateRequest           (String) < '(start|suspend|resume|stop)'
+- jecars:LastToolSignal         (String)
+- jecars:OutputAsLink           (Boolean)
+- jecars:StateRequest           (String)
 - jecars:State                  (String)='open.notrunning' mandatory autocreated
 - jecars:PercCompleted          (Double)='0'
 - jecars:DefaultInstancePath    (Path)
@@ -427,4 +429,17 @@
 [jecars:Dav_deftypes] mixin
 - jecars:Dav_DefaultFileType    (String)
 - jecars:Dav_DefaultFolderType  (String)
+
+// ****************************************************************************
+// **** Observation server nodetypes
+
+[jecars:Obs_Listener] mixin
+- jecars:Obs_Address        (String) mandatory
+- jecars:Obs_Port           (Long)   mandatory
+- jecars:Obs_Path           (Path)   mandatory
+- jecars:Obs_EventTypes     (Long)
+- jecars:Obs_IsDeep         (Boolean)
+
+[jecars:Obs_Server] > jecars:root
++ * (jecars:Obs_Listener)=jecars:Obs_Listener multiple
 

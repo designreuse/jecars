@@ -198,9 +198,10 @@ public class JeCARS_RESTServlet extends HttpServlet {
     }
 
     /** resultToOutput
-     * 
+     *
      * @param pResult
      * @param pResponse
+     * @param pSendData
      */
     private void resultToOutput( final Object pResult, final HttpServletResponse pResponse, final boolean pSendData ) {
       PrintWriter outp = null;
@@ -498,7 +499,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setBodyStream( sis, pRequest.getContentType() );
             mCARSFactory.performPostAction( ac );
             pResponse.setContentType( ac.getContentType() );
-            String createdNodePath = ac.getCreatedNodePath();
+            final String createdNodePath = ac.getCreatedNodePath();
             if (createdNodePath!=null) {
               pResponse.setHeader( "Location", ac.getBaseContextURL() + createdNodePath );
             }
@@ -527,7 +528,6 @@ public class JeCARS_RESTServlet extends HttpServlet {
       return;
     }
     
-
     /** doPut
      *
      * @param pRequest
@@ -536,13 +536,13 @@ public class JeCARS_RESTServlet extends HttpServlet {
      * @throws java.io.IOException
      */
     @Override
-    protected void doPut( HttpServletRequest pRequest, HttpServletResponse pResponse )  throws ServletException, IOException {
+    protected void doPut( final HttpServletRequest pRequest, final HttpServletResponse pResponse )  throws ServletException, IOException {
       try {
         if (mThreadCount>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
         }
         mThreadCount++;
-        CARS_ActionContext ac = createActionContext( pRequest, pResponse );
+        final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         ServletInputStream sis = null;
         if (ac!=null) {
           try {
@@ -563,8 +563,10 @@ public class JeCARS_RESTServlet extends HttpServlet {
             pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );            
           } finally {
-            if (sis!=null) sis.close();
             ac.destroy();
+            if (sis!=null) {
+              sis.close();
+            }
           }
         }
       } catch (Exception e) {

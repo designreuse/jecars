@@ -17,17 +17,21 @@ package org.jecars.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
+import javax.jcr.Binary;
 import javax.jcr.Node;
+import javax.jcr.Property;
 import org.jecars.CARS_Utils;
 
 /**
@@ -38,6 +42,8 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
 
   static final public String WORKINGDIRECTORY               = "jecars:WorkingDirectory";
   static final public String GENERATEUNIQUEWORKINGDIRECTORY = "jecars:GenerateUniqueWorkingDirectory";
+
+  private final transient List<File> mPreRunFiles = new ArrayList<File>();
 
   private final transient List<File> mInputs = new ArrayList<File>();
 
@@ -50,6 +56,30 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
   protected File getWorkingDirectory() {
     return mWorkingDirectory;
   }
+
+  /** toolInit
+   * 
+   * @throws Exception
+   */
+  @Override
+  protected void toolInit() throws Exception {
+    CARS_ToolSignalManager.addToolSignalListener( this );
+    super.toolInit();
+    return;
+  }
+
+  /** toolFinally
+   *
+   */
+  @Override
+  protected void toolFinally() {
+    CARS_ToolSignalManager.removeToolSignalListener( this );
+    super.toolFinally();
+    return;
+  }
+
+
+
 
   /** toolInput
    *
@@ -105,7 +135,9 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
           InputStream       is = null;
           FileOutputStream fos = null;
           try {
-            is = input.getProperty( "jcr:data" ).getStream();
+            final Binary bin = input.getProperty( "jcr:data" ).getBinary();
+            is = bin.getStream();
+//            is = input.getProperty( "jcr:data" ).getStream();
             final File inputResFile = new File( mWorkingDirectory, input.getName() );
             fos = new FileOutputStream( inputResFile );
             CARS_Utils.sendInputStreamToOutputStream( 10000, is, fos );
@@ -132,6 +164,15 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
    */
   @Override
   protected void toolRun() throws Exception {
+
+    // **** file snapshot
+    final File workDir = getWorkingDirectory();
+    final File[] files = workDir.listFiles();
+    for( final File file : files ) {
+      mPreRunFiles.add( file );
+    }
+
+
     final Node config = getConfigNode();
     if (config.hasProperty( "jecars:ExecPath" )) {
       final String execPath = config.getProperty( "jecars:ExecPath" ).getString();
@@ -160,9 +201,11 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       String line;
       final StringBuilder output = new StringBuilder();
       while( (line = outputReader.readLine()) != null) {
+//          System.out.println("outputp " + line );
         output.append( line ).append( LF );
+        replaceOutput( "stdout", output.toString() );
       }
-      addOutput( output.toString() );
+//      addOutput( output.toString() );
       reportStatusMessage( "External tool is ending" );
       outputReader.close();
       process.destroy();
@@ -171,6 +214,88 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
     }
     super.toolRun();
   }
+
+  /** toolOutput
+   *
+   * @throws Exception
+   */
+  @Override
+  protected void toolOutput() throws Exception {
+    super.toolOutput();
+    scanOutputFiles( true, false );
+    return;
+  }
+
+  /** scanOutputFiles
+   *
+   * @param pCopyOutput
+   * @throws FileNotFoundException
+   * @throws Exception
+   */
+  private void scanOutputFiles( final boolean pCopyOutput, final boolean pPartial ) throws FileNotFoundException, Exception {
+    final File workDir = getWorkingDirectory();
+    final File[] files = workDir.listFiles();
+    final boolean outputLink;
+    final Property outputAsLink = getResolvedToolProperty( getTool(), "jecars:OutputAsLink" );
+    if (outputAsLink==null) {
+      outputLink = false;
+    } else {
+      outputLink = outputAsLink.getBoolean();
+    }
+    for( final File file : files ) {
+      if (!mPreRunFiles.contains(file)) {
+        if ((!outputLink) && (pCopyOutput)) {
+          // **** New output file... copy it
+          final FileInputStream fis = new FileInputStream( file );
+          try {
+            final Node output = addOutput( fis, file.getName() );
+            if (output!=null) {
+              output.setProperty( "jecars:IsLink", outputLink );
+              output.setProperty( "jecars:ContentLength", file.length() );
+              output.save();
+            }
+          } finally {
+            fis.close();
+          }
+        } else {
+          final Node output = addOutput( null, file.getName() );
+          if (output!=null) {
+            output.setProperty( "jecars:IsLink", outputLink );
+            output.setProperty( "jecars:ContentLength", file.length() );
+            output.setProperty( "jecars:Partial", pPartial );
+            output.save();
+          }
+        }
+      }
+    }
+    return;
+  }
+
+
+  /** signal
+   *
+   * @param pToolPath
+   * @param pSignal
+   */
+  @Override
+  public void signal( final String pToolPath, final CARS_ToolSignal pSignal ) {
+    switch( pSignal ) {
+
+      /** REFRESH_OUTPUTS
+       *
+       */
+      case REFRESH_OUTPUTS: {
+        try {
+          scanOutputFiles( false, true );
+        } catch( Exception e ) {
+          LOG.log( Level.WARNING, e.getMessage(), e );
+        }
+        break;
+      }
+    }
+    super.signal(pToolPath, pSignal);
+  }
+
 
 
 }

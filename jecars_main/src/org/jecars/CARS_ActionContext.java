@@ -18,6 +18,7 @@ package org.jecars;
 
 import com.google.gdata.data.DateTime;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -68,14 +69,14 @@ public class CARS_ActionContext {
   final public static int NO_ERROR      = 0;
   final public static int ERROR_UNKNOWN = 1000;
 
-  static public boolean       gUntransport = true;
+  static public boolean        gUntransport = true;
   static public final Pattern gQueryPattern = Pattern.compile( "&" );
   
   final private static JD_Taglist gOutputGenerators = new JD_Taglist();
   final private static JD_Taglist gVersionManagers  = new JD_Taglist();
   
   // ****
-  public final static String DEF_NS = CARS_Main.DEFAULTNS;
+  public final static String DEF_NS           = CARS_Main.DEFAULTNS;
   public final static String gDefPublished    = DEF_NS + "Published";
   public final static String DEF_MODIFIED     = DEF_NS + "Modified";
   public final static String gDefLastAccessed = DEF_NS + "LastAccessed";
@@ -126,7 +127,9 @@ public class CARS_ActionContext {
   public final static String gDefActionPUT    = "PUT";
   public final static String gDefActionDELETE = "DELETE";
   public final static String gDefActionPOST   = "POST";
-  
+
+  public final static String NTJ_ROOT = DEF_NS + "root";
+
   public static Vector<String> gIncludeNS = new Vector<String>();
   
   protected static String               gFeedHeader    = null;
@@ -328,7 +331,7 @@ public class CARS_ActionContext {
    * 
    * @param pMain
    */
-  public void setMain( CARS_Main pMain ) {
+  public void setMain( final CARS_Main pMain ) {
     mMain = pMain;
     mMain.addContext( this );
     return;
@@ -346,6 +349,14 @@ public class CARS_ActionContext {
    * 
    */
   public void destroy() {
+    if (mResultContentsStream!=null) {
+      try {
+        mResultContentsStream.close();
+      } catch( IOException ie ) {
+        LOG.log( Level.WARNING, ie.getMessage(), ie );
+      }
+      mResultContentsStream = null;
+    }
     mUsername = null;
     mPassword = null;
     mAuthKey  = null;
@@ -2033,6 +2044,8 @@ public class CARS_ActionContext {
   }
   
   /** Get result
+   *
+   * @return
    */
   public Object getResult() {
     Object result = null;
@@ -2049,15 +2062,13 @@ public class CARS_ActionContext {
         }
         if (mThisNode!=null) {
           // **** URL check
-          if ((mThisNode.isNodeType( gDefURLResource )) && (alt==null) &&
-             (mResultContentsStream==null) &&
-             ((mThisNode.hasProperty(gDefURL)) ||
-              (mThisNode.hasProperty("jcr:data"))) ) {
+          if ((mThisNode.isNodeType( gDefURLResource )) && (alt==null) && (mResultContentsStream==null) &&
+             ((mThisNode.hasProperty(gDefURL)) || (mThisNode.hasProperty("jcr:data"))) ) {
             if (mThisNode.hasProperty(gDefURL)) {
-              String urlString = mThisNode.getProperty( gDefURL ).getString();
-              URL url = new URL( urlString );        
+              final String urlString = mThisNode.getProperty( gDefURL ).getString();
+              final URL url = new URL( urlString );
 //              result = url.openStream();
-              URLConnection urlc = url.openConnection();
+              final URLConnection urlc = url.openConnection();
               setContentsLength( urlc.getContentLength() );
               result = urlc.getInputStream();
               if (mThisNode.hasProperty( "jcr:mimeType" )) {
@@ -2066,7 +2077,7 @@ public class CARS_ActionContext {
                 setContentType( CARS_Mime.getMIMEType( urlString, null ) );
               }
             } else {
-              result = mThisNode.getProperty( "jcr:data" ).getStream();
+              result = mThisNode.getProperty( "jcr:data" ).getBinary().getStream();
               if (mThisNode.hasProperty( "jcr:mimeType" )) {
                 setContentType( mThisNode.getProperty( "jcr:mimeType" ).getString() );              
               } else {
@@ -2122,9 +2133,14 @@ public class CARS_ActionContext {
           result = replyString;
         }
       }
-    } catch (Exception e) {
+    } catch (RepositoryException re) {
+      setError( re );
+      final StringBuilder replyString = new StringBuilder();
+      createError( replyString );
+      result = replyString;
+    } catch (IOException e) {
       setError( e );
-      StringBuilder replyString = new StringBuilder();
+      final StringBuilder replyString = new StringBuilder();
       createError( replyString );
       result = replyString;
     }
