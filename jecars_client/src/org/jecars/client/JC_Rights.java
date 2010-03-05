@@ -42,8 +42,18 @@ public class JC_Rights {
    * @param pRight
    */
   public void addRight( final String pRight ) {
-    if (!hasRight( pRight )) {
-      mRights.add( pRight );
+    // **** The pRight line can be multiline
+    if (pRight.indexOf('\n')==-1) {
+      if (!hasRight( pRight )) {
+        mRights.add( pRight );
+      }
+    } else {
+      final String rights[] = pRight.split( "\n" );
+      for( final String r : rights ) {
+        if (!hasRight( r )) {
+          mRights.add( r );
+        }
+      }
     }
     return;
   }

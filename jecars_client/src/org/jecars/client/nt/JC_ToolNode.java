@@ -20,7 +20,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.List;
 import org.jecars.client.JC_Clientable;
 import org.jecars.client.JC_DefaultNode;
 import org.jecars.client.JC_DefaultStream;
@@ -29,6 +28,7 @@ import org.jecars.client.JC_Exception;
 import org.jecars.client.JC_Filter;
 import org.jecars.client.JC_Nodeable;
 import org.jecars.client.JC_Params;
+import org.jecars.client.JC_Propertyable;
 import org.jecars.client.JC_Query;
 import org.jecars.client.JC_RESTComm;
 import org.jecars.client.JC_Streamable;
@@ -91,6 +91,18 @@ public class JC_ToolNode extends JC_DefaultNode {
   public void abort() throws JC_Exception {
     stop();
     stop();
+    return;
+  }
+
+  /** sendSignal
+   *
+   * @param pSignal
+   * @throws JC_Exception
+   */
+  public void sendSignal( final JC_ToolSignal pSignal ) throws JC_Exception {
+    final JC_Propertyable prop = setProperty( "jecars:LastToolSignal", pSignal.name() );
+    prop.setChanged( true );
+    save();
     return;
   }
 

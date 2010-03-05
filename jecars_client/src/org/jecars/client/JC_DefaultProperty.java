@@ -321,6 +321,16 @@ public class JC_DefaultProperty extends JC_DefaultItem implements JC_Propertyabl
     return mStream;
   }
 
+  /** getValueAsBoolean
+   * 
+   * @return
+   * @throws JC_Exception
+   */
+  @Override
+  public boolean getValueAsBoolean() throws JC_Exception  {
+    return (Boolean)getValueAs( Boolean.class );
+  }
+
   /** getValueAsLong
    * 
    * @return
@@ -348,35 +358,35 @@ public class JC_DefaultProperty extends JC_DefaultItem implements JC_Propertyabl
    * @throws org.jecars.client.JC_Exception
    */
   @Override
-  public Object getValueAs( Class pObjectClass ) throws JC_Exception  {
+  public Object getValueAs( final Class pObjectClass ) throws JC_Exception  {
     if (pObjectClass.equals( Date.class )) {
-      Object v = getValue();
+      final Object v = getValue();
       if (v instanceof String) {
-        Calendar c = ISO8601.parse( (String)v );
+        final Calendar c = ISO8601.parse( (String)v );
         return c.getTime();
       }
     } else if (pObjectClass.equals( Calendar.class )) {
-      Object v = getValue();
+      final Object v = getValue();
       if (v instanceof String) {
-        Calendar c = ISO8601.parse( (String)v );
+        final Calendar c = ISO8601.parse( (String)v );
         return c;
       }
     } else if (pObjectClass.equals( Double.class )) {
-      Object v = getValue();
+      final Object v = getValue();
       if (v instanceof Double) {
         return v;
       } else if (v instanceof String) {
         return Double.parseDouble( (String)v );
       }
     } else if (pObjectClass.equals( Long.class )) {
-      Object v = getValue();
+      final Object v = getValue();
       if (v instanceof Long) {
         return v;
       } else if (v instanceof String) {
         return Long.parseLong( (String)v );
       }
     } else if (pObjectClass.equals( Integer.class )) {
-      Object v = getValue();
+      final Object v = getValue();
       if (v instanceof Integer) {
         return v;
       } else if (v instanceof String) {

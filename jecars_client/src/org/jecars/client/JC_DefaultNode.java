@@ -1216,7 +1216,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       perm.addRights( pPrincipal, pRights );
     } else {
       perm = (JC_PermissionNode)addNode( pName, "jecars:Permission" ).morphToNodeType();
-      if ((pPrincipal!=null) && (pRights!=null)) {
+      if (pRights!=null) {
         perm.addRights( pPrincipal, pRights );
       }
     }
@@ -1699,6 +1699,18 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     return true;
   }
 
+  /** removeChildNode
+   *
+   * @param pName
+   * @throws JC_Exception
+   */
+  @Override
+  public void removeChildNode( final String pName ) throws JC_Exception {
+    if (hasNode( pName )) {
+      getNode( pName ).removeNode();
+    }
+    return;
+  }
 
   /** removeNode
    * @throws java.lang.Exception

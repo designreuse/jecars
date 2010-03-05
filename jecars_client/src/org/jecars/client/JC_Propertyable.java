@@ -66,6 +66,13 @@ public interface JC_Propertyable extends JC_Itemable {
    */
   Object getValueAs( Class pObjectClass ) throws JC_Exception;
 
+  /** getValueAsBoolean
+   *
+   * @return
+   * @throws org.jecars.client.JC_Exception
+   */
+  boolean getValueAsBoolean() throws JC_Exception;
+
   /** getValueAsLong
    *
    * @return

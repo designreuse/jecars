@@ -38,17 +38,18 @@ public class JC_Utils {
   * @return The resulting string
   * @throws IOException when an error occurs
   */
- static public String readAsString( InputStream pInput ) throws IOException {
-   try {
-     InputStreamReader isr = new InputStreamReader(pInput);
-     BufferedReader br = new BufferedReader(isr);
-     StringBuilder buf = new StringBuilder();
+ static public String readAsString( final InputStream pInput ) throws IOException {
+//   try {
+     final InputStreamReader isr = new InputStreamReader(pInput);
+     final BufferedReader br = new BufferedReader(isr);
+     final StringBuilder buf = new StringBuilder();
      String line;
-     while((line = br.readLine()) != null) 
+     while((line = br.readLine()) != null) {
        buf.append(line).append('\n');
+     }
      return buf.toString();
-   } finally {
-   }
+//   } finally {
+//   }
  }
 
  /** readAsString
@@ -63,8 +64,9 @@ public class JC_Utils {
      final BufferedReader br = new BufferedReader(isr);
      final StringBuilder buf = new StringBuilder();
      String line;
-     while((line = br.readLine()) != null)
+     while((line = br.readLine()) != null) {
        buf.append(line).append('\n');
+     }
      return buf.toString();
  }
 
@@ -294,13 +296,15 @@ public class JC_Utils {
     final BufferedOutputStream bos = new BufferedOutputStream( pOutput );
     try {
       final byte[] buff = new byte[pBufferSize];
-//      long sended = 0;
-      int bytesRead;
-      while(-1 != (bytesRead = bis.read(buff, 0, buff.length))) {
+//    long sended = 0;
+      int bytesRead = bis.read(buff, 0, buff.length);
+      while(bytesRead!=-1) {
         bos.write(buff, 0, bytesRead);
         bos.flush();
 //        sended += bytesRead;
-//              System.out.println( "--- " + sended );
+//             System.out.println( "--- " + sended );
+//     try {Thread.sleep( 50 );} catch(Exception e ) {};
+        bytesRead = bis.read( buff, 0, buff.length );
       }
     } finally {
       pInput.close();

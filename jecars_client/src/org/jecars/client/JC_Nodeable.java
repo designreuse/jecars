@@ -412,6 +412,13 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    */
   boolean moveNode( final String pNewName ) throws JC_Exception;
 
+  /** removeChildNode
+   *
+   * @param pName
+   * @throws JC_Exception
+   */
+  void removeChildNode( final String pName ) throws JC_Exception;
+
   /** removeNode
    * @throws java.lang.Exception
    */

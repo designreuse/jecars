@@ -150,7 +150,7 @@ public class JC_PermissionNode extends JC_DefaultNode {
         if (r.equals( JC_Rights.R_DELEGATE )) {
           pNode.setProperty( "jecars:Delegate", JC_Defs.TRUE );
         } else {
-          if (rs.equals( "+")==false) rs += ",";
+          if (!rs.equals( "+" )) rs += ",";
           rs += r;
         }
       }
@@ -159,5 +159,35 @@ public class JC_PermissionNode extends JC_DefaultNode {
     return;
   }
 
-  
+  /** addMixinRights
+   *
+   * @param pNode
+   * @param pPrincipal
+   * @param pRights
+   * @throws JC_Exception
+   */
+  static public void addMixinRights( final JC_Nodeable pNode, final JC_Nodeable pPrincipal, final Collection<String>pRights ) throws JC_Exception {
+    pNode.addMixin( "jecars:permissionable" );
+    if (pPrincipal!=null) {
+      pNode.setProperty( "jecars:Principal", "+" + pPrincipal.getPath() );
+    }
+    if (pRights!=null) {
+      String rs = "+";
+      for (String r : pRights) {
+        if (r.equals( JC_Rights.R_DELEGATE )) {
+          pNode.setProperty( "jecars:Delegate", JC_Defs.TRUE );
+        } else {
+          if (!rs.equals( "+")) {
+            rs += ",";
+          }
+          rs += r;
+        }
+      }
+      pNode.setProperty( "jecars:Actions", rs );
+    }
+    return;
+  }
+
+
+
 }
