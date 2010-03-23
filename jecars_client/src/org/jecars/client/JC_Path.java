@@ -191,15 +191,32 @@ public class JC_Path implements Serializable, Cloneable {
     }
     return path;
   }
-  
+
+  /** getChild
+   *
+   * @return
+   */
   public String getChild() {
-    String child = null;
+    String child;
     if (hasPaths()) {
       child = toString().substring( toString().lastIndexOf('/')+1 );
     } else {
       child = toString();
     }
     return child;
+  }
+
+  /** setChild
+   *
+   * @param pName
+   */
+  public void setChild( final String pName ) {
+    if (hasPaths()) {
+      mPath = new StringBuilder( mPath.substring( 0, mPath.lastIndexOf( "/" ) ) );
+      mPath.append( '/' ).append( pName );
+    } else {
+      mPath = new StringBuilder( pName );
+    }
   }
 
   public String getPathRelToRoot() {
