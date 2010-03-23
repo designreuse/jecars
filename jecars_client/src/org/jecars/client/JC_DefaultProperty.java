@@ -75,6 +75,7 @@ public class JC_DefaultProperty extends JC_DefaultItem implements JC_Propertyabl
    * 
    * @return
    */
+  @Override
   public boolean isMulti() {
     return false;
   }
@@ -85,7 +86,7 @@ public class JC_DefaultProperty extends JC_DefaultItem implements JC_Propertyabl
    * @return
    */
   public JC_PropertyType getPropertyType() throws JC_Exception {
-    JC_PropertyType pt = new JC_PropertyType();
+    final JC_PropertyType pt = new JC_PropertyType();
     pt.setType( mPropertyType );
     return pt;
   }
@@ -108,6 +109,7 @@ public class JC_DefaultProperty extends JC_DefaultItem implements JC_Propertyabl
   protected void _setValue( final String pName, final double pValue ) {
     setName( pName );
     mDValue = pValue;
+    mValue = null;
     return;
   }
 
@@ -119,7 +121,7 @@ public class JC_DefaultProperty extends JC_DefaultItem implements JC_Propertyabl
   protected void _setValue( final String pName, final boolean pValue ) {
     setName( pName );
     mBValue = true;
-    if (pValue==true) {
+    if (pValue) {
       mLValue = 1;
     } else {
       mLValue = 0;      
