@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -232,41 +231,47 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
    * @throws FileNotFoundException
    * @throws Exception
    */
-  private void scanOutputFiles( final boolean pCopyOutput, final boolean pPartial ) throws FileNotFoundException, Exception {
+  private synchronized void scanOutputFiles( final boolean pCopyOutput, final boolean pPartial ) throws FileNotFoundException, Exception {
     final File workDir = getWorkingDirectory();
-    final File[] files = workDir.listFiles();
-    final boolean outputLink;
-    final Property outputAsLink = getResolvedToolProperty( getTool(), "jecars:OutputAsLink" );
-    if (outputAsLink==null) {
-      outputLink = false;
-    } else {
-      outputLink = outputAsLink.getBoolean();
-    }
-    for( final File file : files ) {
-      if (!mPreRunFiles.contains(file)) {
-        if ((!outputLink) && (pCopyOutput)) {
-          // **** New output file... copy it
-          final FileInputStream fis = new FileInputStream( file );
-          try {
-            final Node output = addOutput( fis, file.getName() );
-            if (output!=null) {
-              output.setProperty( "jecars:IsLink", outputLink );
-              output.setProperty( "jecars:ContentLength", file.length() );
-              output.save();
-            }
-          } finally {
-            fis.close();
-          }
+    if ((workDir!=null) && (workDir.exists())) {
+        reportStatusMessage( "Scan output files [Copy output=" + pCopyOutput + "] [Partial=" + pPartial + "]" );
+        final File[] files = workDir.listFiles();
+        final boolean outputLink;
+        final Property outputAsLink = getResolvedToolProperty( getTool(), "jecars:OutputAsLink" );
+        if (outputAsLink==null) {
+          outputLink = false;
         } else {
-          final Node output = addOutput( null, file.getName() );
-          if (output!=null) {
-            output.setProperty( "jecars:IsLink", outputLink );
-            output.setProperty( "jecars:ContentLength", file.length() );
-            output.setProperty( "jecars:Partial", pPartial );
-            output.save();
+          outputLink = outputAsLink.getBoolean();
+        }
+        for( final File file : files ) {
+          if (!mPreRunFiles.contains(file)) {
+            if ((!outputLink) && (pCopyOutput)) {
+              // **** New output file... copy it
+              reportStatusMessage( "Copy output file " + file.getName() );
+              final FileInputStream fis = new FileInputStream( file );
+              try {
+                final Node output = addOutput( fis, file.getName() );
+                if (output!=null) {
+                  output.setProperty( "jecars:IsLink", outputLink );
+                  output.setProperty( "jecars:ContentLength", file.length() );
+                  output.save();
+                }
+              } finally {
+                fis.close();
+              }
+            } else {
+              final Node output = addOutput( null, file.getName() );
+              if (output!=null) {
+                  final long len = file.length();
+                  reportStatusMessage( "Set output file length " + len );
+                  output.setProperty( "jecars:IsLink", outputLink );
+                  output.setProperty( "jecars:ContentLength", len );
+                  output.setProperty( "jecars:Partial", pPartial );
+                  output.save();
+              }
+            }
           }
         }
-      }
     }
     return;
   }
@@ -286,7 +291,9 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
        */
       case REFRESH_OUTPUTS: {
         try {
-          scanOutputFiles( false, true );
+          if (STATE_OPEN_RUNNING.equals( getState() )) {
+            scanOutputFiles( false, true );
+          }
         } catch( Exception e ) {
           LOG.log( Level.WARNING, e.getMessage(), e );
         }
