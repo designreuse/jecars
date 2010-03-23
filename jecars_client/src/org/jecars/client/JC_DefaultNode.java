@@ -1695,7 +1695,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     setProperty( "title", pNewName );
     save();
     setName( pNewName );
-    //getJCPath().
+    getJCPath().setChild( pNewName );
     return true;
   }
 
