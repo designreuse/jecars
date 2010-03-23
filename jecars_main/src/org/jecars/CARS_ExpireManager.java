@@ -111,8 +111,9 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
       try {
         synchronized( LOCK ) {
           if ((++mDataStoreGCCurrent)==DATASTORE_GC_TIMES) {
+            GarbageCollector gc = null;
             try {
-              final GarbageCollector gc = ((SessionImpl)mSession).createDataStoreGarbageCollector();
+              gc = ((SessionImpl)mSession).createDataStoreGarbageCollector();
               gc.mark();
               final int du = gc.sweep();
               if (du>0) {
@@ -127,6 +128,10 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
               mDataStoreGCCurrent = 0;
             } catch( NullPointerException npe) {
               LOG.log( Level.WARNING, "Garbage Collector", npe );
+            } finally {
+              if (gc!=null) {
+                gc.close();
+              }
             }
           }
           
