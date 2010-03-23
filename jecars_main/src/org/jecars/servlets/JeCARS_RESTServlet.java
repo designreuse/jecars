@@ -17,6 +17,7 @@
 package org.jecars.servlets;
 
 import com.google.gdata.data.DateTime;
+import com.google.gdata.util.ParseException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -131,7 +132,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
      * @return
      * @throws java.lang.Exception
      */
-    protected CARS_ActionContext createActionContext( HttpServletRequest pRequest, HttpServletResponse pResponse ) throws Exception {
+    protected CARS_ActionContext createActionContext( final HttpServletRequest pRequest, final HttpServletResponse pResponse ) throws IOException, ParseException {
       CARS_ActionContext ac = null;
       // **** Get Authorization header
       String auth = pRequest.getHeader( "Authorization" );
@@ -139,8 +140,8 @@ public class JeCARS_RESTServlet extends HttpServlet {
         String username = null, password = null;
         if (auth.toUpperCase().startsWith("BASIC ")) {
           // **** Get encoded user and password, comes after "BASIC "
-          String userpassEncoded = auth.substring(6);
-          String encoding = new String( BASE64Decoder.decodeBuffer( userpassEncoded ));
+          final String userpassEncoded = auth.substring(6);
+          final String encoding = new String( BASE64Decoder.decodeBuffer( userpassEncoded ));
           // **** Check our user list to see if that user and password are "allowed"
           final int in = encoding.indexOf( ':' );
 //          username = CARS_Utils.encode(encoding.substring( 0, in));
@@ -347,6 +348,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
         if (mThreadCount>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           gLog.log( Level.WARNING, "SC_SERVICE_UNAVAILABLE", (Exception)null );
+          return;
         }
         mThreadCount++;
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
@@ -425,6 +427,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
         if (mThreadCount>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           gLog.log( Level.WARNING, "SC_SERVICE_UNAVAILABLE", (Exception)null );
+          return;
         }
         mThreadCount++;
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
@@ -474,6 +477,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       try {
         if (mThreadCount>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
+          return;
         }
         mThreadCount++;
         CARS_ActionContext ac = createActionContext( pRequest, pResponse );
@@ -540,6 +544,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       try {
         if (mThreadCount>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
+          return;
         }
         mThreadCount++;
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
@@ -590,6 +595,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       try {
         if (mThreadCount>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
+          return;
         }
         mThreadCount++;
         CARS_ActionContext ac = createActionContext( pRequest, pResponse );
@@ -657,6 +663,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
           if (mThreadCount>MAXTHREADCOUNT) {
             pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
             gLog.log( Level.WARNING, "SC_SERVICE_UNAVAILABLE", (Exception)null );
+            return;
           }
           mThreadCount++;
           CARS_ActionContext ac = createActionContext( pRequest, pResponse );
