@@ -1484,6 +1484,14 @@ public class CARS_ActionContext {
                 for (Value value : vals) {
                   actions.replaceData( value.getString(), gDefActions );
                 }
+              } else if (mThisNode.getPath().startsWith( n.getParent().getPath() )) {
+                acts = n.getProperty( gDefActions );
+                final Value[] vals = acts.getValues();
+                for (Value value : vals) {
+                  if (CARS_AccessManager.P_ADDNODE.equals( value.getString() )) {
+                    actions.replaceData( value.getString(), gDefActions );
+                  }
+                }
               }
             }
             dpi.storeObject( actions );
