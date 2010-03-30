@@ -147,6 +147,7 @@
 
 [jecars:outputresource] > jecars:datafile
 - jecars:IsLink     (Boolean)
+- jecars:Available  (Boolean)
 - jecars:Partial    (Boolean)
 
 [jecars:datafolder] > jecars:dataresource
@@ -253,6 +254,11 @@
 [jecars:Principal] > jecars:root
 - jecars:Source    (Path)
 - jecars:Fullname  (String)    = "[fullname]" autocreated
+
+[jecars:principalexport] mixin
+- jecars:Dest       (Path)      multiple
+- jecars:Exported   (Boolean)   multiple
+- jecars:ExportedAt (Date)      multiple
 
 [jecars:UserSource] > jecars:external
 - jecars:ChangePasswordURL  (String)
