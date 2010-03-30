@@ -26,11 +26,14 @@ import java.io.InputStreamReader;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import javax.jcr.Binary;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.Session;
 import org.jecars.CARS_Utils;
 
 /**
@@ -38,6 +41,8 @@ import org.jecars.CARS_Utils;
  * @author weert
  */
 public class CARS_ExternalTool extends CARS_DefaultToolInterface {
+
+  static final public int SAVEOUTPUTSPER = 30;
 
   static final public String WORKINGDIRECTORY               = "jecars:WorkingDirectory";
   static final public String GENERATEUNIQUEWORKINGDIRECTORY = "jecars:GenerateUniqueWorkingDirectory";
@@ -117,12 +122,40 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
         final File inputF = new File( mWorkingDirectory, "input" + i + ".txt" );
         final FileOutputStream fos = new FileOutputStream( inputF );
         try {
-          CARS_Utils.sendInputStreamToOutputStream( 10000, inputStream, fos );
+          CARS_Utils.sendInputStreamToOutputStream( 50000, inputStream, fos );
           mInputs.add( inputF );
         } finally {
           fos.close();
         }
         i++;
+      }
+
+      // *****************************************************************
+      // **** Copy the input resource of the tool to the working directory
+      final Map<String, File> copiedInputs = new HashMap<String, File>();
+      {
+        final List<Node> inputRes = getInputResources( getTool() );
+        for ( final Node input : inputRes ) {
+          if (!"jecars:Input".equals(input.getName())) {
+            InputStream       is = null;
+            FileOutputStream fos = null;
+            try {
+              final Binary bin = input.getProperty( "jcr:data" ).getBinary();
+              is = bin.getStream();
+              final File inputResFile = new File( mWorkingDirectory, input.getName() );
+              copiedInputs.put( input.getName(), inputResFile );
+              fos = new FileOutputStream( inputResFile );
+              CARS_Utils.sendInputStreamToOutputStream( 50000, is, fos );
+            } finally {
+              if (fos!=null) {
+                fos.close();
+              }
+              if (is!=null) {
+                is.close();
+              }
+            }
+          }
+        }
       }
 
       // **************************************************************************
@@ -131,21 +164,22 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       if (templateTool!=null) {
         final List<Node> inputRes = getInputResources( templateTool );
         for ( final Node input : inputRes ) {
-          InputStream       is = null;
-          FileOutputStream fos = null;
-          try {
-            final Binary bin = input.getProperty( "jcr:data" ).getBinary();
-            is = bin.getStream();
-//            is = input.getProperty( "jcr:data" ).getStream();
-            final File inputResFile = new File( mWorkingDirectory, input.getName() );
-            fos = new FileOutputStream( inputResFile );
-            CARS_Utils.sendInputStreamToOutputStream( 10000, is, fos );
-          } finally {
-            if (fos!=null) {
-              fos.close();
-            }
-            if (is!=null) {
-              is.close();
+          if (!copiedInputs.containsKey( input.getName() )) {
+            InputStream       is = null;
+            FileOutputStream fos = null;
+            try {
+              final Binary bin = input.getProperty( "jcr:data" ).getBinary();
+              is = bin.getStream();
+              final File inputResFile = new File( mWorkingDirectory, input.getName() );
+              fos = new FileOutputStream( inputResFile );
+              CARS_Utils.sendInputStreamToOutputStream( 50000, is, fos );
+            } finally {
+              if (fos!=null) {
+                fos.close();
+              }
+              if (is!=null) {
+                is.close();
+              }
             }
           }
         }
@@ -193,21 +227,19 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       final Process process = pb.start();
       pb.redirectErrorStream( true );
       final BufferedReader outputReader = new BufferedReader(new InputStreamReader( process.getInputStream() ) );
-//      final BufferedReader errorReader = new BufferedReader(new InputStreamReader( process.getErrorStream() ) );
-//      final OutputStream ostream = process.getOutputStream();
-//      ostream.write( "hihia hahahajhj\n".getBytes() );
-//      ostream.flush();
       String line;
       final StringBuilder output = new StringBuilder();
       while( (line = outputReader.readLine()) != null) {
-//          System.out.println("outputp " + line );
+//    System.out.println("outputp " + line );
         output.append( line ).append( LF );
         replaceOutput( "stdout", output.toString() );
+//        getTool().save();
       }
 //      addOutput( output.toString() );
       reportStatusMessage( "External tool is ending" );
       outputReader.close();
       process.destroy();
+      getTool().save();
     } else {
       throw new InvalidParameterException( "No execpath" );
     }
@@ -221,7 +253,7 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
   @Override
   protected void toolOutput() throws Exception {
     super.toolOutput();
-    scanOutputFiles( true, false );
+    scanOutputFiles( true, false, true );
     return;
   }
 
@@ -231,10 +263,13 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
    * @throws FileNotFoundException
    * @throws Exception
    */
-  private synchronized void scanOutputFiles( final boolean pCopyOutput, final boolean pPartial ) throws FileNotFoundException, Exception {
+  private void scanOutputFiles( final boolean pCopyOutput, final boolean pPartial, final boolean pAvailable ) throws FileNotFoundException, Exception {
+   synchronized( getTool() ) {
     final File workDir = getWorkingDirectory();
     if ((workDir!=null) && (workDir.exists())) {
-        reportStatusMessage( "Scan output files [Copy output=" + pCopyOutput + "] [Partial=" + pPartial + "]" );
+      Session saveSession = null;
+      try {
+//        reportStatusMessage( "Scan output files [Copy output=" + pCopyOutput + "] [Partial=" + pPartial + "]" );
         final File[] files = workDir.listFiles();
         final boolean outputLink;
         final Property outputAsLink = getResolvedToolProperty( getTool(), "jecars:OutputAsLink" );
@@ -243,39 +278,122 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
         } else {
           outputLink = outputAsLink.getBoolean();
         }
+        int saveCounter = SAVEOUTPUTSPER;
         for( final File file : files ) {
           if (!mPreRunFiles.contains(file)) {
             if ((!outputLink) && (pCopyOutput)) {
               // **** New output file... copy it
-              reportStatusMessage( "Copy output file " + file.getName() );
+//              reportStatusMessage( "Copy output file " + file.getName() );
               final FileInputStream fis = new FileInputStream( file );
               try {
                 final Node output = addOutput( fis, file.getName() );
                 if (output!=null) {
                   output.setProperty( "jecars:IsLink", outputLink );
                   output.setProperty( "jecars:ContentLength", file.length() );
-                  output.save();
+                  output.setProperty( "jecars:Available", true );
+                  saveSession = output.getSession();
+//                  output.save();
                 }
               } finally {
                 fis.close();
               }
             } else {
-              final Node output = addOutput( null, file.getName() );
+//              final Node output = addOutput( null, file.getName() );
+              final Node output = addOutputTransient( null, file.getName() );
               if (output!=null) {
                   final long len = file.length();
-                  reportStatusMessage( "Set output file length " + len );
+//                  reportStatusMessage( "Set output file length " + len );
                   output.setProperty( "jecars:IsLink", outputLink );
                   output.setProperty( "jecars:ContentLength", len );
                   output.setProperty( "jecars:Partial", pPartial );
-                  output.save();
+                  if (pAvailable) {
+                    output.setProperty( "jecars:Available", true );
+                  }
+                  saveSession = output.getSession();
+                  if (saveCounter--<0) {
+                    saveSession.save();
+                    saveCounter = SAVEOUTPUTSPER;
+                  }
               }
             }
           }
         }
+      } finally {
+        if (saveSession!=null) {
+          saveSession.save();
+        }
+      }
     }
+   }
     return;
   }
 
+  private void refreshOutputFiles( final boolean pCopyOutput, final boolean pPartial, final boolean pAvailable ) throws FileNotFoundException, Exception {
+   synchronized( getTool() ) {
+    final File workDir = getWorkingDirectory();
+    if ((workDir!=null) && (workDir.exists())) {
+      Session saveSession = null;
+      try {
+//        reportStatusMessage( "Scan output files [Copy output=" + pCopyOutput + "] [Partial=" + pPartial + "]" );
+        final File[] files = workDir.listFiles();
+        final boolean outputLink;
+        final Property outputAsLink = getResolvedToolProperty( getTool(), "jecars:OutputAsLink" );
+        if (outputAsLink==null) {
+          outputLink = false;
+        } else {
+          outputLink = outputAsLink.getBoolean();
+        }
+        int saveCounter = SAVEOUTPUTSPER;
+        for( final File file : files ) {
+          if (!STATE_OPEN_RUNNING.equals( getCurrentState() )) {
+            break;
+          }
+          if (!mPreRunFiles.contains(file)) {
+            if ((!outputLink) && (pCopyOutput)) {
+              // **** New output file... copy it
+//              reportStatusMessage( "Copy output file " + file.getName() );
+              final FileInputStream fis = new FileInputStream( file );
+              try {
+                final Node output = addOutput( fis, file.getName() );
+                if (output!=null) {
+                  output.setProperty( "jecars:IsLink", outputLink );
+                  output.setProperty( "jecars:ContentLength", file.length() );
+                  output.setProperty( "jecars:Available", true );
+                  saveSession = output.getSession();
+//                  output.save();
+                }
+              } finally {
+                fis.close();
+              }
+            } else {
+//              final Node output = addOutput( null, file.getName() );
+              final Node output = addOutputTransient( null, file.getName() );
+              if (output!=null) {
+                  final long len = file.length();
+                  output.setProperty( "jecars:IsLink", outputLink );
+                  output.setProperty( "jecars:ContentLength", len );
+                  output.setProperty( "jecars:Partial", pPartial );
+                  if (pAvailable) {
+                    output.setProperty( "jecars:Available", true );
+                  }
+                  saveSession = output.getSession();
+                  if (saveCounter--<0) {
+                    saveSession.save();
+                    saveCounter = SAVEOUTPUTSPER;
+                  }
+              }
+            }
+          }
+        }
+      } finally {
+        if (saveSession!=null) {
+          saveSession.save();
+        }
+      }
+    }
+   }
+    return;
+  }
 
   /** signal
    *
@@ -291,8 +409,9 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
        */
       case REFRESH_OUTPUTS: {
         try {
-          if (STATE_OPEN_RUNNING.equals( getState() )) {
-            scanOutputFiles( false, true );
+          if (STATE_OPEN_RUNNING.equals( getCurrentState() )) {
+//         System.out.println("REQUEST OUTPUT: " + getState() );
+            refreshOutputFiles( false, true, false );
           }
         } catch( Exception e ) {
           LOG.log( Level.WARNING, e.getMessage(), e );
