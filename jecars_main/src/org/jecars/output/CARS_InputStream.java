@@ -51,7 +51,7 @@ public class CARS_InputStream extends InputStream {
    */
   public CARS_InputStream( final Node pNode, final File pFile ) throws FileNotFoundException, RepositoryException {
     super();
-    LOG.info( "[OPEN CARS_Inputstream] for: " + pFile.getAbsolutePath() + " (" + pNode.getPath() + ")" );
+//    LOG.info( "[OPEN CARS_Inputstream] for: " + pFile.getAbsolutePath() + " (" + pNode.getPath() + ") Partial=" + pNode.getProperty( "jecars:Partial" ).getString() );
     mNode = pNode;
     mFile = pFile;
     mStream = new FileInputStream( pFile );
@@ -127,7 +127,7 @@ public class CARS_InputStream extends InputStream {
           LOG.log( Level.WARNING, ex.getMessage(), ex );
         }
         len = mStream.read( pBuffer, pOff, pLen );
-    System.out.println(" DELAY READ RES = " + len + " tot=" + mBytesReaden );
+//    System.out.println(" DELAY READ RES = " + len + " tot=" + mBytesReaden );
         if (len>0) {
           break;
         }
@@ -152,9 +152,10 @@ public class CARS_InputStream extends InputStream {
   @Override
   public void close() throws IOException {
     super.close();
-    LOG.log( Level.INFO, "[CLOSE CARS_Inputstream] for: " + mFile.getAbsolutePath() + ", " + mBytesReaden + " bytes readen " );
-    mStream.close();
-    OPENSTREAMS.remove( this );
+    if (OPENSTREAMS.remove( this )) {
+//      LOG.log( Level.INFO, "[CLOSE CARS_Inputstream] for: " + mFile.getAbsolutePath() + ", " + mBytesReaden + " bytes readen " );
+      mStream.close();
+    }
     return;
   }
 
