@@ -111,6 +111,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
   private transient int                               mClosedExpireMinutes = 60;
   private transient String                            mToolPath = "";
   private transient boolean                           mRebuildToolSession = true;
+  private transient String                            mCurrentState = "";
 
   private transient CARS_Main mMain     = null;
   private transient Node      mToolNode = null;
@@ -783,11 +784,20 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     return getTool().getProperty( "jecars:State" ).getString();    
   }
   
+  /** getCurrentState
+   * 
+   * @return
+   */
+  protected String getCurrentState() {
+    return mCurrentState;
+  }
+
   /** Internal set state
    * @param The state
    */
-  protected void setState( String pState ) {
+  protected void setState( final String pState ) {
     try {
+      mCurrentState = pState;
       getTool().setProperty( "jecars:State", pState );
       getTool().setProperty( "jecars:Modified", Calendar.getInstance() );
       getTool().save();
@@ -1072,6 +1082,46 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     final Calendar c = Calendar.getInstance();
     output.setProperty( "jcr:lastModified", c );
     n.save();
+    return output;
+  }
+
+  /** addOutputTransient
+   *
+   * @param pOutput
+   * @param pOutputName
+   * @return
+   * @throws RepositoryException
+   */
+  protected Node addOutputTransient( final InputStream pOutput, final String pOutputName ) throws RepositoryException {
+    final Node n = getTool();
+    final Node output;
+    final boolean isLink, hasNode;
+    if (hasNode=n.hasNode( pOutputName )) {
+      output = n.getNode( pOutputName );
+      if (output.hasProperty( "jecars:IsLink" )) {
+        isLink = output.getProperty( "jecars:IsLink" ).getBoolean();
+      } else {
+        isLink = false;
+      }
+    } else {
+      output = n.addNode( pOutputName, "jecars:outputresource" );
+      isLink = false;
+      output.setProperty( "jcr:mimeType", "text/plain" );
+    }
+    if (isLink || (pOutput==null)) {
+      if (!hasNode) {
+        final ByteArrayInputStream bais = new ByteArrayInputStream( "".getBytes() );
+        final Binary bin = output.getSession().getValueFactory().createBinary( bais );
+        output.setProperty( "jcr:data", bin );
+      }
+      output.setProperty( "jecars:Partial", true );
+    } else {
+      final Binary bin = output.getSession().getValueFactory().createBinary( pOutput );
+      output.setProperty( "jcr:data", bin );
+      output.setProperty( "jecars:Partial", false );
+    }
+    final Calendar c = Calendar.getInstance();
+    output.setProperty( "jcr:lastModified", c );
     return output;
   }
   
