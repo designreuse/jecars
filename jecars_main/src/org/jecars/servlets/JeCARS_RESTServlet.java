@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jcr.AccessDeniedException;
@@ -49,9 +50,9 @@ public class JeCARS_RESTServlet extends HttpServlet {
 
   /** The maximum number of concurrent threads running before replying with a SERVICE UNAVAILABLE
    */
-  static protected int        MAXTHREADCOUNT  = 20;
-  static private volatile int mThreadCount    = 0;
-  static private CARS_Factory mCARSFactory    = null;
+  static protected final int         MAXTHREADCOUNT = 255;
+  static private final AtomicInteger THREADCOUNT = new AtomicInteger(0);
+  static private CARS_Factory    mCARSFactory    = null;
 
   static private JeCARS_WebDAVServlet gWebdav = new JeCARS_WebDAVServlet();
 
@@ -319,7 +320,6 @@ public class JeCARS_RESTServlet extends HttpServlet {
     protected void doGet( final HttpServletRequest pRequest, final HttpServletResponse pResponse ) throws ServletException, IOException {
 
 //      debugPrintRequestHeader( pRequest );
-
       // **** Check the X-HTTP-Method-Override flags
       final String q = pRequest.getQueryString();
       if (q!=null) {
@@ -345,12 +345,12 @@ public class JeCARS_RESTServlet extends HttpServlet {
 // long time = System.currentTimeMillis();
 //  System.out.println( "--- " + mThreadCount + " GET " + pRequest.getPathInfo() );
       try {
-        if (mThreadCount>MAXTHREADCOUNT) {
+        if (THREADCOUNT.get()>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           gLog.log( Level.WARNING, "SC_SERVICE_UNAVAILABLE", (Exception)null );
           return;
         }
-        mThreadCount++;
+        THREADCOUNT.incrementAndGet();
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         if (ac!=null) {
           try {
@@ -409,7 +409,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
         gLog.log( Level.WARNING, null, e );
         pResponse.sendError( pResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage() );
       } finally {
-        mThreadCount--;
+        THREADCOUNT.decrementAndGet();
       }
       return;
     }
@@ -424,12 +424,12 @@ public class JeCARS_RESTServlet extends HttpServlet {
     @Override
     protected void doHead( final HttpServletRequest pRequest, final HttpServletResponse pResponse )  throws ServletException, IOException {
       try {
-        if (mThreadCount>MAXTHREADCOUNT) {
+        if (THREADCOUNT.get()>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           gLog.log( Level.WARNING, "SC_SERVICE_UNAVAILABLE", (Exception)null );
           return;
         }
-        mThreadCount++;
+        THREADCOUNT.incrementAndGet();
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         if (ac!=null) {
           try {
@@ -462,7 +462,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       } catch (Exception e) {
         gLog.log( Level.WARNING, null, e );
       } finally {
-        mThreadCount--;
+        THREADCOUNT.decrementAndGet();
       }
       return;
     }
@@ -475,12 +475,12 @@ public class JeCARS_RESTServlet extends HttpServlet {
     protected void doPost( HttpServletRequest pRequest, HttpServletResponse pResponse ) throws ServletException, IOException {
 
       try {
-        if (mThreadCount>MAXTHREADCOUNT) {
+        if (THREADCOUNT.get()>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           return;
         }
-        mThreadCount++;
-        CARS_ActionContext ac = createActionContext( pRequest, pResponse );
+        THREADCOUNT.incrementAndGet();
+        final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         ServletInputStream sis = null;
         if (ac!=null) {
           try {
@@ -527,7 +527,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       } catch (Exception e) {
         gLog.log( Level.WARNING, null, e );
       } finally {
-        mThreadCount--;
+        THREADCOUNT.decrementAndGet();
       }
       return;
     }
@@ -542,11 +542,11 @@ public class JeCARS_RESTServlet extends HttpServlet {
     @Override
     protected void doPut( final HttpServletRequest pRequest, final HttpServletResponse pResponse )  throws ServletException, IOException {
       try {
-        if (mThreadCount>MAXTHREADCOUNT) {
+        if (THREADCOUNT.get()>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           return;
         }
-        mThreadCount++;
+        THREADCOUNT.incrementAndGet();
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         ServletInputStream sis = null;
         if (ac!=null) {
@@ -577,7 +577,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       } catch (Exception e) {
         gLog.log( Level.WARNING, null, e );
       } finally {
-        mThreadCount--;
+        THREADCOUNT.decrementAndGet();
       }
       return;
     }
@@ -593,14 +593,14 @@ public class JeCARS_RESTServlet extends HttpServlet {
     @Override
     protected void doDelete( HttpServletRequest pRequest, HttpServletResponse pResponse )  throws ServletException, IOException {
       try {
-        if (mThreadCount>MAXTHREADCOUNT) {
+        if (THREADCOUNT.get()>MAXTHREADCOUNT) {
           pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
           return;
         }
-        mThreadCount++;
-        CARS_ActionContext ac = createActionContext( pRequest, pResponse );
+        THREADCOUNT.incrementAndGet();
+        final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         if (ac!=null) {
-          PrintWriter outp = pResponse.getWriter();
+          final PrintWriter outp = pResponse.getWriter();
           try {
             ac.setContextPath( pRequest.getContextPath() + pRequest.getServletPath() );
             ac.setPathInfo( new String(pRequest.getPathInfo().getBytes( "ISO-8859-1" ), "UTF-8" ) );
@@ -624,7 +624,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
       } catch (Exception e) {
         gLog.log( Level.WARNING, null, e );
       } finally {
-        mThreadCount--;
+        THREADCOUNT.decrementAndGet();
       }
       return;
     }
@@ -654,23 +654,23 @@ public class JeCARS_RESTServlet extends HttpServlet {
      * @throws java.io.IOException
      */
     @Override
-    protected void service( HttpServletRequest pRequest, HttpServletResponse pResponse ) throws ServletException, IOException {
+    protected void service( final HttpServletRequest pRequest, final HttpServletResponse pResponse ) throws ServletException, IOException {
       final String pathInfo = pRequest.getPathInfo();
       if ((pathInfo!=null) && (pathInfo.startsWith( "/webdav" ))) {
 
 //        debugPrintRequestHeader( pRequest );
         try {
-          if (mThreadCount>MAXTHREADCOUNT) {
+          if (THREADCOUNT.get()>MAXTHREADCOUNT) {
             pResponse.sendError( pResponse.SC_SERVICE_UNAVAILABLE );
             gLog.log( Level.WARNING, "SC_SERVICE_UNAVAILABLE", (Exception)null );
             return;
           }
-          mThreadCount++;
-          CARS_ActionContext ac = createActionContext( pRequest, pResponse );
+          THREADCOUNT.incrementAndGet();
+          final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
           if (ac!=null) {
             try {
               ac.setContextPath( pRequest.getContextPath() + pRequest.getServletPath() );
-              String path = new String( pathInfo.getBytes( "ISO-8859-1" ), "UTF-8" );
+              final String path = new String( pathInfo.getBytes( "ISO-8859-1" ), "UTF-8" );
 //              String path = new String( pathInfo.substring( "/webdav".length() ).getBytes( "ISO-8859-1" ), "UTF-8" );
               ac.setPathInfo( path );
               ac.setQueryString( pRequest.getQueryString() );
@@ -687,12 +687,12 @@ public class JeCARS_RESTServlet extends HttpServlet {
             } finally {
               ac.destroy();
             }
-          } else {
+//          } else {
           }
         } catch (Exception e) {
           gLog.log( Level.WARNING, null, e );
         } finally {
-          mThreadCount--;
+          THREADCOUNT.decrementAndGet();
         }
         return;
       }
@@ -701,11 +701,15 @@ public class JeCARS_RESTServlet extends HttpServlet {
     }
 
     
-    
-    @Override   
-    protected long getLastModified( HttpServletRequest req ) {
-      return super.getLastModified( req );
-    }
+    /** getLastModified
+     *
+     * @param req
+     * @return
+     */
+//    @Override
+//    protected long getLastModified( final HttpServletRequest req ) {
+//      return super.getLastModified( req );
+//    }
     
     
     /** Returns a short description of the servlet.
