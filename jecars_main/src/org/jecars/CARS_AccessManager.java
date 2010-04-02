@@ -284,7 +284,7 @@ public class CARS_AccessManager extends DefaultAccessManager implements AccessMa
         String p, cp = pPrefix.substring(pPrefix.indexOf('/'));
         while( it.hasNext() ) {
           p = it.next();
-          if (p.substring(p.indexOf('/')).startsWith( cp )==true) {
+          if (p.substring(p.indexOf('/')).startsWith( cp )) {
 //            System.out.println( "---- REMOVE mReadPathCache " + p );
             it.remove();
           }
@@ -292,14 +292,14 @@ public class CARS_AccessManager extends DefaultAccessManager implements AccessMa
         it = mDenyReadPathCache.iterator();
         while( it.hasNext() ) {
           p = it.next();
-          if (p.substring(p.indexOf('/')).startsWith( cp )==true) {
+          if (p.substring(p.indexOf('/')).startsWith( cp )) {
             it.remove();
           }
         }
         it = mWritePathCache.iterator();
         while( it.hasNext() ) {
           p = it.next();
-          if (p.substring(p.indexOf('/')).startsWith( cp )==true) {
+          if (p.substring(p.indexOf('/')).startsWith( cp )) {
 //          System.out.println( "---- REMOVE mWritePathCache " + p );
             it.remove();
           }
