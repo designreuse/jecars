@@ -342,14 +342,16 @@ public class JC_ToolNode extends JC_DefaultNode {
     return createTool( pParentNode, pTemplateTool, pToolName, pToolUser, 30 );
   }
 
+
   /** createTool
    *
    * @param pParentNode
    * @param pTemplateTool
    * @param pToolName
-   * @param pToolUser
+   * @param pToolUser if null then no permissions are created
+   * @param pExpireMinutes
    * @return
-   * @throws org.jecars.client.JC_Exception
+   * @throws JC_Exception
    */
   static public JC_ToolNode createTool( final JC_Nodeable pParentNode, final String pTemplateTool, final String pToolName, final JC_UserNode pToolUser, final int pExpireMinutes ) throws JC_Exception {
     final JC_ToolNode tool = (JC_ToolNode)pParentNode.addNode( pToolName, "jecars:Tool" ).morphToNodeType();
@@ -364,9 +366,11 @@ public class JC_ToolNode extends JC_DefaultNode {
       tool.setExpireDate( c );
     }
     tool.save();
-    final JC_PermissionNode perm = (JC_PermissionNode)tool.addNode( "P_" + pToolUser.getUsername(), "jecars:Permission" ).morphToNodeType();
-    perm.addRights( pToolUser, JC_PermissionNode.RS_ALLRIGHTS );
-    perm.save();
+    if (pToolUser!=null) {
+      final JC_PermissionNode perm = (JC_PermissionNode)tool.addNode( "P_" + pToolUser.getUsername(), "jecars:Permission" ).morphToNodeType();
+      perm.addRights( pToolUser, JC_PermissionNode.RS_ALLRIGHTS );
+      perm.save();
+    }
     return tool;
   }
 

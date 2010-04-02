@@ -32,7 +32,6 @@ import nl.msd.jdots.JD_Taglist;
 /**
  * JC_RESTComm
  *
- * @version $Id: JC_RESTComm.java,v 1.19 2009/05/20 13:13:58 weertj Exp $
  */
 public class JC_RESTComm implements Serializable {
 

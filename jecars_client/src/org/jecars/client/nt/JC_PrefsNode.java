@@ -145,8 +145,25 @@ public class JC_PrefsNode extends JC_DefaultNode {
    * @throws org.jecars.client.JC_Exception
    */
   public double getPrefValueDouble( final String pPath, final String pName, final boolean pUserPref ) throws JC_Exception {
-    JC_Propertyable p = getPrefProperty( pPath, pName, pUserPref );
+    final JC_Propertyable p = getPrefProperty( pPath, pName, pUserPref );
     return (Double)p.getValueAs( Double.class );
+  }
+
+  /** getPrefValueDouble
+   *
+   * @param pPath
+   * @param pName
+   * @param pUserPref
+   * @param pDefault
+   * @return
+   * @throws JC_Exception
+   */
+  public double getPrefValueDouble( final String pPath, final String pName, final boolean pUserPref, final double pDefault ) throws JC_Exception {
+    try {
+      return getPrefValueDouble( pPath, pName, pUserPref );
+    } catch( JC_Exception je ) {
+      return pDefault;
+    }
   }
 
   /** getPrefValueInteger

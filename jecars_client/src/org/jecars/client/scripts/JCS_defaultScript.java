@@ -17,11 +17,11 @@ import org.jecars.client.JC_Factory;
  */
 public class JCS_defaultScript {
   
-  static final protected Logger gLog = Logger.getLogger( JCS_defaultScript.class.getName() );
+  static final protected Logger LOG = Logger.getLogger( JCS_defaultScript.class.getName() );
   
-  public String mJeCARSServer = "http://localhost:8080/cars";
-  public String mUsername = "Administrator";
-  public String mPassword = "admin";
+  public String mJeCARSServer = "";
+  public String mUsername = "";
+  public String mPassword = "";
 
   public String mUserGroup       = "";
   public String mUser            = "";
@@ -40,16 +40,12 @@ public class JCS_defaultScript {
   public PrintStream mStdOutput    = System.out;
   public PrintStream mErrOutput    = System.err;
 
-  public JCS_defaultScript() {
-    return;
-  }
-
   /** JCS_defaultScript
    * 
    * @param args
    */
-  public JCS_defaultScript( final String[] args ) {
-    parseArguments( args );
+  public JCS_defaultScript() {
+//    parseArguments( args );
     return;
   }
 
@@ -62,7 +58,7 @@ public class JCS_defaultScript {
     if (mConfigOutput!=null) {
       mConfigOutput.println( "Connect to: " + mJeCARSServer + " with " + mUsername + " (" + mPassword + ")" );
     }
-    JC_Clientable client = JC_Factory.createClient( mJeCARSServer );
+    final JC_Clientable client = JC_Factory.createClient( mJeCARSServer );
     client.setCredentials( mUsername, mPassword.toCharArray() );
     return client;
   }
@@ -71,7 +67,7 @@ public class JCS_defaultScript {
    *
    * @param args
    */
-  protected void parseArguments( String[] args ) { 
+  public void parseArguments( final String[] args ) {
       for (String arg : args) {
       if (arg.startsWith( "-s=" )) {
         mJeCARSServer = arg.substring( 3 );

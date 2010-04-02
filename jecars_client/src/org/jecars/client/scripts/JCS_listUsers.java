@@ -18,7 +18,8 @@ import org.jecars.client.nt.JC_UserNode;
 public class JCS_listUsers extends JCS_defaultScript {
 
   public JCS_listUsers( String[] args ) {
-    super( args );
+    super();
+    parseArguments( args );
   }
 
   /** create

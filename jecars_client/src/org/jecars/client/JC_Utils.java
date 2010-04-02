@@ -318,5 +318,25 @@ public class JC_Utils {
     return;
   }
 
+  /** sendInputStreamToOutputStreamNoClosing
+   *
+   * @param pBufferSize
+   * @param pInput
+   * @param pOutput
+   * @throws IOException
+   */
+  static public void sendInputStreamToOutputStreamNoClosing( final int pBufferSize, final InputStream pInput, final OutputStream pOutput ) throws IOException {
+    final BufferedInputStream  bis = new BufferedInputStream(  pInput );
+    final BufferedOutputStream bos = new BufferedOutputStream( pOutput );
+    final byte[] buff = new byte[pBufferSize];
+    int bytesRead = bis.read(buff, 0, buff.length);
+    while(bytesRead!=-1) {
+      bos.write(buff, 0, bytesRead);
+      bos.flush();
+      bytesRead = bis.read( buff, 0, buff.length );
+    }
+    return;
+  }
+
 
 }
