@@ -109,7 +109,7 @@ public class JC_UsersNode extends JC_DefaultNode {
     return result;
   }
 
-    /** removeUser
+    /** removeUser, will save the results
      * 
      * @param pNode
      * @throws org.jecars.client.JC_Exception
@@ -120,7 +120,7 @@ public class JC_UsersNode extends JC_DefaultNode {
     return;
   }
    
-  /** removeUser
+  /** removeUser, will save the results
    * 
    * @param pUsername
    * @throws org.jecars.client.JC_Exception

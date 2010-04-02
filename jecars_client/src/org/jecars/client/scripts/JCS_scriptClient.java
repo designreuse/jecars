@@ -32,7 +32,8 @@ public class JCS_scriptClient {
       try {
         if ("initJeCARS".equals( args[0] )) {
           JCS_initJeCARS init = new JCS_initJeCARS();
-          JCS_defaultScript ds = new JCS_defaultScript( args );
+          JCS_defaultScript ds = new JCS_defaultScript();
+          ds.parseArguments( args );
           init.mJeCARSServer = ds.mJeCARSServer;
           init.mUsername     = ds.mUsername;
           init.mPassword     = ds.mPassword;
