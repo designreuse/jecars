@@ -8,6 +8,9 @@ DataflowAnomalyAnalysis
 UnnecessaryReturn
 IfElseStmtsMustUseBraces
 IfStmtsMustUseBraces
+AvoidDeeplyNestedIfStmts
+NullAssignment
 LongVariable
+UnusedImports
 OnlyOneReturn
 UnnecessaryConstructor
