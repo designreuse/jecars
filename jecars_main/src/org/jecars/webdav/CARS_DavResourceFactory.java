@@ -177,6 +177,7 @@ public class CARS_DavResourceFactory implements DavResourceFactory {
         pAC.setPathInfo( repoPath );
         pFactory.performGetAction( pAC );
         node = pAC.getThisNode();
+//        pAC.getMain().destroy();
 //      } catch (PathNotFoundException e) {
 //        e.printStackTrace();
         // item does not exist (yet). return null -> create null-resource
