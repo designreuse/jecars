@@ -5,6 +5,13 @@
 
 package org.jecars.client;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.util.EnumSet;
 import java.util.List;
 import org.jecars.client.observation.JC_Event;
@@ -48,6 +55,31 @@ public class JC_ObservationManagerTest implements JC_EventListener {
 
     @After
     public void tearDown() {
+    }
+
+    @Test
+    public void udpObservationTest() throws Exception {
+
+
+      byte[] addr = new byte[4];
+      addr[0] = (byte)255;
+      InetAddress iad = Inet4Address.getByAddress( addr );
+      SocketAddress sad = new InetSocketAddress( iad, 4444 );
+      DatagramSocket dsocket = new DatagramSocket( sad );
+      byte[] buffer = new byte[1024];
+
+      DatagramPacket packet = new DatagramPacket( buffer, buffer.length );
+      int i = 5;
+      while( i>0 ) {
+        dsocket.receive( packet );
+
+        String event = new String( buffer, 0, packet.getLength() );
+        System.out.println( i + " EVENT: " + event );
+
+        i--;
+      }
+
+      return;
     }
 
     @Test
