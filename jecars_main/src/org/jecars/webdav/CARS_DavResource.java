@@ -106,6 +106,7 @@ import java.util.HashSet;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.simple.ItemFilter;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
+import org.apache.tika.detect.Detector;
 import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
@@ -817,6 +818,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
     /**
      * @see DavResource#move(DavResource)
      */
+    @Override
     public void move(DavResource destination) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -1155,8 +1157,10 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
      */
     protected ImportContext getImportContext(InputContext inputCtx, String systemId) throws IOException {
   // **** TODO, resolve for Jackrabbit v2.0
-      throw new UnsupportedOperationException( "resolve for Jackrabbit v2.0" );
+//      throw new UnsupportedOperationException( "resolve for Jackrabbit v2.0" );
 //        return new ImportContextImpl(node, systemId, inputCtx, config.getMimeResolver());
+        Detector d = config.getDetector();
+        return new ImportContextImpl( node, systemId, inputCtx, (inputCtx!=null) ? inputCtx.getInputStream() : null, new DefaultIOListener(log), d );
     }
 
     /**
@@ -1168,8 +1172,8 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
      */
     protected ExportContext getExportContext(OutputContext outputCtx) throws IOException {
   // **** TODO, resolve for Jackrabbit v2.0
-      throw new UnsupportedOperationException( "resolve for Jackrabbit v2.0" );
-//        return new ExportContextImpl(node, outputCtx, config.getMimeResolver());
+//      throw new UnsupportedOperationException( "resolve for Jackrabbit v2.0" );
+      return new ExportContextImpl( node, outputCtx );
     }
 
     /**

@@ -353,7 +353,7 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     String report;
     report  = "JeCARS Observation Server\n================================\n\n";
     report  = "  Definitions: " + pOBS.getPath() + "\n";
-    report += CARS_ObservationServer.startObservation( pOBS ) + '\n';
+//    report += CARS_ObservationServer.startObservation( pOBS ) + '\n';
     final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
     ac.setContentsResultStream( bais, "text/plain" );
 
