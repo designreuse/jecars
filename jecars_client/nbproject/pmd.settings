@@ -1,0 +1,15 @@
+TooManyMethods
+AvoidFinalLocalVariable
+SystemPrintln
+ShortVariable
+CyclomaticComplexity
+MethodNamingConventions
+ExcessiveClassLength
+UnnecessaryReturn
+JUnitAssertionsShouldIncludeMessage
+LongVariable
+BooleanGetMethodName
+BeanMembersShouldSerialize
+OnlyOneReturn
+UnnecessaryBooleanAssertion
+UnnecessaryConstructor
