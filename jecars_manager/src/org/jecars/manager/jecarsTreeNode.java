@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import org.jecars.client.JC_Exception;
 import org.jecars.client.JC_Nodeable;
 import org.jecars.client.JC_Propertyable;
 
@@ -63,5 +64,11 @@ public class jecarsTreeNode extends jcrTreeNode {
     return;
   }
 
+  @Override
+  public void delete() throws JC_Exception {
+    mJCNode.removeNode();
+    mJCNode.save();
+    return;
+  }
 
 }

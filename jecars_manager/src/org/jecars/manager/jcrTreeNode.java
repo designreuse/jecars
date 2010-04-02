@@ -39,7 +39,7 @@ public class jcrTreeNode extends DefaultMutableTreeNode {
 
   protected void updateNodeChildren() {
     try {
-      NodeIterator ni = mNode.getNodes();
+      final NodeIterator ni = mNode.getNodes();
       for ( ; ni.hasNext();) {
         Node n = ni.nextNode();
         add( new jcrTreeNode( n ));
@@ -93,6 +93,16 @@ public class jcrTreeNode extends DefaultMutableTreeNode {
 
   public void refresh() throws Exception {
     mNode.refresh( false );
+    return;
+  }
+
+  /** delete
+   *
+   * @throws RepositoryException
+   */
+  public void delete() throws Exception {
+    mNode.remove();
+    mNode.save();
     return;
   }
 
