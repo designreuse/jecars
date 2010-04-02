@@ -20,8 +20,9 @@ import org.jecars.client.nt.JC_UsersNode;
  */
 public class JCS_suspendUser extends JCS_defaultScript {
 
-  public JCS_suspendUser( String[] args ) {
-    super( args );
+  public JCS_suspendUser( final String[] args ) {
+    super();
+    parseArguments( args );
   }
 
   /** create

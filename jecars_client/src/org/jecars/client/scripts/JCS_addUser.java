@@ -21,7 +21,8 @@ import org.jecars.client.nt.JC_UsersNode;
 public class JCS_addUser extends JCS_defaultScript {
 
   public JCS_addUser( String[] args ) {
-    super( args );
+    super();
+    parseArguments( args );
   }
 
   /** create

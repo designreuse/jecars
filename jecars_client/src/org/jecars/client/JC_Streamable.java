@@ -44,5 +44,6 @@ public interface JC_Streamable {
   byte[] readAsByteArray() throws IOException;
 
   void writeToStream( final OutputStream pOutput ) throws IOException;
+  void writeToStreamNoClosing( final OutputStream pOutput ) throws IOException;
 
 }

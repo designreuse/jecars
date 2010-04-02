@@ -68,7 +68,8 @@ public class UsersManagerFrame extends javax.swing.JFrame {
           e.printStackTrace();
         }
 
-        final JCS_defaultScript ds = new JCS_defaultScript( args );
+        final JCS_defaultScript ds = new JCS_defaultScript();
+        ds.parseArguments( args );
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override

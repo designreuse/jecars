@@ -232,5 +232,11 @@ public class JC_DefaultStream implements JC_Streamable {
     return;
   }
 
+  @Override
+  public void writeToStreamNoClosing( final OutputStream pOutput ) throws IOException {
+    JC_Utils.sendInputStreamToOutputStreamNoClosing( 20000, getStream(), pOutput );
+    return;
+  }
+
 
 }
