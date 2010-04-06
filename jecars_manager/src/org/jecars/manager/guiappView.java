@@ -23,6 +23,7 @@ import javax.swing.Icon;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import org.jecars.CARS_Factory;
@@ -185,6 +186,7 @@ public class guiappView extends FrameView {
         mPropsPanel = new javax.swing.JPanel();
         jPanel8 = new javax.swing.JPanel();
         mRefreshProps = new javax.swing.JButton();
+        mDeleteThisNode = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         mJCRTree = new javax.swing.JTree();
@@ -248,11 +250,24 @@ public class guiappView extends FrameView {
         jPanel8.setBackground(resourceMap.getColor("jPanel8.background")); // NOI18N
         jPanel8.setName("jPanel8"); // NOI18N
 
+        mRefreshProps.setIcon(resourceMap.getIcon("mRefreshProps.icon")); // NOI18N
         mRefreshProps.setText(resourceMap.getString("mRefreshProps.text")); // NOI18N
+        mRefreshProps.setToolTipText(resourceMap.getString("mRefreshProps.toolTipText")); // NOI18N
+        mRefreshProps.setMargin(new java.awt.Insets(2, 2, 2, 2));
         mRefreshProps.setName("mRefreshProps"); // NOI18N
         mRefreshProps.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 mRefreshPropsActionPerformed(evt);
+            }
+        });
+
+        mDeleteThisNode.setIcon(resourceMap.getIcon("mDeleteThisNode.icon")); // NOI18N
+        mDeleteThisNode.setToolTipText(resourceMap.getString("mDeleteThisNode.toolTipText")); // NOI18N
+        mDeleteThisNode.setMargin(new java.awt.Insets(2, 2, 2, 2));
+        mDeleteThisNode.setName("mDeleteThisNode"); // NOI18N
+        mDeleteThisNode.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mDeleteThisNodeActionPerformed(evt);
             }
         });
 
@@ -263,24 +278,30 @@ public class guiappView extends FrameView {
             .addGroup(jPanel8Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(mRefreshProps)
-                .addContainerGap(725, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(mDeleteThisNode)
+                .addContainerGap(740, Short.MAX_VALUE))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(mRefreshProps, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addGap(0, 0, 0)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(mRefreshProps)
+                    .addComponent(mDeleteThisNode, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE)
+            .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 220, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -515,7 +536,6 @@ public class guiappView extends FrameView {
         jLabel5.setName("jLabel5"); // NOI18N
         jLabel5.setOpaque(true);
 
-        mSelectJRDirectory.setIcon(null);
         mSelectJRDirectory.setName("mSelectJRDirectory"); // NOI18N
         mSelectJRDirectory.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -559,14 +579,14 @@ public class guiappView extends FrameView {
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(354, Short.MAX_VALUE))
+                .addContainerGap(370, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(117, Short.MAX_VALUE))
+                .addContainerGap(122, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab(resourceMap.getString("jPanel4.TabConstraints.tabTitle"), jPanel4); // NOI18N
@@ -675,9 +695,11 @@ public class guiappView extends FrameView {
     }//GEN-LAST:event_mJeCARSConnectActionPerformed
 
     private void mJCRTreeValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_mJCRTreeValueChanged
-      TreePath tp = mJCRTree.getSelectionPath();
+      final TreePath tp = mJCRTree.getSelectionPath();
       try {
-        objectInTreeSelected( tp.getLastPathComponent() );
+        if (tp!=null) {
+          objectInTreeSelected( tp.getLastPathComponent() );
+        }
       } catch( Exception je ) {
         reportError( je );
       }
@@ -753,6 +775,18 @@ public class guiappView extends FrameView {
       return;
     }//GEN-LAST:event_mSelectJecarsPropsActionPerformed
 
+    private void mDeleteThisNodeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mDeleteThisNodeActionPerformed
+
+      if (mSelectedTreeNode!=null) {
+        try {
+          mSelectedTreeNode.delete();
+        } catch( Exception e ) {
+          reportError( e );
+        }
+      }
+      return;
+    }//GEN-LAST:event_mDeleteThisNodeActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -776,6 +810,7 @@ public class guiappView extends FrameView {
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTabbedPane jTabbedPane3;
+    private javax.swing.JButton mDeleteThisNode;
     private javax.swing.JTree mJCRTree;
     private javax.swing.JComboBox mJRPath;
     private javax.swing.JButton mJackrabbitConnect;

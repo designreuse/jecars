@@ -1066,7 +1066,7 @@ public class CARS_Factory {
    * @param pContext
    * @throws java.lang.Exception
    */
-  public void performPutAction( CARS_ActionContext pContext ) throws Exception {    
+  public void performPutAction( final CARS_ActionContext pContext ) throws Exception {
     CARS_Main main = null;
     try {
 //      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
@@ -1078,7 +1078,7 @@ public class CARS_Factory {
       if (pathinfo.lastIndexOf( '/' )!=-1) {
         // **** Store the given parameters
         final JD_Taglist paramsTL = pContext.getQueryPartsAsTaglist();
-        Node cnode = main.updateNode( pathinfo, paramsTL, pContext.getBodyStream(), pContext.getBodyContentType() );
+        final Node cnode = main.updateNode( pathinfo, paramsTL, pContext.getBodyStream(), pContext.getBodyContentType() );
         pContext.setThisNode( cnode );
       } else {
         throw new PathNotFoundException( pathinfo );

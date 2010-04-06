@@ -18,7 +18,6 @@ package org.jecars.apps;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -48,13 +47,16 @@ import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.jecars.CARS_AccessManager;
 import org.jecars.CARS_ActionContext;
-import org.jecars.CARS_DefaultMain;
 import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
 import org.jecars.backup.JB_ExportData;
 import org.jecars.backup.JB_Options;
+import org.jecars.client.JC_Clientable;
+import org.jecars.client.JC_Exception;
+import org.jecars.client.JC_Factory;
+import org.jecars.client.nt.JC_UsersNode;
 import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.output.CARS_InputStream;
 import org.jecars.tools.*;
@@ -113,7 +115,7 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
 //      gAdminApp = new CARS_AdminApp();
 //    }
     final ObservationManager om = CARS_Factory.getObservationSession().getWorkspace().getObservationManager();
-    om.addEventListener( ADMINAPP, Event.PROPERTY_CHANGED, "/JeCARS/default/Users", true, null, null, false );
+    om.addEventListener( ADMINAPP, Event.PROPERTY_CHANGED|Event.NODE_REMOVED, "/JeCARS/default/Users", true, null, null, false );
 
     return;
   }
@@ -353,7 +355,7 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     String report;
     report  = "JeCARS Observation Server\n================================\n\n";
     report  = "  Definitions: " + pOBS.getPath() + "\n";
-    report += CARS_ObservationServer.startObservation( pOBS ) + '\n';
+//    report += CARS_ObservationServer.startObservation( pOBS ) + '\n';
     final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
     ac.setContentsResultStream( bais, "text/plain" );
 
@@ -563,26 +565,40 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
    * @param pEvents the event iterator
    */
   @Override
-  public void onEvent( EventIterator pEvents ) {
+  public void onEvent( final EventIterator pEvents ) {
     Event lastEvent = null;
     try {
+      final Session session = CARS_Factory.getObservationSession();
       while( pEvents.hasNext() ) {
         lastEvent = pEvents.nextEvent();
 //        System.out.println( "-a-a-a- " + lastEvent.toString() );
-        String path = lastEvent.getPath();
+        final String path = lastEvent.getPath();
         if (path.endsWith( "/jecars:Password_crypt" )) {
           if (lastEvent.getType()==Event.PROPERTY_CHANGED) {
             // **** Password change
-            Session session = CARS_Factory.getObservationSession();
             synchronized(session) {
               session.refresh( false );
-              Node rn = session.getRootNode().getNode( path.substring( 1, path.lastIndexOf('/')) );
+              final Node rn = session.getRootNode().getNode( path.substring( 1, path.lastIndexOf('/')) );
               rn.setProperty( "jecars:PasswordChangedAt", Calendar.getInstance() );
               rn.setProperty( "jecars:PasswordMustChange", false );
               rn.save();
             }
           }
         }
+
+        // **** Check Dest properties
+//        final String ident = lastEvent.getIdentifier();
+//        if (ident!=null) {
+//          if (lastEvent.getType()==Event.PROPERTY_CHANGED) {
+//            final Node n = session.getNodeByIdentifier( ident );
+//            if (n.isNodeType( "jecars:principalexport" )) {
+//              // **** We must export the results
+//              System.out.println("EXPORT === " + n.getPath() );
+//              exportUserNode( n );
+//            }
+//          }
+//        }
+
       }
       super.onEvent( pEvents );
     } catch( Exception e ) {
@@ -595,6 +611,32 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     return;
   }
 
-  
+  private void exportUserNode( final Node pUserNode ) throws RepositoryException, JC_Exception {
+    if (pUserNode.hasProperty( "jecars:Dest" )) {
+      final Value[] dests       = pUserNode.getProperty( "jecars:Dest" ).getValues();
+      for (int i = 0; i < dests.length; i++) {
+        final Value destValue = dests[i];
+        final Node userSource = pUserNode.getSession().getNode( destValue.getString() );
+        final Value loginName = userSource.getProperty( "jecars:LoginName" ).getValue();
+        final Value loginPwd  = userSource.getProperty( "jecars:LoginPassword" ).getValue();
+        final String repClass = userSource.getProperty( "jecars:RepositoryClass" ).getString();
+        final String[] repClasses = repClass.split( "," );
+        final JC_Clientable client = JC_Factory.createClient( repClasses[1] );
+      System.out.println(" Connect toR " + repClasses[1] );
+        client.setCredentials( loginName.getString(), loginPwd.getString().toCharArray() );
+      System.out.println(" client = " + client );
+        final JC_UsersNode users = client.getUsersNode();
+      System.out.println(" users = " + users.getPath() );
+        if (!users.hasUser( pUserNode.getName() ) ) {
+            System.out.println(" HAS No USER " + pUserNode.getName() );
+          users.addUser( pUserNode.getName(), null, pUserNode.getProperty( "jecars:Password" ).getString().toCharArray(), null );
+          users.save();
+        }
+        // **** Update the user
+        
+      }
+    }
+    return;
+  }
     
 }

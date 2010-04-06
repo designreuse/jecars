@@ -304,9 +304,10 @@ public class JC_DefaultNodeTest {
      * @throws org.jecars.client.JC_Exception
      * @throws java.io.IOException
      */
+    @Ignore( "no testSerializableNode")
     @Test
     public void testSerializableNode() throws JC_Exception, IOException {
-      System.out.println( " " );
+      System.out.println( "testSerializableNode" );
       JC_Nodeable node = mClient_Admin.getNode( "/JeCARS/default/Users/Administrator" );
       ObjectOutputStream oos = new ObjectOutputStream( System.out );
       oos.writeObject( node );
@@ -320,6 +321,7 @@ public class JC_DefaultNodeTest {
      */
     @Test
     public void testGetRights() throws JC_Exception {
+      System.out.println( "testGetRights" );
       JC_Rights r = mClient_Admin.getRights( "/JeCARS/default" );
       assertTrue( r.hasRight( JC_Rights.R_REMOVE ) );
 

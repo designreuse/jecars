@@ -34,6 +34,8 @@ package org.jecars.servlets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
@@ -105,6 +107,9 @@ import org.apache.jackrabbit.webdav.version.VersionResource;
 import org.apache.jackrabbit.webdav.version.VersionableResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.mime.MimeTypeException;
+import org.apache.tika.mime.MimeTypesFactory;
 import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
@@ -142,6 +147,8 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
 
     /** the 'missing-auth-mapping' init parameter */
     public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
+
+    public final static String INIT_PARAM_MIME_INFO = "mime-info";
 
     /**
      * Name of the init parameter that specify a separate configuration used
@@ -305,7 +312,11 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     @Override
     public DavResourceFactory getResourceFactory() {
         if (resourceFactory == null) {
+          try {
             resourceFactory = new CARS_DavResourceFactory(getLockManager(), getResourceConfig());
+          } catch( ServletException se ) {
+            se.printStackTrace();
+          }
         }
         return resourceFactory;
     }
@@ -319,6 +330,31 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     public void setResourceFactory(DavResourceFactory resourceFactory) {
         this.resourceFactory = resourceFactory;
     }
+
+    private Detector getDetector() throws ServletException {
+      return MimeTypesFactory.create();
+      /**
+      URL url;
+      String mimeInfo = getInitParameter( INIT_PARAM_MIME_INFO );
+      if (mimeInfo!=null) {
+        try {
+          url = getServletContext().getResource( mimeInfo );
+        } catch( MalformedURLException e ) {
+          throw new ServletException( "Invalid " + INIT_PARAM_MIME_INFO + " configuration setting: " + mimeInfo, e );
+        }
+      } else {
+        url = MimeTypesFactory.class.getResource( "tike-mimetypes.xml" );
+      }
+      try {
+        return MimeTypesFactory.create( url );
+      } catch( IOException ie ) {
+        throw new ServletException(ie);
+      } catch( MimeTypeException me ) {
+        throw new ServletException( me );
+      }
+       */
+    }
+
 
     /**
      * Returns the <code>SessionProvider</code>. If no session provider has been
@@ -403,11 +439,11 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
      *
      * @return the resource configuration.
      */
-    public ResourceConfig getResourceConfig() {
+    public ResourceConfig getResourceConfig() throws ServletException {
         // fallback if no config present
         if (config == null) {
 // v2.0
-            config = new CARS_DavResourceConfig( null );
+          config = new CARS_DavResourceConfig( getDetector() );
 //            config = new CARS_DavResourceConfig();
         }
         return config;
@@ -919,8 +955,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
             response.sendError(status);
             return;
         }
-
+//        DavResource parent = resource.getCollection();
         resource.move(destResource);
+//        parent.removeMember(resource); // **** JeCARS performs a copy instead of a move
         response.setStatus(status);
     }
 

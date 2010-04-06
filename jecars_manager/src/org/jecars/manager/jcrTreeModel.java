@@ -50,7 +50,7 @@ public class jcrTreeModel {
    * @return
    * @throws RepositoryException
    */
-  public jcrTreeNode getRootTreeNode() throws RepositoryException {
+  public jcrTreeNode getRootTreeNode() throws Exception {
     final jcrTreeNode tn = new jcrTreeNode( mSession.getRootNode() );
     return tn;
   }
