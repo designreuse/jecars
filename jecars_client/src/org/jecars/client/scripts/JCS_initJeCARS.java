@@ -27,7 +27,7 @@ import org.jecars.client.local.JC_LocalClient;
  */
 public class JCS_initJeCARS {
 
-  public String mJeCARSServer = "http://localhost:8080/cars";
+  public String mJeCARSServer = "http://localhost:8084/cars";
   public String mUsername = "Administrator";
   public String mPassword = "admin";
 

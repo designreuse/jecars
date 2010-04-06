@@ -941,6 +941,7 @@ koasdkaso
     if ("jcr:primaryType".equals( pKey )) return true;
     if ("jcr:mixinTypes".equals(  pKey )) return true;
     if ("jcr:created".equals(     pKey )) return true;
+    if ("jcr:createdBy".equals(   pKey )) return true;
     if ("jcr:uuid".equals(        pKey )) return true;
     if ("jecars:alt".equals(      pKey )) return true;
 //    if (pKey.equals( "jecars:X-HTTP-Method-Override" )) return true;
