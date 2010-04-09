@@ -1,11 +1,14 @@
+TooManyMethods
 AvoidFinalLocalVariable
 CollapsibleIfStatements
+DoNotUseThreads
 ShortVariable
 CyclomaticComplexity
 AvoidInstantiatingObjectsInLoops
 MethodNamingConventions
 DataflowAnomalyAnalysis
 UnnecessaryReturn
+ExcessiveImports
 IfElseStmtsMustUseBraces
 IfStmtsMustUseBraces
 AvoidDeeplyNestedIfStmts
