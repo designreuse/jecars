@@ -162,8 +162,7 @@
 [jecars:RemoteURLResource] > jecars:dataresource, jecars:urlresource
 - jecars:Username   (String)
 - jecars:Password   (String)
-- jecars:AuthType   (String) < '(BASIC)'
-
+- jecars:AuthType   (String)
 
 
 [jecars:LoggerSource] > jecars:Logs
@@ -246,6 +245,53 @@
 + jecars:EventsFINER    (jecars:EventsFolder)=jecars:EventsFolder autocreated
 + jecars:EventsFINEST   (jecars:EventsFolder)=jecars:EventsFolder autocreated
 + jecars:EventsVERSION  (jecars:EventsFolder)=jecars:EventsFolder autocreated
+
+// *****************************************************************************
+// **** Mail
+
+[jecars:MailServer] > jecars:root
+- jecars:SMTPHost       (String)='unknown smtp server' mandatory autocreated
+- jecars:TotalMailsSend (Long)='0' mandatory autocreated
+- jecars:LastMailSend   (Date)
+
+[jecars:Mail] > jecars:root
+- jecars:InSendQueue (Boolean)
+- jecars:MailServer  (Path)
+- jecars:To          (String) multiple
+- jecars:Cc          (String) multiple
+- jecars:Bcc         (String) multiple
+- jecars:SendResult  (String)
+- jecars:SendedAt    (Date)
+
+[jecars:Mails] > jecars:root
++ * (jecars:Mail)
+
+[jecars:MailBox] > jecars:root, jecars:unstructured
+- jecars:MailServer       (Path)
+- jecars:TotalMailsSend   (Long)='0' mandatory autocreated
+- jecars:LastMailSend     (Date)
+- jecars:LastMailCheck    (Date)
+- jecars:NewMailExpire    (Long)='120' mandatory autocreated
+- jecars:SendedMailExpire (Long)='120' mandatory autocreated
++ Inbox     (jecars:Mails)=jecars:Mails autocreated
++ SendQueue (jecars:Mails)=jecars:Mails autocreated
++ Sended    (jecars:Mails)=jecars:Mails autocreated
++ *         (jecars:Mails)
+
+
+[jecars:MailLink] > jecars:root
+- jecars:User               (Path)      // **** The mailbox will be {path}/jecars:Prefs/MailBox
+- jecars:ObservationPath    (Path)
+- jecars:EventType          (Long)
+- jecars:NodeType           (String)
+- jecars:NodeNameRegex      (String)
+
+[jecars:MailLinks] > jecars:root
++ * (jecars:MailLink)
+
+[jecars:MailManager] > jecars:Tool
++ DefaultMailServer (jecars:MailServer)=jecars:MailServer autocreated
++ MailLinks         (jecars:MailLinks)=jecars:MailLinks   autocreated
 
 
 // *****************************************************************************

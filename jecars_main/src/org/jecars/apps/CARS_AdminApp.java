@@ -19,8 +19,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -53,10 +51,6 @@ import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
 import org.jecars.backup.JB_ExportData;
 import org.jecars.backup.JB_Options;
-import org.jecars.client.JC_Clientable;
-import org.jecars.client.JC_Exception;
-import org.jecars.client.JC_Factory;
-import org.jecars.client.nt.JC_UsersNode;
 import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.output.CARS_InputStream;
 import org.jecars.tools.*;
@@ -174,15 +168,6 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
       }
       if (!pParentNode.hasNode( "ObservationServer" )) {
         pParentNode.addNode( "ObservationServer", "jecars:Obs_Server" );
-
-        // **** test
-        final Node os = pParentNode.getNode( "ObservationServer" );
-        final Node tudp = os.addNode( "testUDP" );
-        tudp.setProperty( "jecars:Obs_Address", "davn188w" );
-        tudp.setProperty( "jecars:Obs_Path", "/JeCARS/default" );
-        tudp.setProperty( "jecars:Obs_Port", 4444 );
-        tudp.setProperty( "jecars:Obs_IsDeep", true );
-
       }
       if (!pParentNode.hasNode( "BackupFacility")) {
         pParentNode.addNode( "BackupFacility", "jecars:backup" );
@@ -199,6 +184,13 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
         tool.setProperty( "jecars:ToolClass", "org.jecars.CARS_ExpireManager" );
         tool.setProperty( CARS_ActionContext.gDefTitle, "Tool to expire jecars objects" );
         tool.setProperty( CARS_ActionContext.gDefBody, "This tool scans JeCARS at regular intervals to remove expired objects" );
+        tool.setProperty( CARS_ActionContext.gDefExpireDate, (Calendar)null );
+        pParentNode.save();
+      }
+      if (!pParentNode.hasNode( "Tools/new/MailManager" )) {
+        final Node tool = CARS_ToolsFactory.createDynamicTool( pParentNode.getNode( "Tools/new" ), null, null, "MailManager", false, "jecars:MailManager" );
+        tool.setProperty( "jecars:AutoStart", true );
+        tool.setProperty( "jecars:ToolClass", "org.jecars.CARS_MailManager" );
         tool.setProperty( CARS_ActionContext.gDefExpireDate, (Calendar)null );
         pParentNode.save();
       }
@@ -239,8 +231,8 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
         backupFacility( pLeaf, pParentNode.getParent() );
       } else if (pLeaf.equals( "/AdminApp/Config" )) {
         jecars_Config( pMain );
-      } else if (pLeaf.equals( "/AdminApp/ObservationServer" )) {
-        jecars_ObservationServer( pMain, pParentNode );
+//      } else if (pLeaf.equals( "/AdminApp/ObservationServer" )) {
+//        jecars_ObservationServer( pMain, pParentNode );
       } else if (pLeaf.equals( "/AdminApp/GC" )) {
         jecars_GC( pMain );
       } else if (pLeaf.equals( "/AdminApp/CleanAndGC" )) {
@@ -348,19 +340,19 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
    *
    * @param pMain
    */
-  protected void jecars_ObservationServer( final CARS_Main pMain, final Node pOBS ) throws RepositoryException, UnknownHostException, SocketException {
-
-    final CARS_ActionContext ac = pMain.getContext();
-    ac.setErrorCode( HttpURLConnection.HTTP_OK );
-    String report;
-    report  = "JeCARS Observation Server\n================================\n\n";
-    report  = "  Definitions: " + pOBS.getPath() + "\n";
+//  protected void jecars_ObservationServer( final CARS_Main pMain, final Node pOBS ) throws RepositoryException, UnknownHostException, SocketException {
+//
+//    final CARS_ActionContext ac = pMain.getContext();
+//    ac.setErrorCode( HttpURLConnection.HTTP_OK );
+//    String report;
+//    report  = "JeCARS Observation Server\n================================\n\n";
+//    report  = "  Definitions: " + pOBS.getPath() + "\n";
 //    report += CARS_ObservationServer.startObservation( pOBS ) + '\n';
-    final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
-    ac.setContentsResultStream( bais, "text/plain" );
-
-    return;
-  }
+//    final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
+//    ac.setContentsResultStream( bais, "text/plain" );
+//
+//    return;
+//  }
 
   /** adminApp_OpenStreams
    *
@@ -611,32 +603,32 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     return;
   }
 
-  private void exportUserNode( final Node pUserNode ) throws RepositoryException, JC_Exception {
-    if (pUserNode.hasProperty( "jecars:Dest" )) {
-      final Value[] dests       = pUserNode.getProperty( "jecars:Dest" ).getValues();
-      for (int i = 0; i < dests.length; i++) {
-        final Value destValue = dests[i];
-        final Node userSource = pUserNode.getSession().getNode( destValue.getString() );
-        final Value loginName = userSource.getProperty( "jecars:LoginName" ).getValue();
-        final Value loginPwd  = userSource.getProperty( "jecars:LoginPassword" ).getValue();
-        final String repClass = userSource.getProperty( "jecars:RepositoryClass" ).getString();
-        final String[] repClasses = repClass.split( "," );
-        final JC_Clientable client = JC_Factory.createClient( repClasses[1] );
-      System.out.println(" Connect toR " + repClasses[1] );
-        client.setCredentials( loginName.getString(), loginPwd.getString().toCharArray() );
-      System.out.println(" client = " + client );
-        final JC_UsersNode users = client.getUsersNode();
-      System.out.println(" users = " + users.getPath() );
-        if (!users.hasUser( pUserNode.getName() ) ) {
-            System.out.println(" HAS No USER " + pUserNode.getName() );
-          users.addUser( pUserNode.getName(), null, pUserNode.getProperty( "jecars:Password" ).getString().toCharArray(), null );
-          users.save();
-        }
+//  private void exportUserNode( final Node pUserNode ) throws RepositoryException, JC_Exception {
+//    if (pUserNode.hasProperty( "jecars:Dest" )) {
+//      final Value[] dests       = pUserNode.getProperty( "jecars:Dest" ).getValues();
+//      for (int i = 0; i < dests.length; i++) {
+//        final Value destValue = dests[i];
+//        final Node userSource = pUserNode.getSession().getNode( destValue.getString() );
+//        final Value loginName = userSource.getProperty( "jecars:LoginName" ).getValue();
+//        final Value loginPwd  = userSource.getProperty( "jecars:LoginPassword" ).getValue();
+//        final String repClass = userSource.getProperty( "jecars:RepositoryClass" ).getString();
+//        final String[] repClasses = repClass.split( "," );
+//        final JC_Clientable client = JC_Factory.createClient( repClasses[1] );
+//      System.out.println(" Connect toR " + repClasses[1] );
+//        client.setCredentials( loginName.getString(), loginPwd.getString().toCharArray() );
+//      System.out.println(" client = " + client );
+//        final JC_UsersNode users = client.getUsersNode();
+//      System.out.println(" users = " + users.getPath() );
+//        if (!users.hasUser( pUserNode.getName() ) ) {
+//            System.out.println(" HAS No USER " + pUserNode.getName() );
+//          users.addUser( pUserNode.getName(), null, pUserNode.getProperty( "jecars:Password" ).getString().toCharArray(), null );
+//          users.save();
+//        }
         // **** Update the user
         
-      }
-    }
-    return;
-  }
+//      }
+//    }
+//    return;
+//  }
     
 }
