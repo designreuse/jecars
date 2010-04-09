@@ -231,9 +231,12 @@ public class UserManagerPanel extends javax.swing.JPanel {
       if (userN==null) {
         mFirstName.setText( "" );
         mLastName.setText(  "" );
+        mEmail.setText(  "" );
       } else {
         mFirstName.setText( userN.getFirstName() );
         mLastName.setText( userN.getLastName() );
+        mEmail.setText( userN.getEmail() );
+        mModifyUser.setEnabled( true );
       }
       refreshGroup();
       return;
@@ -464,6 +467,8 @@ public class UserManagerPanel extends javax.swing.JPanel {
         mFirstName = new javax.swing.JTextField();
         mLastName = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        mEmail = new javax.swing.JTextField();
         mClearData = new javax.swing.JButton();
         mDefaultMembership = new javax.swing.JCheckBox();
         jPanel3 = new javax.swing.JPanel();
@@ -550,11 +555,16 @@ public class UserManagerPanel extends javax.swing.JPanel {
 
         mModifyUser.setText("Modify User");
         mModifyUser.setEnabled(false);
+        mModifyUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mModifyUserActionPerformed(evt);
+            }
+        });
 
         mUserMayAccess.setSelected(true);
         mUserMayAccess.setText("User may access user data");
 
-        jPanel4.setBackground(new java.awt.Color(239, 255, 255));
+        jPanel4.setBackground(new java.awt.Color(232, 232, 232));
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "User data", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(102, 102, 102))); // NOI18N
 
         jPanel5.setOpaque(false);
@@ -577,6 +587,8 @@ public class UserManagerPanel extends javax.swing.JPanel {
 
         jLabel4.setText("Last name");
 
+        jLabel9.setText("EMail");
+
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
@@ -586,17 +598,23 @@ public class UserManagerPanel extends javax.swing.JPanel {
                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, 71, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(mLastName, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE)
-                    .addComponent(mFirstName, javax.swing.GroupLayout.DEFAULT_SIZE, 132, Short.MAX_VALUE))
-                .addContainerGap())
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(mLastName)
+                    .addComponent(mFirstName, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel9)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(mEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(36, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(mFirstName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel9)
+                    .addComponent(mEmail, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
@@ -610,7 +628,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(268, Short.MAX_VALUE))
+                .addContainerGap(78, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1034,6 +1052,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
         }
         user.setFirstName( mFirstName.getText() );
         user.setLastName(  mLastName.getText() );
+        user.setEmail(     mEmail.getText() );
         user.save();
         if (mDefaultMembership.isSelected()) {
           JC_GroupNode group = mGroups.getGroup( "DefaultReadGroup" );
@@ -1231,6 +1250,23 @@ public class UserManagerPanel extends javax.swing.JPanel {
       return;
     }//GEN-LAST:event_mCreateGroupActionPerformed
 
+    private void mModifyUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mModifyUserActionPerformed
+      try {
+        final JC_UserNode user = mUsers.getUser( mNameID.getText() );
+        if (user==null) {
+          throw new JC_Exception( "User " + mNameID.getText() + " doesn't exists" );
+        } else {
+          user.setFirstName( mFirstName.getText() );
+          user.setLastName(  mLastName.getText() );
+          user.setEmail(     mEmail.getText() );
+          user.save();
+        }
+      } catch( JC_Exception je ) {
+        reportError( je );
+      }
+      return;
+    }//GEN-LAST:event_mModifyUserActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
@@ -1241,6 +1277,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
@@ -1258,6 +1295,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
     private javax.swing.JButton mCreateGroup;
     private javax.swing.JButton mCreateUser;
     private javax.swing.JCheckBox mDefaultMembership;
+    private javax.swing.JTextField mEmail;
     private javax.swing.JTextField mFirstName;
     private javax.swing.JList mGroupMemberList;
     private javax.swing.JTextField mGroupNameID;
