@@ -116,8 +116,12 @@ public class CARS_ToolsFactory {
    * @return
    * @throws java.lang.Exception
    */
-  static public Node createDynamicTool( Node pParent, Node pTemplateTool, String pUserId, String pToolName ) throws Exception {
+  static public Node createDynamicTool( final Node pParent, final Node pTemplateTool, final String pUserId, final String pToolName ) throws Exception {
     return createDynamicTool( pParent, pTemplateTool, pUserId, pToolName, false );
+  }
+
+  static public Node createDynamicTool( final Node pParent, final Node pTemplateTool, final String pUserId, final String pToolName, final boolean pUnique ) throws Exception {
+    return createDynamicTool( pParent, pTemplateTool, pUserId, pToolName, pUnique, "jecars:Tool" );
   }
 
   /** createDynamicTool
@@ -130,9 +134,9 @@ public class CARS_ToolsFactory {
    * @return
    * @throws java.lang.Exception
    */
-  static public Node createDynamicTool( Node pParent, Node pTemplateTool, String pUserId, String pToolName, boolean pUnique ) throws Exception {
+  static public Node createDynamicTool( final Node pParent, final Node pTemplateTool, final String pUserId, final String pToolName, final boolean pUnique, final String pToolNodeType ) throws Exception {
     String id;
-    if (pUnique==true) {
+    if (pUnique) {
       if (pUserId==null) {
         id = pToolName + "_" + getUniqueID();
       } else {
@@ -145,7 +149,7 @@ public class CARS_ToolsFactory {
         id = pUserId + "_" + pToolName;
       }
     }
-    Node jtool = pParent.addNode( id, "jecars:Tool" );
+    final Node jtool = pParent.addNode( id, pToolNodeType );
     jtool.setProperty( CARS_ActionContext.gDefTitle, pToolName );
     if (pTemplateTool!=null) {
       jtool.setProperty( "jecars:ToolTemplate", pTemplateTool.getPath() );

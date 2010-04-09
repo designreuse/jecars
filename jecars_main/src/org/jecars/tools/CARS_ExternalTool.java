@@ -54,6 +54,40 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
 
   private transient File mWorkingDirectory = null;
 
+
+  /** IOStreamThread
+   *
+   */
+  private class IOStreamThread extends Thread {
+    final private String      mName;
+    final private InputStream mInput;
+
+    public IOStreamThread( final String pName, final InputStream pIs ) {
+      super();
+      mName  = pName;
+      mInput = pIs;
+      return;
+    }
+
+    @Override
+    public void run() {
+      try {
+        final InputStreamReader isr = new InputStreamReader(mInput);
+        final BufferedReader br = new BufferedReader(isr);
+        String line = null;
+        final StringBuilder sbuf = new StringBuilder();
+        while ( (line = br.readLine()) != null) {
+          sbuf.append( line ).append( '\n' );
+        }
+        final Node output = replaceOutput( mName, sbuf.toString() );
+      } catch (Exception ioe) {
+        ioe.printStackTrace();
+      }
+    }
+}
+
+
+
   /** getWorkingDirectory
    *
    * @return
@@ -212,7 +246,6 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       final String execPath = config.getProperty( "jecars:ExecPath" ).getString();
       reportMessage( Level.CONFIG, "ExecPath=" + execPath, false );
       final String cmdParam = getParameterString( "commandLine", 0 );
-      final ProcessBuilder pb;
       final List<String> commands = new ArrayList<String>();
       commands.add( execPath );
       if (cmdParam!=null) {
@@ -221,25 +254,37 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       for(final File input : mInputs ) {
         commands.add( input.getAbsolutePath() );
       }
-      pb = new ProcessBuilder( commands );
+      final ProcessBuilder pb = new ProcessBuilder( commands );
       if (config.hasProperty( WORKINGDIRECTORY )) {
         pb.directory( mWorkingDirectory );
       }
       final Process process = pb.start();
-      pb.redirectErrorStream( true );
-      final BufferedReader outputReader = new BufferedReader(new InputStreamReader( process.getInputStream() ) );
-      String line;
-      final StringBuilder output = new StringBuilder();
-      while( (line = outputReader.readLine()) != null) {
-//    System.out.println("outputp " + line );
-        output.append( line ).append( LF );
-        replaceOutput( "stdout", output.toString() );
-//        getTool().save();
-      }
-//      addOutput( output.toString() );
-      reportStatusMessage( "External tool is ending" );
-      outputReader.close();
+      final IOStreamThread error = new IOStreamThread( "error.txt",  process.getErrorStream() );
+      final IOStreamThread input = new IOStreamThread( "stdout.txt", process.getInputStream() );
+      error.start();
+      input.start();
+      final int err = process.waitFor();
+      error.join( 4000 );
+      input.join( 4000 );
       process.destroy();
+      getTool().save();
+
+//      pb.redirectErrorStream( true );
+//      final BufferedReader outputReader = new BufferedReader(new InputStreamReader( process.getInputStream() ) );
+//      String line;
+//      final StringBuilder output = new StringBuilder();
+//      while( (line = outputReader.readLine()) != null) {
+////    System.out.println("outputp " + line );
+//        output.append( line ).append( LF );
+//        replaceOutput( "stdout", output.toString() );
+////        getTool().save();
+//      }
+////      addOutput( output.toString() );
+      reportStatusMessage( "External tool is ending result = " + err );
+      if (err!=0) {
+        throw new CARS_ToolException( "External tool has produced an error " + err );
+      }
+//      outputReader.close();
       getTool().save();
     } else {
       throw new InvalidParameterException( "No execpath" );

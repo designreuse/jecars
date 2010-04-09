@@ -1022,9 +1022,10 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    *
    * @param pNodeName
    * @param pOutput
+   * @return
    * @throws RepositoryException
    */
-  protected void replaceOutput( final String pNodeName, final String pOutput ) throws RepositoryException {
+  protected Node replaceOutput( final String pNodeName, final String pOutput ) throws RepositoryException {
     final Node n = getTool();
     if (!n.hasNode( pNodeName )) {
       n.addNode( pNodeName, "jecars:outputresource" );
@@ -1033,7 +1034,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     output.setProperty( "jcr:mimeType", "text/plain" );
     output.setProperty( "jcr:data", pOutput );
     output.setProperty( "jcr:lastModified", Calendar.getInstance() );
-    return;
+    return output;
   }
 
   
