@@ -75,7 +75,7 @@ public class UsersManagerFrame extends javax.swing.JFrame {
             @Override
             public void run() {
               try {
-                UsersManagerFrame umf = new UsersManagerFrame();
+                final UsersManagerFrame umf = new UsersManagerFrame();
                 JC_Clientable client = JC_Factory.createClient( ds.mJeCARSServer );
                 client.setCredentials( ds.mUsername, ds.mPassword.toCharArray() );
                 umf.userManagerPanel1.setClient( client );
