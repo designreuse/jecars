@@ -76,9 +76,9 @@
    <target name="jecarsClient" depends="-post-jar">
       <jar destfile="dist/jecarsClient.jar">
         <zipfileset src="dist/jecars_client.jar"/>
-        <zipfileset src="../libs/rome-1.0RC1.jar"/>
-        <zipfileset src="../libs/jdom.jar"/>
-        <zipfileset src="../libs/jdots.jar"/>
+        <zipfileset src="../sharedlibs/rome-1.0RC1.jar"/>
+        <zipfileset src="../sharedlibs/jdom.jar"/>
+        <zipfileset src="../sharedlibs/jdots.jar"/>
         <manifest>
             <attribute name="Manifest-Version" value="1.1"/>
             <attribute name="Created-By"       value=""/>
