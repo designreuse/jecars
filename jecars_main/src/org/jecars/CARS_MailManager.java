@@ -179,6 +179,22 @@ public class CARS_MailManager extends CARS_DefaultToolInterface {
     return;
   }
 
+  /** shutdown the expire manager
+   */
+  public void shutdown() {
+    try {
+      setStateRequest( STATEREQUEST_ABORT );
+    } catch (Exception e) {
+      LOG.log( Level.WARNING, null, e );
+    }
+    if (mSession!=null) {
+      mSession.logout();
+      mSession = null;
+    }
+    return;
+  }
+
+
   /** toolRun
    *
    * @throws Exception
@@ -187,87 +203,92 @@ public class CARS_MailManager extends CARS_DefaultToolInterface {
   protected void toolRun() throws Exception {
     super.toolRun();
     final Node n = getTool();
-    mSession = n.getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
-
-//    final Node tool = mSession.getNode( getTool().getPath() );
-    final Node mailLinks = mSession.getNode( getTool().getPath() + "/MailLinks" );
-    if ((mCheckPathLastModified==0) || (mailLinks.hasProperty( "jecars:Modified" ))) {
-      final long mod;
-      if (mCheckPathLastModified==0) {
-        mod = System.currentTimeMillis();
-      } else {
-        mod = mailLinks.getProperty( "jecars:Modified" ).getLong();
-      }
-//    System.out.println("CHECK MAIL : " + mod);
-      if (mCheckPathLastModified!=mod) {
-//    System.out.println(" REFRESH LINKS : " + mod);
-        mCheckPathLastModified = mod;
-        final NodeIterator links = mailLinks.getNodes();
-        mCheckPaths.clear();
-        while( links.hasNext() ) {
-          final Node link = links.nextNode();
-          mCheckPaths.put( link, link.getProperty( "jecars:ObservationPath" ).getValue().getString() );
+    try {
+        if (mSession==null) {
+          mSession = n.getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
         }
-      }
-    }
+        
+    //    final Node tool = mSession.getNode( getTool().getPath() );
+        final Node mailLinks = mSession.getNode( getTool().getPath() + "/MailLinks" );
+        if ((mCheckPathLastModified==0) || (mailLinks.hasProperty( "jecars:Modified" ))) {
+          final long mod;
+          if (mCheckPathLastModified==0) {
+            mod = System.currentTimeMillis();
+          } else {
+            mod = mailLinks.getProperty( "jecars:Modified" ).getLong();
+          }
+    //    System.out.println("CHECK MAIL : " + mod);
+          if (mCheckPathLastModified!=mod) {
+    //    System.out.println(" REFRESH LINKS : " + mod);
+            mCheckPathLastModified = mod;
+            final NodeIterator links = mailLinks.getNodes();
+            mCheckPaths.clear();
+            while( links.hasNext() ) {
+              final Node link = links.nextNode();
+              mCheckPaths.put( link, link.getProperty( "jecars:ObservationPath" ).getValue().getString() );
+            }
+          }
+        }
 
-    // *************************************
-    // **** Check for mails
-    if (mMailToBeSend) {
-      mMailToBeSend = false;
-      try {
-        synchronized(LOCK) {
-          final Node dms = getTool().getNode( "DefaultMailServer" );
-          final String smtp = dms.getProperty( "jecars:SMTPHost" ).getString();
-          final NodeIterator ni = getMailNodes( mSession.getWorkspace().getQueryManager() );
-          while( ni.hasNext() ) {
-            final Node mailNode = ni.nextNode();
-//             System.out.println("READY to send == " + mailNode.getPath() );
-            final SimpleEmail email = new SimpleEmail();
-            email.setHostName( smtp );
-            if (mailNode.hasProperty( "jecars:To" )) {
-              final Value[] tos = mailNode.getProperty( "jecars:To" ).getValues();
-              for (Value to : tos) {
-                email.addTo( to.getString() );
-              }
-              email.setFrom( mSession.getUserID() + "@jecars.org", mSession.getUserID() );
-              email.setSubject( mailNode.getProperty( "jecars:Title" ).getString() );
-              email.setMsg( mailNode.getProperty( "jecars:Body" ).getString() );
-              final String result = email.send();
-              final Node mailbox = mailNode.getParent().getParent();
-        //        System.out.println("result = " + result );
-              mailNode.setProperty( "jecars:SendResult",  result );
-              mailNode.setProperty( "jecars:SendedAt",    Calendar.getInstance() );
-              mailNode.setProperty( "jecars:InSendQueue", false );
-              CARS_Utils.setCurrentModificationDate( mailNode );
-              CARS_Utils.setExpireDate( mailNode, (int)mailbox.getProperty( "jecars:SendedMailExpire" ).getLong() );
-              mailNode.save();
-//        System.out.println("result " + email.send() );
-              // **** Check if there is a Sended box
-              if (mailbox.isNodeType( "jecars:MailBox" )) {
-                mailbox.setProperty( "jecars:LastMailSend",   Calendar.getInstance() );
-                dms.setProperty(     "jecars:LastMailSend",   Calendar.getInstance() );
-                mailbox.setProperty( "jecars:TotalMailsSend", mailbox.getProperty( "jecars:TotalMailsSend" ).getLong()+1 );
-                dms.setProperty(     "jecars:TotalMailsSend", dms.getProperty( "jecars:TotalMailsSend" ).getLong()+1 );
-                CARS_Utils.setCurrentModificationDate( mailbox );
-                CARS_Utils.setCurrentModificationDate( dms );
-              }
-              if (mailbox.hasNode( "Sended" ) && (mailbox.getNode( "Sended" ).isNodeType( "jecars:Mails" ))) {
-                // **** Move the mail to the sended box
-                mSession.move( mailNode.getPath(), mailbox.getNode( "Sended" ).getPath() + '/' + mailNode.getName() );
-              } else {
-                mailNode.remove();
+        // *************************************
+        // **** Check for mails
+        if (mMailToBeSend) {
+          mMailToBeSend = false;
+          try {
+            synchronized(LOCK) {
+              final Node dms = getTool().getNode( "DefaultMailServer" );
+              final String smtp = dms.getProperty( "jecars:SMTPHost" ).getString();
+              final NodeIterator ni = getMailNodes( mSession.getWorkspace().getQueryManager() );
+              while( ni.hasNext() ) {
+                final Node mailNode = ni.nextNode();
+    //             System.out.println("READY to send == " + mailNode.getPath() );
+                final SimpleEmail email = new SimpleEmail();
+                email.setHostName( smtp );
+                if (mailNode.hasProperty( "jecars:To" )) {
+                  final Value[] tos = mailNode.getProperty( "jecars:To" ).getValues();
+                  for (Value to : tos) {
+                    email.addTo( to.getString() );
+                  }
+                  email.setFrom( mSession.getUserID() + "@jecars.org", mSession.getUserID() );
+                  email.setSubject( mailNode.getProperty( "jecars:Title" ).getString() );
+                  email.setMsg( mailNode.getProperty( "jecars:Body" ).getString() );
+                  final String result = email.send();
+                  final Node mailbox = mailNode.getParent().getParent();
+            //        System.out.println("result = " + result );
+                  mailNode.setProperty( "jecars:SendResult",  result );
+                  mailNode.setProperty( "jecars:SendedAt",    Calendar.getInstance() );
+                  mailNode.setProperty( "jecars:InSendQueue", false );
+                  CARS_Utils.setCurrentModificationDate( mailNode );
+                  CARS_Utils.setExpireDate( mailNode, (int)mailbox.getProperty( "jecars:SendedMailExpire" ).getLong() );
+                  mailNode.save();
+    //        System.out.println("result " + email.send() );
+                  // **** Check if there is a Sended box
+                  if (mailbox.isNodeType( "jecars:MailBox" )) {
+                    mailbox.setProperty( "jecars:LastMailSend",   Calendar.getInstance() );
+                    dms.setProperty(     "jecars:LastMailSend",   Calendar.getInstance() );
+                    mailbox.setProperty( "jecars:TotalMailsSend", mailbox.getProperty( "jecars:TotalMailsSend" ).getLong()+1 );
+                    dms.setProperty(     "jecars:TotalMailsSend", dms.getProperty( "jecars:TotalMailsSend" ).getLong()+1 );
+                    CARS_Utils.setCurrentModificationDate( mailbox );
+                    CARS_Utils.setCurrentModificationDate( dms );
+                  }
+                  if (mailbox.hasNode( "Sended" ) && (mailbox.getNode( "Sended" ).isNodeType( "jecars:Mails" ))) {
+                    // **** Move the mail to the sended box
+                    mSession.move( mailNode.getPath(), mailbox.getNode( "Sended" ).getPath() + '/' + mailNode.getName() );
+                  } else {
+                    mailNode.remove();
+                  }
+                  mSession.save();
+                }
               }
               mSession.save();
             }
+          } catch( Exception e ) {
+            e.printStackTrace();
+          } finally {
+            mSession.save();
           }
-          mSession.save();
         }
-      } catch( Exception e ) {
-        e.printStackTrace();
-      } finally {
-        mSession.save();
-      }
+    } finally {
     }
     return;
   }
