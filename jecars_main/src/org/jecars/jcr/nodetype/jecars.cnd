@@ -368,7 +368,7 @@
 [jecars:main] > jecars:root
 - jecars:MajorVersion    (Long)='1'         mandatory autocreated
 - jecars:MinorVersion    (Long)='3'         mandatory autocreated
-- jecars:BuildVersion    (Long)='20100226'  mandatory autocreated
+- jecars:BuildVersion    (Long)='20100412'  mandatory autocreated
 - jecars:CurrentId       (Long)='0'         mandatory autocreated
 - jecars:Started         (Date)
 + *
