@@ -301,6 +301,7 @@ public class WB_UserPanel extends javax.swing.JPanel {
       try {
         final JC_UserNode userNode = mClient.getUserAsUserNode();
         userNode.changePassword( mCurrentPassword.getPassword(), mNewPassword.getPassword() );
+        reportMessage( "New password is set" );
       } catch( JC_HttpException jhe ) {
         if (jhe.getHttpErrorCode().getErrorCode()==HttpURLConnection.HTTP_UNAUTHORIZED) {
           reportMessage( "Current password is not correct" );
@@ -309,7 +310,6 @@ public class WB_UserPanel extends javax.swing.JPanel {
       } catch( JC_Exception je ) {
         reportError( je );
       }
-      reportMessage( "New password is set" );
       return;
     }//GEN-LAST:event_mChangePasswordActionPerformed
 
