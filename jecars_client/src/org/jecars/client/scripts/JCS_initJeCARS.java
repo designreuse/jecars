@@ -20,6 +20,9 @@ import org.jecars.client.JC_Clientable;
 import org.jecars.client.JC_Factory;
 import org.jecars.client.JC_Nodeable;
 import org.jecars.client.local.JC_LocalClient;
+import org.jecars.client.nt.JC_GroupNode;
+import org.jecars.client.nt.JC_GroupsNode;
+import org.jecars.client.nt.JC_PermissionNode;
 
 /** JCS_initJeCARS
  *
@@ -51,7 +54,7 @@ public class JCS_initJeCARS {
   public void createGroups( JC_Clientable pClient ) throws Exception {
     // **** Create the standard groups        
     JC_Nodeable jecars      = pClient.getNode( "/JeCARS" );
-    JC_Nodeable groups      = pClient.getNode( "/JeCARS/default/Groups" );
+    JC_GroupsNode groups    = (JC_GroupsNode)pClient.getNode( "/JeCARS/default/Groups" ).morphToNodeType();
     JC_Nodeable defaultNode = groups.getParent();
     JC_Nodeable users       = pClient.getNode( "/JeCARS/default/Users" );
     JC_Nodeable data        = pClient.getNode( "/JeCARS/default/Data" );
@@ -164,6 +167,25 @@ public class JCS_initJeCARS {
       perm.setProperty( "jecars:Principal", "+" + drg.getPath() );
       perm.save();
     }
+
+    // **** Add /JeCARS/apps container and credentials
+/*
+    if (!jecars.hasNode( "apps" )) {
+      jecars.addNode( "apps", "jecars:datafolder" );
+      jecars.save();
+    }
+    final JC_Nodeable userapps = jecars.getNode( "apps" );
+    if (!groups.hasGroup( "AppUsers" )) {
+      final JC_GroupNode appUsers = groups.addGroup( "AppUsers" );
+      appUsers.save();
+    }
+    final JC_GroupNode appUsers = groups.getGroup( "AppUsers" );
+    if (!userapps.hasNode( "P_AppUsers" )) {
+      userapps.addPermissionNode( "P_AppUsers", appUsers, JC_PermissionNode.RS_ALLREADACCESS );
+      userapps.save();
+    }
+ * 
+ */
 
 
 //    // **** Add standard Queries container

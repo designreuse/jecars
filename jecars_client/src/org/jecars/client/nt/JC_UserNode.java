@@ -16,9 +16,9 @@
 package org.jecars.client.nt;
 
 import java.util.Calendar;
+import org.jecars.client.JC_Clientable;
 import org.jecars.client.JC_DefaultNode;
 import org.jecars.client.JC_Exception;
-import org.jecars.client.JC_Nodeable;
 
 /**
  * JC_UserNode
@@ -46,7 +46,7 @@ public class JC_UserNode extends JC_DefaultNode {
      * @throws org.jecars.client.JC_Exception
      */
     public String getFullname() throws JC_Exception {
-        return (String) getProperty("jecars:Fullname").getValue();
+      return (String) getProperty("jecars:Fullname").getValue();
     }
 
     public void setFullname(final String pFullname) throws JC_Exception {
@@ -66,6 +66,25 @@ public class JC_UserNode extends JC_DefaultNode {
     public void setPassword(final char[] pPassword) throws JC_Exception {
         setProperty("jecars:Password_crypt", new String(pPassword));
         return;
+    }
+
+    /** changePassword
+     *
+     * @param pOldPassword
+     * @param pNewPassword
+     * @throws JC_Exception
+     */
+    public void changePassword( final char[] pOldPassword, final char[] pNewPassword ) throws JC_Exception {
+      final JC_Clientable client = getClient();
+      final char[] pwd = client.getPassword();
+      try {
+        client.setCredentials( client.getUsername(), pOldPassword );
+        setProperty("jecars:Password_crypt", new String(pNewPassword) );
+        save();
+      } finally {
+        client.setProxyCredentials( client.getUsername(), pwd );
+      }
+      return;
     }
 
     /** expirePassword

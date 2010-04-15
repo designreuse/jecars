@@ -19,6 +19,7 @@ package org.jecars.client;
 import java.util.AbstractMap;
 import java.util.EnumSet;
 import org.jecars.client.nt.JC_GroupsNode;
+import org.jecars.client.nt.JC_UserNode;
 import org.jecars.client.nt.JC_UsersNode;
 import org.jecars.client.observation.JC_ObservationManager;
 
@@ -29,8 +30,8 @@ import org.jecars.client.observation.JC_ObservationManager;
  */
 public interface JC_Clientable {
 
-  final static public String VERSION_ID = "v1.2.-99";
-  final static public String VERSION = "JeCARS 'Babaco' Client Development " + VERSION_ID;
+  final static public String VERSION_ID = "v1.3.-98";
+  final static public String VERSION = "JeCARS 'Araza' Client Development " + VERSION_ID;
 
   @Deprecated
   final static int LOGIN_TYPE_UNKNOWN = 0; 
@@ -118,6 +119,12 @@ public interface JC_Clientable {
    * @return
    */
   JC_Nodeable getUserNode() throws JC_Exception;
+
+  /** getUserAsUserNode
+   *
+   * @return
+   */
+  JC_UserNode getUserAsUserNode() throws JC_Exception;
   
   /** getUsersNode
    * 
