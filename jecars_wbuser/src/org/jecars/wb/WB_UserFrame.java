@@ -11,6 +11,7 @@
 
 package org.jecars.wb;
 
+//import org.jdesktop.swingx.JXLoginDialog;
 import org.jdesktop.swingx.JXLoginDialog;
 import org.jdesktop.swingx.JXLoginPane;
 import org.jecars.client.scripts.JCS_defaultScript;
@@ -37,7 +38,6 @@ public class WB_UserFrame extends javax.swing.JFrame {
       if ("".equals( pScript.mUsername )) {
         // **** Ask for credentials
         final JXLoginDialog ld = new JXLoginDialog( this,  "Enter credentials for the user to be edited", true );
-//        WB_LoginDailog ld = new WB_LoginDailog( this, true );
         final JXLoginPane lp = ld.getPanel();
         ld.setAlwaysOnTop( true );
         ld.setVisible( true );
