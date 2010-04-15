@@ -34,8 +34,6 @@ package org.jecars.servlets;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import org.apache.jackrabbit.server.BasicCredentialsProvider;
 import org.apache.jackrabbit.server.CredentialsProvider;
 import org.apache.jackrabbit.server.SessionProvider;
@@ -65,7 +63,6 @@ import org.apache.jackrabbit.webdav.DavServletRequest;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.WebdavRequestImpl;
 import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.WebdavResponseImpl;
 import org.apache.jackrabbit.webdav.bind.BindInfo;
@@ -108,11 +105,11 @@ import org.apache.jackrabbit.webdav.version.VersionableResource;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.tika.detect.Detector;
-import org.apache.tika.mime.MimeTypeException;
 import org.apache.tika.mime.MimeTypesFactory;
 import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
+import org.jecars.webdav.CARS_DavRequestImpl;
 import org.jecars.webdav.CARS_DavResourceConfig;
 import org.jecars.webdav.CARS_DavResourceFactory;
 import org.jecars.webdav.CARS_DavSessionProvider;
@@ -470,21 +467,27 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
      * @throws javax.servlet.ServletException
      * @throws java.io.IOException
      */
-    protected void service(HttpServletRequest request, HttpServletResponse response,
-                        CARS_ActionContext pAC, CARS_Factory pFactory ) throws ServletException, Exception {
+    protected void service( final HttpServletRequest request, final HttpServletResponse response,
+                            final CARS_ActionContext pAC,     final CARS_Factory pFactory ) throws ServletException, Exception {
 
-        WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory());
+//        WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory());
+//     System.out.println(" adsdsad " + request.getContextPath() );
+//     System.out.println(" adsdsad1 " + request.getPathInfo() );
+//     System.out.println(" adsdsad1 " + request.getRequestURI() );
+//     System.out.println(" adsdsad1 " + request.getServletPath() );
+        final WebdavRequest webdavRequest = new CARS_DavRequestImpl( request, getLocatorFactory(), request.getContextPath() + request.getServletPath() );
         // **** DeltaV requires 'Cache-Control' header for all methods except 'VERSION-CONTROL' and 'REPORT'.
-        int methodCode = DavMethods.getMethodCode(request.getMethod());
-        boolean noCache = DavMethods.isDeltaVMethod(webdavRequest) && !(DavMethods.DAV_VERSION_CONTROL == methodCode || DavMethods.DAV_REPORT == methodCode);
-        WebdavResponse webdavResponse = new WebdavResponseImpl(response, noCache);
+        final int methodCode = DavMethods.getMethodCode(request.getMethod());
+        final boolean noCache = DavMethods.isDeltaVMethod(webdavRequest) && !(DavMethods.DAV_VERSION_CONTROL == methodCode || DavMethods.DAV_REPORT == methodCode);
+        final WebdavResponse webdavResponse = new WebdavResponseImpl(response, noCache);
+        CARS_Main main = null;
         try {
             pAC.setAction( CARS_ActionContext.gDefActionGET );
-            CARS_Main main = pFactory.createMain( pAC );
+            main = pFactory.createMain( pAC );
             pAC.setMain( main );
 
             // **** make sure there is a authenticated user
-            if (((CARS_DavSessionProvider)getDavSessionProvider()).attachSession( webdavRequest, pAC, pFactory )==false) {
+            if (!((CARS_DavSessionProvider)getDavSessionProvider()).attachSession( webdavRequest, pAC, pFactory )) {
               return;
             }
 
@@ -492,8 +495,8 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
 //            cds.setActionContext( pAC );
 
             // **** check matching if=header for lock-token relevant operations
-            CARS_DavResourceFactory drf = (CARS_DavResourceFactory)getResourceFactory();
-            DavResource resource = drf.createResource(webdavRequest.getRequestLocator(), webdavRequest, webdavResponse, pAC, pFactory );
+            final CARS_DavResourceFactory drf = (CARS_DavResourceFactory)getResourceFactory();
+            final DavResource resource = drf.createResource(webdavRequest.getRequestLocator(), webdavRequest, webdavResponse, pAC, pFactory );
             if (!isPreconditionValid(webdavRequest, resource)) {
                 webdavResponse.sendError(DavServletResponse.SC_PRECONDITION_FAILED);
                 return;
@@ -506,7 +509,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
             if (e.getErrorCode() == HttpServletResponse.SC_UNAUTHORIZED) {
                 webdavResponse.setHeader("WWW-Authenticate", getAuthenticateHeaderValue());
 //                webdavResponse.sendError(e.getErrorCode(), e.getStatusPhrase());
-                Throwable cause = e.getCause();
+                final Throwable cause = e.getCause();
                 if (cause==null) {
                   webdavResponse.sendError(e.getErrorCode(), e.getStatusPhrase() );
                 } else {
@@ -515,7 +518,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
                           cause.getMessage() );
                 }
             } else {
-              Throwable cause = e.getCause();
+              final Throwable cause = e.getCause();
               if (cause==null) {
                 webdavResponse.sendError(e);
               } else {
@@ -524,7 +527,10 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
               }
             }
         } finally {
-            getDavSessionProvider().releaseSession(webdavRequest);
+          if (main!=null) {
+            main.destroy();
+          }
+          getDavSessionProvider().releaseSession(webdavRequest);
         }
     }
 

@@ -40,7 +40,7 @@ public class CARS_Mime {
   /** Check for mime type
    * @param pName the name, must(!) converted to lowercase
    */
-  static public String getMIMEType( String pName, InputStream pStream ) { //byte[] pContents ) {
+  static public String getMIMEType( final String pName, final InputStream pStream ) { //byte[] pContents ) {
     String mime = null;
     if (pName!=null) mime = URLConnection.guessContentTypeFromName( pName );
     if (mime==null) {
@@ -56,6 +56,9 @@ public class CARS_Mime {
         else if (pName.endsWith( ".pdf" )) mime = "application/pdf";
         else if (pName.endsWith( ".doc" )) mime = "application/msword";
         else if (pName.endsWith( ".odg" )) mime = "application/vnd.oasis.opendocument.graphics";
+        else if (pName.endsWith( ".html" ))  mime = "text/html";
+        else if (pName.endsWith( ".htm"  ))  mime = "text/html";
+        else if (pName.endsWith( ".jnlp"  )) mime = "application/x-java-jnlp-file";
       }
     }
     if (mime==null) mime = "text/plain";

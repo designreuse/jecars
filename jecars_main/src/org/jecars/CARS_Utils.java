@@ -35,6 +35,8 @@ import javax.jcr.nodetype.PropertyDefinition;
 public class CARS_Utils {
 
   static public final Escaper URLENCODER = CharEscapers.uriEscaper();
+  static public final String[] EMPTY_STRING_ARRAY = {};
+
 
   private CARS_Utils() {
   }

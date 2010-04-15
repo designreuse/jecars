@@ -359,7 +359,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setQueryString( q );
             ac.setParameterMap( pRequest.getParameterMap() );
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ':' + pRequest.getServerPort() );
-            mCARSFactory.performGetAction( ac );
+            mCARSFactory.performGetAction( ac, null );
             final long lastMod = ac.getLastModified();
             boolean getResult = true;
 //            if (ac.getIfNoneMatch()!=null) {
@@ -557,7 +557,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             sis = pRequest.getInputStream();
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ":" + pRequest.getServerPort() );
             ac.setBodyStream( sis, pRequest.getContentType() );
-            mCARSFactory.performPutAction( ac );
+            mCARSFactory.performPutAction( ac, null );
             pResponse.setContentType( ac.getContentType() );
             pResponse.setStatus( ac.getErrorCode() );
             resultToOutput( ac.getResult(), pResponse, true );

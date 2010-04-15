@@ -941,14 +941,16 @@ public class CARS_Factory {
    * @param pContext
    * @throws java.lang.Exception
    */
-  public void performGetAction( final CARS_ActionContext pContext ) throws CredentialExpiredException, AccessDeniedException  {
-    CARS_Main main = null;
+  public void performGetAction( final CARS_ActionContext pContext, final CARS_Main pMain ) throws CredentialExpiredException, AccessDeniedException  {
+    CARS_Main main = pMain;
     try {
 //      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
       final String fet = _getFET( pContext );
       pContext.setAction( CARS_ActionContext.gDefActionGET );
-      main = createMain( pContext );
-      pContext.setMain( main );
+      if (main==null) {
+        main = createMain( pContext );
+        pContext.setMain( main );
+      }
       if ((fet==null) || (fet.indexOf( "READ" )==-1)) {
         if (pContext.getQueryString()==null) {
           gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "READ",
@@ -1062,17 +1064,20 @@ public class CARS_Factory {
   
   
   /** Do PUT
-   * 
+   *
    * @param pContext
-   * @throws java.lang.Exception
+   * @param pMain
+   * @throws Exception
    */
-  public void performPutAction( final CARS_ActionContext pContext ) throws Exception {
-    CARS_Main main = null;
+  public void performPutAction( final CARS_ActionContext pContext, final CARS_Main pMain ) throws Exception {
+    CARS_Main main = pMain;
     try {
 //      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
       pContext.setAction( CARS_ActionContext.gDefActionPUT );
-      main = createMain( pContext );
-      pContext.setMain( main );
+      if (main==null) {
+        main = createMain( pContext );
+        pContext.setMain( main );
+      }
       final String pathinfo = pContext.getPathInfo();
       gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "PUT: " + pathinfo );
       if (pathinfo.lastIndexOf( '/' )!=-1) {
