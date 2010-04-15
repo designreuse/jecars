@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import nl.msd.jdots.JD_Taglist;
 import org.jecars.client.nt.JC_GroupsNode;
+import org.jecars.client.nt.JC_UserNode;
 import org.jecars.client.nt.JC_UsersNode;
 import org.jecars.client.observation.JC_DefaultObservationManager;
 import org.jecars.client.observation.JC_ObservationManager;
@@ -209,6 +210,16 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
   public JC_Nodeable getUserNode() throws JC_Exception {
     return getNode( "/JeCARS/default/Users/" + getUsername() );
   }
+
+  /** getUserAsUserNode
+   *
+   * @return
+   */
+  @Override
+  public JC_UserNode getUserAsUserNode() throws JC_Exception {
+    return (JC_UserNode)getNode( "/JeCARS/default/Users/" + getUsername() ).morphToNodeType();
+  }
+
 
   /** getUsersNode
    * 
@@ -487,9 +498,9 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
   @Override
   public JC_Nodeable getNode( final String pPath, final boolean pRetrieve ) throws JC_Exception {
 
-    JC_DefaultNode newNode    = null;
-    JC_DefaultNode parentNode = null;
-    JC_DefaultNode returnNode = null;
+    JC_DefaultNode newNode;
+    JC_DefaultNode parentNode;
+    final JC_DefaultNode returnNode;
 
     newNode = (JC_DefaultNode)createNodeClass( JC_Clientable.CREATENODE_DEFAULT );
     returnNode = newNode;

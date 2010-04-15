@@ -16,7 +16,6 @@
 
 package org.jecars.client.local;
 
-import com.google.gdata.data.DateTime;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -242,7 +241,7 @@ public class JC_LocalRESTComm extends JC_RESTComm {
       ac.setParameterMap( null );
       ac.setBaseURL( JC_LocalClient.JECARSLOCAL );
       ac.setBodyStream( pContents, pContentsType );
-      factory.performPutAction( ac );
+      factory.performPutAction( ac, null );
       tags.replaceData( "ContentType", ac.getContentType() );
       tags.replaceData( "ResponseCode", ac.getErrorCode() );
       resultToOutput( ac.getResult(), tags, true );
@@ -417,7 +416,7 @@ public class JC_LocalRESTComm extends JC_RESTComm {
       ac.setQueryString( q );
       ac.setParameterMap( null );
       ac.setBaseURL( JC_LocalClient.JECARSLOCAL );
-      factory.performGetAction( ac );
+      factory.performGetAction( ac, null );
       final long lastMod = ac.getLastModified();
       boolean getResult = true;
       if ((ac.canBeCachedResult()) && (lastMod!=0) && (ac.getIfModifiedSince()!=null)) {

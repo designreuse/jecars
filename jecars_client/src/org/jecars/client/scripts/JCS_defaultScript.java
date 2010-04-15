@@ -54,7 +54,7 @@ public class JCS_defaultScript {
    * @return
    * @throws java.lang.Exception
    */
-  protected JC_Clientable getClient() throws Exception {
+  public JC_Clientable getClient() throws Exception {
     if (mConfigOutput!=null) {
       mConfigOutput.println( "Connect to: " + mJeCARSServer + " with " + mUsername + " (" + mPassword + ")" );
     }
