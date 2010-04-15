@@ -1,0 +1,4 @@
+SingularField
+ShortVariable
+BeanMembersShouldSerialize
+UnnecessaryReturn
