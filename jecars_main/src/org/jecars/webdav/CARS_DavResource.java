@@ -95,19 +95,18 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.simple.ItemFilter;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 import org.apache.tika.detect.Detector;
 import org.jecars.CARS_ActionContext;
+import org.jecars.CARS_DefaultMain;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
 import org.jecars.apps.CARS_DefaultInterface;
@@ -729,11 +728,11 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 //                    Node cnode = node.addNode( memberName, "jecars:datafile" );
                     String mimeType = ctx.getMimeType();
 //                      System.out.println("dkoosdk " + mimeType );
-                    if ("application/octet-stream".equals( mimeType )) {
+                    if (("application/octet-stream".equals( mimeType )) || ("text/plain".equals( mimeType ))) {
                       mimeType = CARS_Mime.getMIMEType( memberName, null );
                     }
                     cnode.setProperty( "jcr:mimeType", mimeType );
-                    Calendar c = Calendar.getInstance();
+                    final Calendar c = Calendar.getInstance();
                     c.setTimeInMillis( ctx.getModificationTime() );
                     cnode.setProperty( "jcr:lastModified", c );
                     cnode.setProperty( "jcr:data", ctx.getInputStream() );
@@ -819,7 +818,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
      * @see DavResource#move(DavResource)
      */
     @Override
-    public void move(DavResource destination) throws DavException {
+    public void move( final DavResource destination ) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
@@ -834,16 +833,25 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
         try {
 //            String destItemPath = destination.getLocator().getRepositoryPath();
             final CARS_DavSession ses = (CARS_DavSession)session;
-            CARS_ActionContext ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
-            Map map = ac.getParameterMap();
-            String[] link = {""};
-            String[] rel = {"via"};
-            String[] href = {ac.getBaseContextURL() + locator.getRepositoryPath() };
-            map.put( "$0.link", link );
-            map.put( "$0.link.rel", rel );
-            map.put( "$0.link.href", href );
-            ac.setParameterMap( map );
-            ses.getFactory().performPostAction( ac );
+            final CARS_ActionContext ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
+            String path = getLocator().getResourcePath();
+            if (path.startsWith( "/webdav" )) {
+              path = path.substring( "/webdav".length() );
+            }
+            ac.setPathInfo( path );
+            ac.setQueryString( CARS_DefaultMain.DEFAULTNS + "title=" + destination.getLocator().getResourcePath() );
+            ses.getFactory().performPutAction( ac, ac.getMain() );
+
+//            ac.setPathInfo( destination.getLocator().getResourcePath() );
+//            final Map map = ac.getParameterMap();
+//            final String[] link = {""};
+//            final String[] rel = {"via"};
+//            final String[] href = {ac.getBaseContextURL() + locator.getRepositoryPath() };
+//            map.put( "$0.link", link );
+//            map.put( "$0.link.rel", rel );
+//            map.put( "$0.link.href", href );
+//            ac.setParameterMap( map );
+//            ses.getFactory().performPostAction( ac );
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         } catch (Exception e) {

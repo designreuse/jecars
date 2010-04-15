@@ -40,12 +40,11 @@ public class CARS_DavSessionProvider implements DavSessionProvider {
    * @return
    * @throws org.apache.jackrabbit.webdav.DavException
    */
-  public boolean attachSession( WebdavRequest pWr, CARS_ActionContext pAC, CARS_Factory pFact ) throws DavException {
-    CARS_DavSession cds = new CARS_DavSession( pAC.getMain().getSession() );
+  public boolean attachSession( final WebdavRequest pWr, final CARS_ActionContext pAC, final CARS_Factory pFact ) throws DavException {
+    final CARS_DavSession cds = new CARS_DavSession( pAC.getMain().getSession() );
     cds.setFactory( CARS_Factory.getLastFactory() );
     cds.setActionContext( pAC );
     pWr.setDavSession( cds );
-//    System.out.println("attachSession: " + pWr );
     return true;
   }
 

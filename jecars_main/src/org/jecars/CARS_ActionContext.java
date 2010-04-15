@@ -419,12 +419,12 @@ public class CARS_ActionContext {
    * @param pTag
    * @return
    */
-  public String getQueryValue( String pTag ) {
-    String[] params = getQueryStringParts();
-    if (params!=null) {
-      int len = params.length;
-      for (int i=0; i<len; i++ ) {
-        if (params[i].startsWith( pTag )==true) return params[i].substring( pTag.length() );
+  public String getQueryValue( final String pTag ) {
+    final String[] params = getQueryStringParts();
+    final int len = params.length;
+    for (int i=0; i<len; i++ ) {
+      if (params[i].startsWith( pTag )) {
+        return params[i].substring( pTag.length() );
       }
     }
     return null;
@@ -438,12 +438,10 @@ public class CARS_ActionContext {
    */
   public String getQueryValueResolved( final String pTag ) throws RepositoryException, UnsupportedEncodingException {
     final String[] params = getQueryStringParts();
-    if (params!=null) {
-      final int len = params.length;
-      for (int i=0; i<len; i++ ) {
-        if (params[i].startsWith( pTag )) {
-          return convertValueName( pTag, untransportString(params[i].substring( pTag.length()+1 )));
-        }
+    final int len = params.length;
+    for (int i=0; i<len; i++ ) {
+      if (params[i].startsWith( pTag )) {
+        return convertValueName( pTag, untransportString(params[i].substring( pTag.length()+1 )));
       }
     }
     return null;
@@ -455,10 +453,9 @@ public class CARS_ActionContext {
    */
   public String[] getQueryStringParts() {
     if (getQueryString()!=null) {
-      String[] parts = gQueryPattern.split( getQueryString() );
-      return parts;
+      return gQueryPattern.split( getQueryString() );
     }
-    return null;
+    return CARS_Utils.EMPTY_STRING_ARRAY;
   }
   
   /** Returns the parameter taglist, this taglist will holds all parameters.
@@ -477,23 +474,21 @@ public class CARS_ActionContext {
     if (mQueryParametersTL==null) {
       mQueryParametersTL = new JD_Taglist();
       final String[] param = getQueryStringParts();
-      if (param!=null) {
-        for( int i=0; i<param.length; i++ ) {
-          final String[] parts = param[i].split( "=", 2 );
-          final String propName = convertPropertyName( untransportString(parts[0]));
-          if (parts.length==2) {
-            mQueryParametersTL.replaceData( propName,
-                          convertValueName( propName, untransportString(parts[1])) );
-          } else {
-            mQueryParametersTL.replaceData( propName,
-                          convertValueName( propName, untransportString("")) );
-          }
+      for( int i=0; i<param.length; i++ ) {
+        final String[] parts = param[i].split( "=", 2 );
+        final String propName = convertPropertyName( untransportString(parts[0]));
+        if (parts.length==2) {
+          mQueryParametersTL.replaceData( propName,
+                        convertValueName( propName, untransportString(parts[1])) );
+        } else {
+          mQueryParametersTL.replaceData( propName,
+                        convertValueName( propName, untransportString("")) );
+        }
 //          if (parts.length==2) { // **** TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //            String propName = convertPropertyName( untransportString(parts[0]));
 //            mQueryParametersTL.replaceData( propName,
 //                                  convertValueName( propName, untransportString(parts[1])) );
 //          }
-        }
       }
     }
     return mQueryParametersTL;

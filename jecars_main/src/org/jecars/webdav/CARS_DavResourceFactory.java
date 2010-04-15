@@ -109,14 +109,14 @@ public class CARS_DavResourceFactory implements DavResourceFactory {
      * @see DavResourceFactory#createResource(DavResourceLocator,
      *      DavServletRequest, DavServletResponse)
      */
-    public DavResource createResource(DavResourceLocator locator, DavServletRequest request,
-                                      DavServletResponse response, CARS_ActionContext pAC, CARS_Factory pFactory ) throws DavException {
+    public DavResource createResource( final DavResourceLocator locator, final DavServletRequest request,
+                                       final DavServletResponse response, final CARS_ActionContext pAC, final CARS_Factory pFactory ) throws DavException {
         try {
-            Node node = getNode( request.getDavSession(), locator, pAC, pFactory );
+            final Node node = getNode( request.getDavSession(), locator, pAC, pFactory );
             CARS_DavResource resource;
             if (node == null) {
               log.debug("Creating resource for non-existing repository node.");
-              boolean isCollection = DavMethods.isCreateCollectionRequest(request);
+              final boolean isCollection = DavMethods.isCreateCollectionRequest(request);
               resource = (CARS_DavResource)createNullResource(locator, request.getDavSession(), isCollection);
             } else {
               resource = (CARS_DavResource)createResource(node, locator, request.getDavSession());
@@ -124,7 +124,7 @@ public class CARS_DavResourceFactory implements DavResourceFactory {
             resource.addLockManager(lockMgr);
             return resource;
         } catch (Exception e) {
-          e.printStackTrace();
+//          e.printStackTrace();
             throw new DavException( 500, e);
         }
     }
@@ -161,21 +161,21 @@ public class CARS_DavResourceFactory implements DavResourceFactory {
      * @return
      * @throws RepositoryException
      */
-    private Node getNode( DavSession sessionImpl, DavResourceLocator locator, CARS_ActionContext pAC, CARS_Factory pFactory )
+    private Node getNode( final DavSession sessionImpl, final DavResourceLocator locator, CARS_ActionContext pAC, CARS_Factory pFactory )
                    throws Exception {
       Node node = null;
 //      try {
-        CARS_DavSession cds = (CARS_DavSession)sessionImpl;
+        final CARS_DavSession cds = (CARS_DavSession)sessionImpl;
         if (pAC     ==null) pAC      = cds.getActionContext();
         if (pFactory==null) pFactory = cds.getFactory();
-        String repoPath = locator.getRepositoryPath();
+        final String repoPath = locator.getRepositoryPath();
 //        if (repoPath.startsWith( "/webdav" )) {
 //          repoPath = repoPath.substring( "/webdav".length() );
 //        }
 //        Session session = CARS_Factory.getSystemApplicationSession();
 //        node = (Node)session.getItem(repoPath);
         pAC.setPathInfo( repoPath );
-        pFactory.performGetAction( pAC );
+        pFactory.performGetAction( pAC, pAC.getMain() );
         node = pAC.getThisNode();
 //        pAC.getMain().destroy();
 //      } catch (PathNotFoundException e) {

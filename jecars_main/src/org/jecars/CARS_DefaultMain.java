@@ -445,10 +445,17 @@ public class CARS_DefaultMain implements CARS_Main {
   public Property setParamProperty( final Node pNode, final String pPropName, final String pValue ) throws Exception {
     
     if (pPropName.equals( DEFAULTNS + "title" )) {
-      // **** The node must be renamed
-      CARS_Factory.getEventManager().addEvent( this, mUserNode, pNode, null, "URL", "MOVE",
-              pNode.getPath() + " to " + pNode.getParent().getPath() + "/" + pValue );
-      pNode.getSession().getWorkspace().move( pNode.getPath(), pNode.getParent().getPath() + "/" + pValue );
+      if (pValue.indexOf( '/' )==-1) {
+        // **** The node must be renamed
+        CARS_Factory.getEventManager().addEvent( this, mUserNode, pNode, null, "URL", "MOVE",
+                pNode.getPath() + " to " + pNode.getParent().getPath() + "/" + pValue );
+        pNode.getSession().getWorkspace().move( pNode.getPath(), pNode.getParent().getPath() + "/" + pValue );
+      } else {
+        // **** The node must be moved
+        CARS_Factory.getEventManager().addEvent( this, mUserNode, pNode, null, "URL", "MOVE",
+                pNode.getPath() + " to " + pValue );
+        pNode.getSession().getWorkspace().move( pNode.getPath(), pValue );
+      }
       return null;
     }
 
@@ -1025,10 +1032,10 @@ koasdkaso
                  } else {
                    primType = copyNode.getPrimaryNodeType().getName();
                  }
-                 if (cars!=null) {
-                   newNode = cars.copyNode( this, interfaceClass, cnode, copyNode, name, primType, pParamsTL );
-                 } else {
+                 if (cars==null) {
                    newNode = di.copyNode( this, interfaceClass, cnode, copyNode, name, primType, pParamsTL );
+                 } else {
+                   newNode = cars.copyNode( this, interfaceClass, cnode, copyNode, name, primType, pParamsTL );
                  }
 /*
                  final PropertyIterator pi = copyNode.getProperties();
@@ -1273,8 +1280,13 @@ koasdkaso
         // **** Clear the access cache
         CARS_AccessManager.clearPathCache();
         // **** Update also the modification date in the node, because it have effects for the viewable children objects
-        CARS_Utils.setCurrentModificationDate( cnode.getParent() );
-        cnode.getParent().save();
+        final Node cnodeParent = cnode.getParent();
+        try {
+          CARS_Utils.setCurrentModificationDate( cnodeParent );
+          cnodeParent.save();
+        } catch( ItemNotFoundException ie ) {
+          // **** Not available or no rights to set the property
+        }
       }
 
     } else {
