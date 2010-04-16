@@ -17,7 +17,9 @@
 package org.jecars;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.logging.*;
 import javax.jcr.LoginException;
 import javax.jcr.Node;
@@ -83,10 +85,35 @@ public class CARS_EventManager {
   private int               mInUse   = 0;
 
   static final private Object EVENTLOCK = new Object();
+  
+  static private File              gEVENTLOGFILE  = new File( "jecars.log" );
+  static private boolean           gENABLELOG     = true;
+  static private SimpleDateFormat  gLOGTIMEFORMAT = new SimpleDateFormat( "[dd/MMM/yyyy:HH:mm:ss Z]" );
+
 
   /** Creates a new instance of CARS_EventManager
    */
   public CARS_EventManager() {
+    return;
+  }
+
+  /** setEventLogFile
+   * 
+   * @param pLogFile
+   */
+  static public void setEventLogFile( final File pLogFile ) {
+    gLog.info( "Setting event logfile to: " + pLogFile.getAbsolutePath() );
+    gEVENTLOGFILE = pLogFile;
+    return;
+  }
+
+  /** setEnableFileLog
+   *
+   * @param pEnable
+   */
+  static public void setEnableFileLog( final boolean pEnable ) {
+    gLog.info( "Setting enable logfile: " + pEnable );
+    gENABLELOG = pEnable;
     return;
   }
 
@@ -371,6 +398,8 @@ public class CARS_EventManager {
     if (pBody!=null) {
       event.setProperty( "jecars:Body", pBody );
     }
+
+    addLogEntry( pMain, pUser, pSource, pApplication, pCategory, pType, null, pMessage );
     return event;
   }
 
@@ -543,6 +572,9 @@ public class CARS_EventManager {
               bais.close();
             }
             ses.save();
+
+            addLogEntry( pMain, pUser, pSource, pApplication, pCategory, pType, pThrow, pMessage );
+
           }
         } catch( Exception e ) {
           ses.refresh( false );
@@ -557,5 +589,113 @@ public class CARS_EventManager {
       }
     return;
   }
-  
+
+  /** processLogRequest
+   *
+   * @param pRequest
+   * @return
+   */
+  static private String processLogRequest( final String pRequest ) {
+    if ((pRequest.startsWith( "GET " )) ||
+        (pRequest.startsWith( "HEAD " )) ||
+        (pRequest.startsWith( "PUT " )) ||
+        (pRequest.startsWith( "DELETE " )) ||
+        (pRequest.startsWith( "POST " ))) {
+      return pRequest + " HTTP/1.0";
+    }
+    return  "GET " + pRequest + " HTTP/1.0";
+  }
+
+  /** addLogEntry
+   *
+   * @param pMain
+   * @param pUser
+   * @param pSource
+   * @param pApplication
+   * @param pCategory
+   * @param pType
+   * @param pThrow
+   * @param pMessage
+   * @throws RepositoryException
+   */
+  public void addLogEntry( final CARS_Main pMain, final Node pUser, final Node pSource,
+                        final String pApplication, final String pCategory, final String pType,
+                        final Throwable pThrow, final String pMessage ) throws RepositoryException {
+    if (gENABLELOG) {
+      try {
+        final String rh, userAgent, referer;
+        final int code;
+        final CARS_ActionContext ac;
+        if (pMain==null) {
+          ac = null;
+        } else {
+          ac = pMain.getContext();
+        }
+        if (ac==null) {
+          referer = "-";
+          userAgent = "-";
+          rh = "jecars.org";
+          code = 200;
+        } else {
+          referer = ac.getReferer();
+          userAgent = ac.getUserAgent();
+          rh   = ac.getRemoteHost();
+          code = ac.getErrorCode();
+        }
+        if (pUser==null) {
+          if (pSource==null) {
+            addLogEntry( rh, "-", "-", processLogRequest( pMessage ), code, 0, referer, userAgent );
+          } else {
+            addLogEntry( rh, "-", "-", processLogRequest( pMessage ), code, 0, referer, userAgent );
+          }
+        } else {
+          if (pSource==null) {
+            addLogEntry( rh, "-", pUser.getName(), processLogRequest( pMessage ), code, 0, referer, userAgent );
+          } else {
+            addLogEntry( rh, "-", pUser.getName(), processLogRequest( pMessage ), code, 0, referer, userAgent );
+          }
+        }
+      } catch(IOException ie) {
+      }
+    }
+    return;
+  }
+
+  /** addLogEntry
+   *
+   * @param pClient
+   * @param pIdentd
+   * @param pUserId
+   * @param pRequest
+   * @param pResponse
+   * @param pSize
+   * @param pReferrer
+   * @param pUserAgent
+   * @throws IOException
+   */
+  synchronized static public void addLogEntry(
+                        final String pClient,   final String pIdentd,  final String pUserId,
+                        final String pRequest,  final int pResponse,   final int pSize,
+                        final String pReferrer, final String pUserAgent ) throws IOException {
+    FileOutputStream fos = null;
+    try {
+      fos = new FileOutputStream( gEVENTLOGFILE, true );
+      final String line = pClient + " " + pIdentd + " " + pUserId + " " +
+                    gLOGTIMEFORMAT.format(new Date()) + " " +
+                    "\"" + pRequest + "\" " + pResponse + " " + pSize + " " +
+                    "\"" + pReferrer + "\" " + "\"" + pUserAgent + "\"\n";
+      fos.write( line.getBytes() );
+      fos.flush();
+    } catch (Exception e) {
+      gLog.log( Level.SEVERE, null, e );
+    } finally {
+      if (fos!=null) {
+        fos.close();
+      }
+    }
+    return;
+  }
+
+
+
 }
