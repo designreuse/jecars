@@ -159,6 +159,10 @@ public class CARS_ActionContext {
   private Map<String,ArrayList<String>> mResultHttpHeaders = null;
   private DateTime          mIfModifiedSince = null;
   private String            mIfNoneMatch     = null;
+  private String            mRemoteHost      = "jecars.org";
+  private String            mUserAgent       = "-";
+  private String            mReferer         = "-";
+
   /** If true then the If-Modified-Since header is supported
    */
   private boolean           mCanBeCachedResult = false;
@@ -832,12 +836,64 @@ public class CARS_ActionContext {
     return mIfModifiedSince;
   }
 
+  /** setReferer
+   * 
+   * @param pReferer
+   */
+  public void setReferer( final String pReferer ) {
+    mReferer = pReferer;
+    return;
+  }
+
+  /** getReferer
+   *
+   * @return
+   */
+  public String getReferer() {
+    return mReferer;
+  }
+
+
+  /** setUserAgent
+   * 
+   * @param pAgent
+   */
+  public void setUserAgent( final String pAgent ) {
+    mUserAgent = pAgent;
+    return;
+  }
+
+  /** getUserAgent
+   *
+   * @return
+   */
+  public String getUserAgent() {
+    return mUserAgent;
+  }
+
+  /** setRemoteHost
+   * 
+   * @param pHost
+   */
+  public void setRemoteHost( final String pHost ) {
+    mRemoteHost = pHost;
+    return;
+  }
+
+  /** getRemoteHost
+   *
+   * @return
+   */
+  public String getRemoteHost() {
+    return mRemoteHost;
+  }
+
   /** setThisNode
    *
    * @param pNode
    * @throws java.lang.Exception
    */
-  public void setThisNode( Node pNode ) {
+  public void setThisNode( final Node pNode ) {
     mThisNode = pNode;
     return;
   }

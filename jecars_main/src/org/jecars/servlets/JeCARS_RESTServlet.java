@@ -194,6 +194,9 @@ public class JeCARS_RESTServlet extends HttpServlet {
       if (ac!=null) {
         ac.setIfModifiedSince( pRequest.getHeader( "If-Modified-Since" ) );
         ac.setIfNoneMatch(     pRequest.getHeader( "If-None-Match"     ) );
+        ac.setRemoteHost( pRequest.getRemoteHost() );
+        ac.setUserAgent(  pRequest.getHeader("User-Agent") );
+        ac.setReferer( pRequest.getHeader("Referer") );
       }
 
       return ac;

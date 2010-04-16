@@ -902,12 +902,12 @@ public class CARS_Factory {
       main = createMain( pContext );
       pContext.setMain( main );
       if ((fet==null) || (fet.indexOf( "READ" )==-1)) {
-        if (pContext.getQueryString()!=null) {
+        if (pContext.getQueryString()==null) {
           gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "READ",
-                "HEAD: " + pContext.getPathInfo() + "?" + CARS_ActionContext.untransportString(pContext.getQueryString())  );
+                "HEAD " + pContext.getPathInfo() );
         } else {
           gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "READ",
-                "HEAD: " + pContext.getPathInfo() );
+                "HEAD " + pContext.getPathInfo() + "?" + CARS_ActionContext.untransportString(pContext.getQueryString())  );
         }
       }
       Node cnode = main.getNode( pContext.getPathInfo(), null, true );
@@ -954,14 +954,13 @@ public class CARS_Factory {
       if ((fet==null) || (fet.indexOf( "READ" )==-1)) {
         if (pContext.getQueryString()==null) {
           gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "READ",
-                "GET: " + pContext.getPathInfo() );
+                "GET " + pContext.getPathInfo() );
         } else {
           gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "READ",
-                "GET: " + pContext.getPathInfo() + "?" + CARS_ActionContext.untransportString(pContext.getQueryString())  );
+                "GET " + pContext.getPathInfo() + "?" + CARS_ActionContext.untransportString(pContext.getQueryString())  );
         }
       }
       pContext.setCanBeCachedResult( pContext.getQueryString()==null );
-//      JD_Taglist paramsTL = pContext.getQueryPartsAsTaglist();
       final Node cnode = main.getNode( pContext.getPathInfo(), null, false );
       pContext.setThisNode( cnode );
       pContext.prepareResult(); // **** This will cache the result so we can close the connection
@@ -976,14 +975,14 @@ public class CARS_Factory {
       gEventManager.addException( main, null, null, null, "SYS", "LOGIN", ade, pContext.getPathInfo() );
       throw ade;
     } catch (PathNotFoundException pnfe) {
-      gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "READ", pnfe, pContext.getPathInfo() );
       pContext.setErrorCode( HttpURLConnection.HTTP_NOT_FOUND );
       pContext.setError( pnfe );
+      gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "READ", pnfe, pContext.getPathInfo() );
     } catch (Exception e) {
-      gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "READ", e, null );
 //      LOG.log( Level.INFO, null, e );
       pContext.setErrorCode( HttpURLConnection.HTTP_INTERNAL_ERROR );
       pContext.setError( e );
+      gEventManager.addException( main, main.getLoginUser(), main.getCurrentViewNode(), null, "SYS", "READ", e, null );
     } finally {
 //      if (main!=null) {
 //        try {
@@ -1009,7 +1008,7 @@ public class CARS_Factory {
       main = createMain( pContext );      
       pContext.setMain( main );
       final String pathinfo = pContext.getPathInfo();
-      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "POST: " + pathinfo );
+      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "POST " + pathinfo );
       if (pathinfo.lastIndexOf( '/' )==-1) {
         throw new PathNotFoundException( pathinfo );
       } else {
@@ -1079,7 +1078,7 @@ public class CARS_Factory {
         pContext.setMain( main );
       }
       final String pathinfo = pContext.getPathInfo();
-      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "PUT: " + pathinfo );
+      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "PUT " + pathinfo );
       if (pathinfo.lastIndexOf( '/' )!=-1) {
         // **** Store the given parameters
         final JD_Taglist paramsTL = pContext.getQueryPartsAsTaglist();
@@ -1134,7 +1133,7 @@ public class CARS_Factory {
       main = createMain( pContext );      
       pContext.setMain( main );
       String pathinfo = pContext.getPathInfo();
-      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "DELETE", "DELETE: " + pathinfo );
+      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "DELETE", "DELETE " + pathinfo );
       if (pathinfo.lastIndexOf( '/' )!=-1) {
         // **** Store the given parameters
         JD_Taglist paramsTL = pContext.getQueryPartsAsTaglist();

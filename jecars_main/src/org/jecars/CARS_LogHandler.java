@@ -27,7 +27,18 @@ import javax.jcr.Session;
 public class CARS_LogHandler extends Handler {
   
   private Node mSystemEventsFolder = null;
- 
+
+  /** createLogRecord
+   *
+   * @param pUser
+   * @param pSourceNode
+   * @param pLevel
+   * @param pCategory
+   * @param pType
+   * @param pMessage
+   * @param pThrow
+   * @return
+   */
   static public LogRecord createLogRecord( Node pUser, Node pSourceNode, Level pLevel, String pCategory, String pType, String pMessage, Throwable pThrow ) {
     if (pMessage==null) {
       if (pThrow!=null) {
@@ -56,12 +67,13 @@ public class CARS_LogHandler extends Handler {
     return lr;
   }
   
-  /** Creates a new instance of CARS_LogHandler */
+  /** Creates a new instance of CARS_LogHandler
+   */
   public CARS_LogHandler() {
     if (mSystemEventsFolder==null) {
       try {
 //        mSystemEventsFolder = CARS_Factory.gSystemCarsSession.getRootNode().getNode( "JeCARS/default/Events/System" );
-        Session appSession = CARS_Factory.getSystemApplicationSession();
+        final Session appSession = CARS_Factory.getSystemApplicationSession();
         synchronized( appSession ) {
           mSystemEventsFolder = appSession.getRootNode().getNode( "JeCARS/default/Events/System" );
         }
@@ -71,8 +83,12 @@ public class CARS_LogHandler extends Handler {
     }
   }
 
+  /** publish
+   *
+   * @param pRecord
+   */
   @Override
-  public void publish( LogRecord pRecord ) {
+  public void publish( final LogRecord pRecord ) {
     if (mSystemEventsFolder!=null) {
       try {
         Session ses = mSystemEventsFolder.getSession();
