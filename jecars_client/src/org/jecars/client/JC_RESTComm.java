@@ -80,7 +80,8 @@ public class JC_RESTComm implements Serializable {
   public static final String LF = "\n"; 
   public static boolean gInit = false;
   
-  
+  static private String gREFERER = "jecars.org";
+
   /** Creates a new instance of JC_RESTComm
    */
   public JC_RESTComm( JC_Clientable pClient ) {
@@ -90,7 +91,16 @@ public class JC_RESTComm implements Serializable {
     }
     return;
   }
-  
+
+  /** setReferer
+   *
+   * @param pRef
+   */
+  static public void setReferer( final String pRef ) {
+    gREFERER = pRef;
+    return;
+  }
+
   static public void init() {
     try {      
       trustHttpsCertificates();
@@ -288,6 +298,8 @@ public class JC_RESTComm implements Serializable {
     }
     uc.setInstanceFollowRedirects( false );
     uc.setRequestProperty( "Connection", "Keep-Alive" );
+    uc.setRequestProperty( "User-Agent", JC_Clientable.VERSION );
+    uc.setRequestProperty( "Referer", gREFERER );
     return uc;
   }
 
