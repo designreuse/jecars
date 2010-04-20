@@ -30,7 +30,7 @@ import org.jecars.client.observation.JC_ObservationManager;
  */
 public interface JC_Clientable {
 
-  final static public String VERSION_ID = "v1.3.-98";
+  final static public String VERSION_ID = "v1.3.-88";
   final static public String VERSION = "JeCARS 'Araza' Client Development " + VERSION_ID;
 
   @Deprecated
@@ -341,5 +341,17 @@ public interface JC_Clientable {
    * @return
    */
   boolean isLocalClient();
+
+  /** useChunkedStreamingMode
+   *
+   * @param pUse
+   */
+  void useChunkedStreamingMode( boolean pUse );
+
+  /** isInChunkedStreamingMode
+   * 
+   * @return
+   */
+  boolean isInChunkedStreamingMode();
 
 }
