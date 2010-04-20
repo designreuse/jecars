@@ -34,6 +34,7 @@ import javax.security.auth.login.CredentialExpiredException;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import org.jecars.CARS_ActionContext;
+import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.support.BASE64Decoder;
@@ -64,6 +65,30 @@ public class JeCARS_RESTServlet extends HttpServlet {
   @Override
   public void init() throws ServletException {
     gLog.log( Level.INFO, "Using " + CARS_Main.PRODUCTNAME + " version: " + CARS_Main.VERSION );
+
+    // **** Initialize event log file
+    final String elfEnable = getInitParameter( "ENABLE_FILE_LOG" );
+    final String elf       = getInitParameter( "EVENT_LOG_FILE" );
+    if ((elf==null) || (elfEnable==null)) {
+      gLog.log( Level.WARNING, "Event log file Init parameters not set, event log disabled" );
+    } else {
+      final File elfF = new File( elf );
+      gLog.log( Level.INFO, "Event log file: " + elfF.getAbsolutePath() );
+      try {
+        if ((elfF.exists()) || (elfF.createNewFile())) {
+          gLog.log( Level.INFO, "Event log file enabled: " + elfEnable );
+          final boolean enabled = Boolean.parseBoolean( elfEnable );
+          CARS_EventManager.setEventLogFile( elfF );
+          CARS_EventManager.setEnableFileLog( enabled );
+        } else {
+          gLog.log( Level.WARNING, "Cannot write event log file: " + elfF.getAbsolutePath() );
+        }
+      } catch( IOException ie ) {
+        gLog.log( Level.WARNING, ie.getMessage(), ie );
+      }
+    }
+
+
     try {
       mCARSFactory = new CARS_Factory();
       CARS_Factory.setServletContext( getServletContext() );
