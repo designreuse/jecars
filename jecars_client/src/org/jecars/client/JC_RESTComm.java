@@ -245,7 +245,8 @@ public class JC_RESTComm implements Serializable {
   }
 
   /** apply the ContentsLength to a HttpURLConnection
-   *
+   * Default disabled because of sporadic problems
+   * http://forums.sun.com/thread.jspa?threadID=5188839
    * @param pConn
    * @param pContentsLength
    */
@@ -427,7 +428,9 @@ public class JC_RESTComm implements Serializable {
       pConn.setDoInput(true);
       pConn.setUseCaches(false);
       pConn.setRequestProperty( "Content-Type", pContentsType );//"application/x-www-form-urlencoded" );    
-//      applyContentsLength( pConn, pContentsLength );
+      if (pClient.isInChunkedStreamingMode()) {
+        applyContentsLength( pConn, pContentsLength );
+      }
       OutputStream os = pConn.getOutputStream();
       try {
         sendInputStreamToOutputStream( 50000, pContents, os );
@@ -463,7 +466,9 @@ public class JC_RESTComm implements Serializable {
       pConn.setDoInput( true );
       pConn.setUseCaches(false);
       pConn.setRequestProperty( "Content-Type", pContentsType );//"application/x-www-form-urlencoded" );    
-//      applyContentsLength( pConn, pContentsLength );
+      if (pClient.isInChunkedStreamingMode()) {
+        applyContentsLength( pConn, pContentsLength );
+      }
     
       OutputStream os = pConn.getOutputStream();
       try {

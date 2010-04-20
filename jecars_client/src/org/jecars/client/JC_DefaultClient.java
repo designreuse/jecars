@@ -50,6 +50,7 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
   private boolean      mPOST_AS_GET          = false;
   private boolean      mPUT_AS_GET           = false;
   private boolean      mDELETE_AS_GET        = false;
+  private boolean      mChunkedStreamingMode = false;
 
   private final JC_RESTComm                     mRESTComm;
   private final AbstractMap<String, JC_Params>  mDefaultParams;
@@ -719,6 +720,26 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
   @Override
   public boolean isLocalClient() {
     return false;
+  }
+
+
+  /** useChunkedStreamingMode
+   *
+   * @param pUse
+   */
+  @Override
+  public void useChunkedStreamingMode( final boolean pUse ) {
+    mChunkedStreamingMode = pUse;
+    return;
+  }
+
+  /** isInChunkedStreamingMode
+   *
+   * @return
+   */
+  @Override
+  public boolean isInChunkedStreamingMode() {
+    return mChunkedStreamingMode;
   }
 
 
