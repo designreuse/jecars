@@ -327,4 +327,15 @@ public class CARS_MailManager extends CARS_DefaultToolInterface {
     return CHECKEVERY/1000;
   }
 
+  /** getRunningExpireMinutes
+   *
+   * @return
+   */
+  @Override
+  public int getRunningExpireMinutes() {
+    return 60*24*365*25;
+  }
+
+
+
 }
