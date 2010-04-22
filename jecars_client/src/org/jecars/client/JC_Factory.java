@@ -58,6 +58,7 @@ public class JC_Factory {
     c.registerNodeClass( "jecars:ToolEventException", "org.jecars.client.nt.JC_ToolEventExceptionNode" );
     c.registerNodeClass( "jecars:parameterdata", "org.jecars.client.nt.JC_ParameterDataNode" );
     c.registerNodeClass( "jecars:Event", "org.jecars.client.nt.JC_EventNode" );
+    c.registerNodeClass( "jecars:MailManager", "org.jecars.client.nt.JC_MailManagerNode" );
     c.setServerPath( pServerPath );
 
     c.setDefaultParams( JC_RESTComm.GET,    c.createParams( JC_RESTComm.GET ) );
