@@ -48,11 +48,11 @@ public class UsersManagerFrame extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(userManagerPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE)
+            .addComponent(userManagerPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(userManagerPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 428, Short.MAX_VALUE)
+            .addComponent(userManagerPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 575, Short.MAX_VALUE)
         );
 
         pack();
@@ -70,18 +70,30 @@ public class UsersManagerFrame extends javax.swing.JFrame {
 
         final JCS_defaultScript ds = new JCS_defaultScript();
         ds.parseArguments( args );
+        if (("".equals( ds.mUsername)) || ("".equals( ds.mPassword )) || ("".equals( ds.mJeCARSServer ))) {
+          final LoginDialog ld = new LoginDialog( null, true );
+          ld.setVisible( true );
+          if (ld.isOk()) {
+            ds.mUsername      = ld.getUserName();
+            ds.mPassword      = new String( ld.getPassword() );
+            ds.mJeCARSServer  = ld.getServer();
+          } else {
+            System.exit( 0 );
+          }
+        }
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
               try {
                 final UsersManagerFrame umf = new UsersManagerFrame();
-                JC_Clientable client = JC_Factory.createClient( ds.mJeCARSServer );
+                final JC_Clientable client = JC_Factory.createClient( ds.mJeCARSServer );
                 client.setCredentials( ds.mUsername, ds.mPassword.toCharArray() );
                 umf.userManagerPanel1.setClient( client );
                 umf.setVisible(true);
               } catch( Exception e ) {
                 e.printStackTrace();
+                JOptionPane.showMessageDialog( null, "<html>" + e.getMessage() + "</html>", "Error", JOptionPane.ERROR_MESSAGE );
               }
             }
         });
