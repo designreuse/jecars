@@ -37,6 +37,7 @@ import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
+import org.jecars.apps.CARS_AccountsApp;
 import org.jecars.support.BASE64Decoder;
 import org.jecars.tools.CARS_DefaultToolInterface;
 
@@ -52,8 +53,8 @@ public class JeCARS_RESTServlet extends HttpServlet {
   /** The maximum number of concurrent threads running before replying with a SERVICE UNAVAILABLE
    */
   static protected final int         MAXTHREADCOUNT = 255;
-  static private final AtomicInteger THREADCOUNT = new AtomicInteger(0);
-  static private CARS_Factory    mCARSFactory    = null;
+  static private final AtomicInteger THREADCOUNT    = new AtomicInteger(0);
+  static private final CARS_Factory  CARSFACTORY    = new CARS_Factory();
 
   static private JeCARS_WebDAVServlet gWebdav = new JeCARS_WebDAVServlet();
 
@@ -65,6 +66,20 @@ public class JeCARS_RESTServlet extends HttpServlet {
   @Override
   public void init() throws ServletException {
     gLog.log( Level.INFO, "Using " + CARS_Main.PRODUCTNAME + " version: " + CARS_Main.VERSION );
+
+    // **** Initialize circle of trust file
+    final String cotf = getInitParameter( "CIRCLE_OF_TRUST_FILE" );
+    if (cotf==null) {
+      gLog.log( Level.INFO, "Circle of trust file not set" );
+    } else {
+      final File cotfF = new File( cotf );
+      gLog.log( Level.INFO, "Circle of trust file: " + cotfF.getAbsolutePath() );
+      try {
+        CARS_AccountsApp.setCircleOfTrustFile( cotfF );
+      } catch( IOException ie ) {
+        gLog.log( Level.WARNING, ie.getMessage(), ie );
+      }
+    }
 
     // **** Initialize event log file
     final String elfEnable = getInitParameter( "ENABLE_FILE_LOG" );
@@ -90,20 +105,55 @@ public class JeCARS_RESTServlet extends HttpServlet {
 
 
     try {
-      mCARSFactory = new CARS_Factory();
+//      mCARSFactory = new CARS_Factory();
       CARS_Factory.setServletContext( getServletContext() );
 
+      // **** Default config file
+
+      final File configXML = new File( getServletContext().getRealPath( "WEB-INF/cars_repository.xml" ) );
+      if (configXML.exists()) {
+        CARS_Factory.gJecarsProperties.setProperty( "jecars.ConfigFile", configXML.getAbsolutePath() );
+      } else {
+        gLog.log( Level.INFO, "XML config file = " + configXML.getAbsolutePath() + " not found" );
+      }
+
+      // **** First try to init the jecars property file with the INIT PARAMETERS
+      String initVar = getInitParameter( "JECARS_CONFIGFILE" );
+      gLog.log( Level.INFO, "INIT-PARAM: JECARS_CONFIGFILE = " + initVar );
+      if (initVar!=null) {
+        CARS_Factory.gJecarsProperties.setProperty( "jecars.ConfigFile", initVar );
+      }
+      initVar = getInitParameter( "JECARS_REPHOME" );
+      gLog.log( Level.INFO, "INIT-PARAM: JECARS_REPHOME = " + initVar );
+      if (initVar!=null) {
+        CARS_Factory.gJecarsProperties.setProperty( "jecars.RepHome", initVar );
+      }
+      initVar = getInitParameter( "JECARS_REPLOGHOME" );
+      gLog.log( Level.INFO, "INIT-PARAM: JECARS_REPLOGHOME = " + initVar );
+      if (initVar!=null) {
+        CARS_Factory.gJecarsProperties.setProperty( "jecars.RepLogHome", initVar );
+      }
+      initVar = getInitParameter( "JECARS_NAMESPACES" );
+      gLog.log( Level.INFO, "INIT-PARAM: JECARS_NAMESPACES = " + initVar );
+      if (initVar!=null) {
+        CARS_Factory.gJecarsProperties.setProperty( "jecars.Namespaces", initVar );
+      }
+      initVar = getInitParameter( "JECARS_CNDFILES" );
+      gLog.log( Level.INFO, "INIT-PARAM: JECARS_CNDFILES = " + initVar );
+      if (initVar!=null) {
+        CARS_Factory.gJecarsProperties.setProperty( "jecars.CNDFiles", initVar );
+      }
+
       gLog.log( Level.INFO, "Trying to read /WEB-INF/classes/" + CARS_Factory.JECARSPROPERTIESNAME );
-      InputStream is = null;
-      is = getServletContext().getResourceAsStream( "/WEB-INF/classes/" + CARS_Factory.JECARSPROPERTIESNAME );
-      if (is!=null) {
+      final InputStream is = getServletContext().getResourceAsStream( "/WEB-INF/classes/" + CARS_Factory.JECARSPROPERTIESNAME );
+      if (is==null) {
+        gLog.log( Level.INFO, "/WEB-INF/classes/" + CARS_Factory.JECARSPROPERTIESNAME + " not found" );
+      } else {
         gLog.log( Level.INFO, "Reading /WEB-INF/classes/" + CARS_Factory.JECARSPROPERTIESNAME );
         CARS_Factory.gJecarsProperties.load( is );
         is.close();
-      } else {
-        gLog.log( Level.INFO, "/WEB-INF/classes/" + CARS_Factory.JECARSPROPERTIESNAME + " not found" );
       }
-      mCARSFactory.init( null, false );
+      CARSFACTORY.init( null, false );
       gWebdav.init();
       gWebdav.init( getServletContext(), this );
     } catch (Exception e) {
@@ -387,7 +437,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setQueryString( q );
             ac.setParameterMap( pRequest.getParameterMap() );
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ':' + pRequest.getServerPort() );
-            mCARSFactory.performGetAction( ac, null );
+            CARSFACTORY.performGetAction( ac, null );
             final long lastMod = ac.getLastModified();
             boolean getResult = true;
 //            if (ac.getIfNoneMatch()!=null) {
@@ -465,7 +515,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setPathInfo( new String(pRequest.getPathInfo().getBytes( "ISO-8859-1" ), "UTF-8" ) );
             ac.setQueryString( pRequest.getQueryString() );
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ":" + pRequest.getServerPort() );
-            mCARSFactory.performHeadAction( ac );
+            CARSFACTORY.performHeadAction( ac );
 //            Object result = ac.getResult();
             pResponse.setContentType( ac.getContentType() );
             pResponse.setStatus( ac.getErrorCode() );
@@ -529,7 +579,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             sis = pRequest.getInputStream();
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ":" + pRequest.getServerPort() );
             ac.setBodyStream( sis, pRequest.getContentType() );
-            mCARSFactory.performPostAction( ac );
+            CARSFACTORY.performPostAction( ac );
             pResponse.setContentType( ac.getContentType() );
             final String createdNodePath = ac.getCreatedNodePath();
             if (createdNodePath!=null) {
@@ -585,7 +635,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             sis = pRequest.getInputStream();
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ":" + pRequest.getServerPort() );
             ac.setBodyStream( sis, pRequest.getContentType() );
-            mCARSFactory.performPutAction( ac, null );
+            CARSFACTORY.performPutAction( ac, null );
             pResponse.setContentType( ac.getContentType() );
             pResponse.setStatus( ac.getErrorCode() );
             resultToOutput( ac.getResult(), pResponse, true );
@@ -634,7 +684,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setPathInfo( new String(pRequest.getPathInfo().getBytes( "ISO-8859-1" ), "UTF-8" ) );
             ac.setQueryString( pRequest.getQueryString() );
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ":" + pRequest.getServerPort() );
-            mCARSFactory.performDeleteAction( ac );
+            CARSFACTORY.performDeleteAction( ac );
             pResponse.setContentType( ac.getContentType() );
             pResponse.setStatus( ac.getErrorCode() );
             resultToOutput( ac.getResult(), pResponse, true );
@@ -704,7 +754,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
               ac.setQueryString( pRequest.getQueryString() );
               ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ":" + pRequest.getServerPort() );
   //            JeCARS_WebDAVServlet webdav = new JeCARS_WebDAVServlet();
-              gWebdav.service( pRequest, pResponse, ac, mCARSFactory );
+              gWebdav.service( pRequest, pResponse, ac, CARSFACTORY );
             } catch( AccessDeniedException ade ) {
               // **** Not allowed, so report (s)he's unauthorized
               pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );

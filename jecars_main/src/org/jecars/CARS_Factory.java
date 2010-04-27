@@ -39,6 +39,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.log4j.PropertyConfigurator;
+import org.jecars.apps.CARS_AccountsApp;
 import org.jecars.apps.CARS_AdminApp;
 import org.jecars.apps.CARS_Interface;
 
@@ -832,30 +833,36 @@ public class CARS_Factory {
         final SimpleCredentials creds = new SimpleCredentials( userName, pContext.getPassword() );
         ses = gRepository.login( creds );
       } else {
-        final SimpleCredentials creds = new SimpleCredentials( "AUTHKEY_" + pContext.getAuthKey(), "".toCharArray() );
+        final SimpleCredentials creds = new SimpleCredentials( CARS_AccountsApp.AUTHKEY_PREFIX + pContext.getAuthKey(), "".toCharArray() );
         ses = gRepository.login( creds );
       }
       m = createMain( ses );
       m.addContext( pContext );
-      final Node user = m.getLoginUser();
-      if ((user.hasProperty( "jecars:PasswordMustChange" )) && (user.getProperty( "jecars:PasswordMustChange" ).getBoolean())) {
-        // **** Password must change
-        if (user.hasProperty( "jecars:Source" )) {
-          final Session sas = getSystemAccessSession();
-          synchronized(sas) {
+      final String userId = m.getSession().getUserID();
+      final Session loginSession = CARS_Factory.getSystemLoginSession();
+      synchronized( loginSession ) {
+        final Node users = loginSession.getNode( "/JeCARS/default/Users" );
+        final Node user = users.getNode( userId );
+//        final Node user = m.getLoginUser();
+        if ((user.hasProperty( "jecars:PasswordMustChange" )) && (user.getProperty( "jecars:PasswordMustChange" ).getBoolean())) {
+          // **** Password must change
+          if (user.hasProperty( "jecars:Source" )) {
+//            final Session sas = getSystemAccessSession();
+//            synchronized(sas) {
 //            // **** Refresh after x times
 //            if (gRefreshSystemAccessSession<=0) {
 //              sas.refresh( false );
 //              gRefreshSystemAccessSession = gRefreshSystemAccessSession_Times;
 //            }
 //            gRefreshSystemAccessSession--;
-            final Node source = sas.getNode( user.getProperty( "jecars:Source" ).getString().substring(1) );
-            if (source.hasProperty( "jecars:ChangePasswordURL" )) {
-              throw new CredentialExpiredException( source.getProperty( "jecars:ChangePasswordURL" ).getString() );
-            }
+              final Node source = loginSession.getNode( user.getProperty( "jecars:Source" ).getString().substring(1) );
+              if (source.hasProperty( "jecars:ChangePasswordURL" )) {
+                throw new CredentialExpiredException( source.getProperty( "jecars:ChangePasswordURL" ).getString() );
+              }
+//            }
           }
+          throw new CredentialExpiredException();
         }
-        throw new CredentialExpiredException();
       }
 //    } catch (AccountLockedException ale) {
 //      throw ale;

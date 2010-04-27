@@ -63,7 +63,7 @@ public class CARS_AccessManager extends DefaultAccessManager implements AccessMa
     static public final String P_ADDNODE     = "add_node";
     static public final String P_REMOVE      = "remove";
     
-    static public final String gAccountKeysPath  = "accounts/ClientLogin";
+    static public final String ACCOUNTKEYSPATH   = "accounts/ClientLogin";
     static public final String gUsersPath        = CARS_Main.MAINFOLDER + "/default/Users";
     static public final String gGroupsPath       = CARS_Main.MAINFOLDER + "/default/Groups";
     static public final String gPasswordProperty = CARS_Main.DEFAULTNS + "Password_crypt";

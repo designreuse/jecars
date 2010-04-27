@@ -393,7 +393,11 @@ public class CARS_ActionContext {
   public char[] getPassword() {
     return mPassword;
   }
-  
+
+  /** getAuthKey
+   *
+   * @return
+   */
   public String getAuthKey() {
     return mAuthKey;
   }
