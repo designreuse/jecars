@@ -94,7 +94,7 @@ public class JC_UsersNode extends JC_DefaultNode {
   public Collection<JC_UserNode> getUsers() throws JC_Exception {
     final JC_Filter filter = JC_Filter.createFilter();
     filter.addCategory("jecars:User");
-    JC_Params params = getClient().createParams( JC_RESTComm.GET );
+    final JC_Params params = getClient().createParams( JC_RESTComm.GET ).cloneParams();
     params.addOtherParameter( JC_Defs.PARAM_GETALLPROPS, JC_Defs.TRUE );
     params.setOutputFormat( JC_Defs.OUTPUTTYPE_PROPERTIES );
     final Collection<JC_Nodeable> nodes = getNodes( params, filter, null );

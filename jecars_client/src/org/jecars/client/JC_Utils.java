@@ -92,11 +92,15 @@ public class JC_Utils {
        e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, ioe.getMessage() );
      }
    } else {
-     final Throwable t = (Throwable)pTags.getData( "ResponseException" );
-     if ((t==null) || !(t instanceof Exception)) {
+     if (pTags==null) {
        e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL );
      } else {
-       e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, (Exception)t );
+       final Throwable t = (Throwable)pTags.getData( "ResponseException" );
+       if ((t==null) || !(t instanceof Exception)) {
+         e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL );
+       } else {
+         e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, (Exception)t );
+       }
      }
    }
    return e;
