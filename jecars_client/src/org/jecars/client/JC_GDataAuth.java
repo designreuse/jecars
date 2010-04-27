@@ -31,7 +31,7 @@ import nl.msd.jdots.JD_Taglist;
  */
 public class JC_GDataAuth implements Serializable {
 
-  static final protected Logger gLog = Logger.getLogger( "org.jecars.client" );
+  static final protected Logger LOG = Logger.getLogger( "org.jecars.client" );
 
   private String mAuth = null;
 

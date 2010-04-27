@@ -189,11 +189,11 @@ public class JC_Params implements Serializable {
    * @return true if the parameter is added, false if not
    */
   public boolean addOtherParameter( final String pTag, final String pValue ) {
-    if (!mOtherParams.containsKey( pTag )) {
+    if (mOtherParams.containsKey( pTag )) {
+      return false;
+    } else {
       mOtherParams.put( pTag, pValue );
       return true;
-    } else {
-      return false;
     }
   }
 
