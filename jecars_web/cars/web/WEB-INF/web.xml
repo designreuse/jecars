@@ -3,8 +3,23 @@
     <servlet>
         <servlet-name>cars</servlet-name>
         <servlet-class>org.jecars.servlets.cars</servlet-class>
+        <init-param>
+            <param-name>JECARS_REPHOME</param-name>
+            <param-value>../data/rep</param-value>
+        </init-param>
+        <init-param>
+            <param-name>JECARS_REPLOGHOME</param-name>
+            <param-value>../data/logs</param-value>
+        </init-param>
+        <init-param>
+            <param-name>JECARS_NAMESPACES</param-name>
+            <param-value>jcr,http://www.jcp.org/jcr,jecars,http://jecars.org</param-value>
+        </init-param>
+        <init-param>
+            <param-name>JECARS_CNDFILES</param-name>
+            <param-value>/org/jecars/jcr/nodetype/jecars.cnd,jecars.cnd</param-value>
+        </init-param>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>cars</servlet-name>
         <url-pattern>/*</url-pattern>
@@ -15,7 +30,7 @@
         </session-timeout>
     </session-config>
     <welcome-file-list>
-	<welcome-file>
+        <welcome-file>
             index.jsp
         </welcome-file>
     </welcome-file-list>
