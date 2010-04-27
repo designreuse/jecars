@@ -16,10 +16,25 @@
 package org.jecars.apps;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -30,6 +45,11 @@ import org.jecars.CARS_CustomException;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
+import org.jecars.client.JC_Clientable;
+import org.jecars.client.JC_Exception;
+import org.jecars.client.JC_Factory;
+import org.jecars.client.JC_GDataAuth;
+import org.jecars.client.JC_InfoApp;
 import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.support.BASE64Encoder;
 import org.jecars.support.Base64;
@@ -41,10 +61,15 @@ import org.jecars.support.Base64;
  */
 public class CARS_AccountsApp extends CARS_DefaultInterface {
 
+  static final public Logger LOG = Logger.getLogger( "org.jecars.apps" );
+
   static final public String AUTHKEY_PREFIX = "AUTHKEY_";
 
   static private long gKeyValidInHours = 1;
-    
+
+  static private File               gCIRCLE_OF_TRUST = null;
+  static private Properties         propCIRCLE_OF_TRUST = new Properties();
+
   /** Creates a new instance of CARS_AccountsApp
    */
   public CARS_AccountsApp() {
@@ -70,6 +95,88 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
     return;
   }
 
+  /** setCircleOfTrustFile
+   * 
+   * @param pCotf
+   */
+  static public void setCircleOfTrustFile( final File pCotf ) throws FileNotFoundException, IOException {
+    gCIRCLE_OF_TRUST = pCotf;
+    propCIRCLE_OF_TRUST.clear();
+    if (pCotf!=null) {
+      final FileInputStream fis = new FileInputStream( pCotf );
+      try {
+        propCIRCLE_OF_TRUST.load( fis );
+      } finally {
+        fis.close();
+      }
+    }
+    return;
+  }
+
+  /** getTrustedServers
+   *
+   * @return
+   */
+  static public List<String> getTrustedServers() {
+    if (propCIRCLE_OF_TRUST==null) {
+      return Collections.EMPTY_LIST;
+    } else {
+      final List<String> l = new ArrayList<String>();
+      final Enumeration<Object> keys = propCIRCLE_OF_TRUST.keys();
+      while( keys.hasMoreElements() ) {
+        final String key = keys.nextElement().toString();
+        if (key.startsWith( "JeCARS.Server" )) {
+          l.add( propCIRCLE_OF_TRUST.getProperty( key ) );
+        }
+      }
+      return l;
+    }
+  }
+
+  /** checkCircleOfTrust
+   *
+   * @param pAuth
+   * @return
+   */
+  static public String checkCircleOfTrust( final String pAuth ) throws RepositoryException {
+    String un = null;
+    final List<String> tss = getTrustedServers();
+    for( final String ts : tss ) {
+      try {
+        final JC_Clientable client = JC_Factory.createClient( ts );
+        client.setCredentials( JC_GDataAuth.create( pAuth ));
+        final JC_InfoApp info = new JC_InfoApp( client );
+        un = info.whoAmI();
+        if (un!=null) {
+
+          // **** Copy the key to the current jecars
+          final Session appSession = CARS_Factory.getSystemApplicationSession();
+          synchronized( appSession ) {
+            final Node clientLogin = appSession.getNode( "/accounts/ClientLogin" );
+            final String nodeAuthKey = AUTHKEY_PREFIX + pAuth;
+            if (!clientLogin.hasNode( nodeAuthKey )) {
+              clientLogin.addNode( nodeAuthKey, "jecars:root" );
+            }
+            final Node authKey = clientLogin.getNode( nodeAuthKey );
+            final Calendar c = Calendar.getInstance();
+            c.add( Calendar.MINUTE, 15 );
+            authKey.setProperty( CARS_ActionContext.gDefTitle, un );
+            authKey.setProperty( CARS_ActionContext.gDefExpireDate, c );
+            authKey.setProperty( CARS_ActionContext.gDefBody, "Key is copied from " + client.getServerPath() );
+            CARS_Utils.setCurrentModificationDate( authKey.getParent() );
+            appSession.save();
+          }
+
+          break;
+        }
+      } catch(JC_Exception je) {
+        LOG.log( Level.WARNING, je.getMessage(), je );
+      }
+    }
+    return un;
+  }
+
+
   /** getNodes
    * @param pMain
    * @param pInterfaceNode
@@ -82,12 +189,11 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
 //    System.out.println( "Must put the nodes under: " + pParentNode.getPath() );
 //    System.out.println( "The leaf is (fullpath): " + pLeaf );
     
-    // **** sys* nodes have all rights. TODO
+    // **** sys* nodes have all rights.
     final Session appSession = CARS_Factory.getSystemApplicationSession();
     synchronized( appSession ) {
       final Node sysParentNode = appSession.getRootNode().getNode( pParentNode.getPath().substring(1) );
       if (sysParentNode.isNodeType( "jecars:CARS_Interface" )) {
-        // **** Hey!.... it the root....
         if (!sysParentNode.hasNode( "login")) {
           sysParentNode.addNode( "login", "jecars:root" );        
         }
@@ -98,19 +204,21 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
   }
 
   /** createAuthKey
+   *
    * @param pUsername
    * @param pEncryptPwd
    * @param pService
+   * @param pExpireDate
    * @return
-   * @throws java.lang.Exception
+   * @throws NoSuchAlgorithmException
+   * @throws UnsupportedEncodingException
    */
-  static final public String createAuthKey( String pUsername, String pEncryptPwd, String pService, Calendar pExpireDate ) throws Exception {
+  static final public String createAuthKey( final String pUsername, final String pEncryptPwd, final String pService, final Calendar pExpireDate ) throws NoSuchAlgorithmException, UnsupportedEncodingException {
     final CARS_PasswordService ps = CARS_PasswordService.getInstance();
     final UUID uuid = UUID.randomUUID();
     final String authKeyS = BASE64Encoder.encodeBuffer(
             ps.encrypt(pUsername + "$!$" + pEncryptPwd + pService + "!$!" + uuid.toString() ).getBytes(),
             Base64.DONT_BREAK_LINES );
-//    String authKeyS = CARS_Utils.encode(ps.encrypt( pUsername + "$!$" + pEncryptPwd + pService + "!$!" + pExpireDate.getTimeInMillis() ));
     return authKeyS;
   }
 
@@ -132,6 +240,7 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
   
   
   /** addNode
+   *
    * @param pMain
    * @param pInterfaceNode
    * @param pParentNode
@@ -139,22 +248,28 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
    * @param pPrimType
    * @param pParams
    * @return
-   * @throws java.lang.Exception
+   * @throws RepositoryException
+   * @throws NoSuchAlgorithmException
+   * @throws UnsupportedEncodingException
+   * @throws CARS_CustomException
    */
   @Override
-  synchronized public Node addNode( CARS_Main pMain, Node pInterfaceNode, Node pParentNode, String pName, String pPrimType, JD_Taglist pParams ) throws Exception {
+  synchronized public Node addNode( final CARS_Main pMain, final Node pInterfaceNode, final Node pParentNode,
+                                    final String pName, final String pPrimType, final JD_Taglist pParams ) throws RepositoryException, NoSuchAlgorithmException, UnsupportedEncodingException, CARS_CustomException {
     Node newNode = null;
     
-    // **** sys* nodes have all rights. TODO
+    // **** sys* nodes have all rights.
     final Session appSession = CARS_Factory.getSystemApplicationSession();
     synchronized( appSession ) {
-      final Node sysParentNode = appSession.getRootNode().getNode( pParentNode.getPath().substring(1) );
-      if (pName.equals( "ClientLogin" )) {
+      final Node sysParentNode = appSession.getNode( pParentNode.getPath() );
+      if ("ClientLogin".equals( pName )) {
 
         final CARS_ActionContext ac = pMain.getContext();
 
         // **** ClientLogin
-        if (!sysParentNode.hasNode( pName )) {
+        if (sysParentNode.hasNode( pName )) {
+          newNode = sysParentNode.getNode( pName );
+        } else {
           newNode = sysParentNode.addNode( pName, "jecars:unstructured" );
           newNode.addMixin( "jecars:permissionable" );
           final String[] prin = {"/JeCARS/default/Groups/DefaultReadGroup"};
@@ -163,8 +278,6 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
           newNode.setProperty( "jecars:Actions", acts );
           sysParentNode.save();
 //          newNode.setProperty( "jecars:KeyValidForHours", gKeyValidInHours );
-        } else {
-          newNode = sysParentNode.getNode( pName );          
         }
 
         final String email   = (String)pParams.getData( "jecars:Email" );
@@ -186,30 +299,29 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
 //                newNode.setProperty( "jecars:accountType",  (String)pParams.getData( "jecars:accountType" ) );
                 pParams.clear();
                 final StringBuilder result = new StringBuilder();
-//                String authKeyS = CARS_Utils.encode(ps.encrypt( email + "$!$" + ps.encrypt( pwd ) + service ));
-                boolean clash = true;
+                final boolean clash = true;
                 int i = 0;
                 while( clash ) {
-                  Calendar c = Calendar.getInstance();
+                  final Calendar c = Calendar.getInstance();
                   c.add( Calendar.HOUR_OF_DAY, (int)gKeyValidInHours );
                   final String authKeyS = createAuthKey( email, ps.encrypt( pwd ), service, c );
                   result.append( "Auth=" ).append( authKeyS ).append( "\n" );
                   final String nodeAuthKey = AUTHKEY_PREFIX + authKeyS;
                   Node authKey;
-                  if (!newNode.hasNode( nodeAuthKey )) {
-                    authKey = newNode.addNode( nodeAuthKey, "jecars:root" );
-                    authKey.setProperty( CARS_ActionContext.gDefTitle, email );
-                    authKey.setProperty( CARS_ActionContext.gDefExpireDate, c );
-                    CARS_Utils.setCurrentModificationDate( newNode );
-                    newNode = authKey;
-                    break;
-                  } else {
+                  if (newNode.hasNode( nodeAuthKey )) {
                     i++;
                     if (i>20) {
                       ac.setContentsResultStream( new ByteArrayInputStream( "Error=ServiceUnavailable\n".getBytes() ), "text/plain" );
                       ac.setErrorCode( HttpURLConnection.HTTP_FORBIDDEN );
                       throw new CARS_CustomException( "Key clash" );
                     }
+                  } else {
+                    authKey = newNode.addNode( nodeAuthKey, "jecars:root" );
+                    authKey.setProperty( CARS_ActionContext.gDefTitle, email );
+                    authKey.setProperty( CARS_ActionContext.gDefExpireDate, c );
+                    CARS_Utils.setCurrentModificationDate( newNode );
+                    newNode = authKey;
+                    break;
                   }
                 }
   //              authKey = newNode.getNode( nodeAuthKey );

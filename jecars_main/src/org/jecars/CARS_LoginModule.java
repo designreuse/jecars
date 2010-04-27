@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.security.AnonymousPrincipal;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.UserPrincipal;
 import org.apache.jackrabbit.core.security.authentication.CredentialsCallback;
+import org.jecars.apps.CARS_AccountsApp;
 
 /**
  * CARS_LoginModule
@@ -129,7 +130,7 @@ public class CARS_LoginModule implements LoginModule {
    */
 //  static protected Collection<Node> getUserKeys( String pUsername ) throws RepositoryException {
 //    Collection<Node> col = new ArrayList<Node>();
-//    Node authsPath = CARS_Factory.getSystemCarsSession().getRootNode().getNode( CARS_AccessManager.gAccountKeysPath );
+//    Node authsPath = CARS_Factory.getSystemCarsSession().getRootNode().getNode( CARS_AccessManager.ACCOUNTKEYSPATH );
 //    NodeIterator ni = authsPath.getNodes();
 //    Node key;
 //    while( ni.hasNext() ) {
@@ -146,10 +147,28 @@ public class CARS_LoginModule implements LoginModule {
    * @return
    * @throws javax.jcr.RepositoryException
    */
-  static protected Node getKeyNode( String pKey ) throws RepositoryException {
-    Session s = CARS_Factory.getSystemCarsSession();
-//    s.refresh( false );
-    return s.getRootNode().getNode( CARS_AccessManager.gAccountKeysPath ).getNode( pKey );
+//  static protected Node getKeyNode( final String pKey ) throws RepositoryException {
+//    Session s = CARS_Factory.getSystemCarsSession();
+////    s.refresh( false );
+//    return s.getRootNode().getNode( CARS_AccessManager.ACCOUNTKEYSPATH ).getNode( pKey );
+//  }
+
+  /** getKeyNodeName
+   *
+   * @param pKey
+   * @return
+   * @throws RepositoryException
+   */
+  static protected String getKeyNodeName( final String pKey ) throws RepositoryException {
+    final Session s = CARS_Factory.getSystemCarsSession();
+    synchronized( s ) {
+      final Node akp = s.getRootNode().getNode( CARS_AccessManager.ACCOUNTKEYSPATH );
+      if (akp.hasNode( pKey )) {
+        final Node an = akp.getNode( pKey );
+        return an.getProperty( CARS_ActionContext.gDefTitle ).getString();
+      }
+    }
+    return null;
   }
 
   
@@ -181,23 +200,37 @@ public class CARS_LoginModule implements LoginModule {
 //                if (CARS_Factory.gSystemCarsSession!=null) {
                   // **** Superuser isn't allowed for remote login
                 if (!userName.equals( CARS_AccessManager.gSuperuserName )) {
-                  Session loginSession = CARS_Factory.getSystemLoginSession();
+                  final Session loginSession = CARS_Factory.getSystemLoginSession();
                   if (loginSession!=null) {
                     synchronized( loginSession ) {
 //                      loginSession.refresh( false );
-                      if (userName.startsWith( "AUTHKEY_" )) {
+                      if (userName.startsWith( CARS_AccountsApp.AUTHKEY_PREFIX )) {
 //                      System.out.println( " CHECK KEY = " + userName );
                         final String authKey = userName;
-                        final Node keyNode = getKeyNode( authKey );
-                        userName = keyNode.getProperty( CARS_ActionContext.gDefTitle ).getString();
+//                        final Node keyNode = getKeyNode( authKey );
+//                        userName = keyNode.getProperty( CARS_ActionContext.gDefTitle ).getString();
+                        userName = getKeyNodeName( authKey );
                         final Node users = CARS_Factory.getSystemLoginSession().getRootNode().getNode( CARS_AccessManager.gUsersPath );
-                        if (users.hasNode( userName )) {
+                        if ((userName!=null) && users.hasNode( userName )) {
                           final Node user = users.getNode( userName );
                           if (user.hasProperty( CARS_AccessManager.gPasswordProperty )) {
                             // **** The username is a AUTHKEY
                             userP = new UserPrincipal( userName );
                             authenticated = true;
                           }                        
+                        } else {
+                          // **** Check the circle of trust
+                          userName = CARS_AccountsApp.checkCircleOfTrust( authKey.substring( CARS_AccountsApp.AUTHKEY_PREFIX.length() ) );
+                          if ((userName!=null) && users.hasNode( userName )) {
+                            final Node user = users.getNode( userName );
+                            if (user.hasProperty( CARS_AccessManager.gPasswordProperty )) {
+                              // **** The username is a AUTHKEY
+                              userP = new UserPrincipal( userName );
+                              authenticated = true;
+                            }
+                          } else {
+                            throw new LoginException( "Login error for: " + authKey );
+                          }
                         }
                       } else {
                         // **** Normal username/password

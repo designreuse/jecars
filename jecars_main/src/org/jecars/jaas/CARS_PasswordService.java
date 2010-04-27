@@ -15,6 +15,7 @@
  */
 package org.jecars.jaas;
 
+import java.io.UnsupportedEncodingException;
 import java.security.*;
 import org.jecars.support.BASE64Encoder;
 
@@ -29,14 +30,19 @@ public final class CARS_PasswordService {
   
   private CARS_PasswordService() {    
   }
-  
-  public synchronized String encrypt( String pPassword ) throws Exception {
-    MessageDigest md = null;
-    md = MessageDigest.getInstance("SHA");
+
+  /** encrypt
+   *
+   * @param pPassword
+   * @return
+   * @throws NoSuchAlgorithmException
+   * @throws UnsupportedEncodingException
+   */
+  public synchronized String encrypt( final String pPassword ) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    final MessageDigest md = MessageDigest.getInstance("SHA");
     md.update(pPassword.getBytes("UTF-8"));
-    byte raw[] = md.digest();
-    String hash = BASE64Encoder.encodeBuffer(raw);
-    return hash;
+    final byte raw[] = md.digest();
+    return BASE64Encoder.encodeBuffer(raw);
   }
   
   public static synchronized CARS_PasswordService getInstance() {

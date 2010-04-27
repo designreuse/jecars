@@ -81,8 +81,9 @@ public class CARS_DefaultMain implements CARS_Main {
     mSession = pSession;
     mFactory = pFactory;
     final Node users = getUsers();
-    if (users.hasNode( mSession.getUserID() )) {
-      mUserNode = getUsers().getNode( mSession.getUserID() );
+    final String userId = mSession.getUserID();
+    if (users.hasNode( userId )) {
+      mUserNode = getUsers().getNode( userId );
     } else {
       mUserNode = null;
     }
@@ -778,7 +779,7 @@ public class CARS_DefaultMain implements CARS_Main {
   public void setId( Node pNode ) throws Exception {
     if (pNode.hasProperty( "jecars:Id" )==false) {
       Session ses = CARS_Factory.getSystemCarsSession();
-      synchronized(ses) {        
+      synchronized(ses) {
         Node main = ses.getRootNode().getNode( "JeCARS" );
         long id = main.getProperty( "jecars:CurrentId" ).getLong();
         pNode.setProperty( "jecars:Id", id++ );
@@ -1452,14 +1453,14 @@ koasdkaso
   @Override
   final public Node getUsers() throws PathNotFoundException, RepositoryException {
 //    return CARS_Factory.getSystemCarsSession().getRootNode().getNode( "JeCARS/default/Users" );
-    return mSession.getRootNode().getNode( "JeCARS/default/Users" );
+    return mSession.getNode( "/JeCARS/default/Users" );
   }
   
   
   /** Get user sources
    */
   public Node getUserSources() throws PathNotFoundException, RepositoryException {
-    return mSession.getRootNode().getNode( "JeCARS/UserSources" );
+    return mSession.getNode( "/JeCARS/UserSources" );
   }
   
 }
