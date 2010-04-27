@@ -139,6 +139,20 @@ public class JC_UsersTests {
   }
 
   @Test
+  public void listUsersTest1() throws Exception {
+    final JC_Clientable c = getClient();
+    c.setCredentials( "UserManager", "jecars".toCharArray() );
+    final JC_UsersNode un = c.getUsersNode();
+    System.out.println("Users = " + un.getPath() + " = " + un.getName() );
+    final Collection<JC_UserNode> users = un.getUsers();
+    for (JC_UserNode user : users) {
+      System.out.println("User = " + user.getPath() + " = " + user.getFullname() );
+    }
+    return;
+  }
+
+
+  @Test
   public void userDataCreateTest() throws Exception {
     JC_Nodeable     rootNode = mClient_Admin.getRootNode();
     JC_Nodeable   eventsNode = rootNode.getNode( "JeCARS/default/Data" );
