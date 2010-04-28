@@ -158,7 +158,7 @@ public class CARS_Factory {
    */
   static private void initJeCARSProperties() {
     try {
-      if (gJecarsProperties.isEmpty()) {
+//      if (gJecarsProperties.isEmpty()) {
         if (gJecarsPropertiesPath==null) {
           gLog.log( Level.INFO, "Trying to read jecars properties as system resource " + JECARSPROPERTIESNAME );
           final InputStream sis = ClassLoader.getSystemResourceAsStream( "/" + JECARSPROPERTIESNAME );
@@ -189,7 +189,7 @@ public class CARS_Factory {
             jfis.close();
           }
         }
-      }
+//      }
       gLog.log( Level.INFO, "Config file = " + gJecarsProperties.getProperty( "jecars.ConfigFile", "<null>" ) );
       gConfigFile    = gJecarsProperties.getProperty( "jecars.ConfigFile", "<null>" );
       gRepHome       = gJecarsProperties.getProperty( "jecars.RepHome",    "<null>" );
