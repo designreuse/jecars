@@ -724,7 +724,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
                   } else {
                     final CARS_DefaultInterface di = new CARS_DefaultInterface();
                     final CARS_Main main = davSession.getActionContext().getMain();
-                    Node cnode = di.addNode( main, null, node, memberName, "jecars:datafile", null );
+                    final Node cnode = di.addNode( main, null, node, memberName, "jecars:datafile", null );
 //                    Node cnode = node.addNode( memberName, "jecars:datafile" );
                     String mimeType = ctx.getMimeType();
 //                      System.out.println("dkoosdk " + mimeType );

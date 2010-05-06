@@ -357,7 +357,11 @@ public class CARS_Utils {
    */
   static public void setCurrentModificationDate( final Node pNode ) throws RepositoryException {
     final Calendar c = Calendar.getInstance();
-    pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, c );
+    try {
+      pNode.setProperty( CARS_ActionContext.DEF_MODIFIED, c );
+    } catch( final ItemNotFoundException ie ) {
+      // **** No error, just trying to set it.
+    }
     if (pNode.hasProperty( "jcr:lastModified" )) {
       pNode.setProperty( "jcr:lastModified", c );
     }
