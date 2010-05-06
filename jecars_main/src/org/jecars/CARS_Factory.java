@@ -942,6 +942,17 @@ public class CARS_Factory {
     }
     return;
   }
+
+  /** performGetAction
+   * 
+   * @param pContext
+   * @throws CredentialExpiredException
+   * @throws AccessDeniedException
+   */
+  public void performGetAction( final CARS_ActionContext pContext ) throws CredentialExpiredException, AccessDeniedException  {
+    performGetAction( pContext, null );
+    return;
+  }
   
   /** Do GET
    * 

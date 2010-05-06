@@ -124,7 +124,7 @@ import org.w3c.dom.Document;
  */
 public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
 
-    protected static final java.util.logging.Logger gLog = java.util.logging.Logger.getLogger( JeCARS_WebDAVServlet.class.getPackage().getName() );
+    protected static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger( JeCARS_WebDAVServlet.class.getPackage().getName() );
 
     /**
      * init param name of the repository prefix
@@ -212,11 +212,11 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
       if (resourcePathPrefix==null) {
         resourcePathPrefix = pServlet.getResourcePathPrefix();
         if (resourcePathPrefix==null) {
-          gLog.warning( "Missing path prefix > setting to empty string. (resource-path-prefix)" );
+          LOG.warning( "Missing path prefix > setting to empty string. (resource-path-prefix)" );
           resourcePathPrefix = "";
         }
       } else if (resourcePathPrefix.endsWith("/")) {
-        gLog.warning( "Path prefix ends with '/' > removing trailing slash." );
+        LOG.warning( "Path prefix ends with '/' > removing trailing slash." );
         resourcePathPrefix = resourcePathPrefix.substring(0, resourcePathPrefix.length() - 1);
       }
       return;

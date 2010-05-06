@@ -123,7 +123,8 @@ public class CARS_DefaultMain implements CARS_Main {
     }
 
     // **** Update the Modified property in the parent
-    pParent.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
+    CARS_Utils.setCurrentModificationDate( node );
+//    pParent.setProperty( CARS_ActionContext.DEF_MODIFIED, cal );
 
 //    Calendar cal = Calendar.getInstance();
 //    node.setProperty( "jecars:Created", cal );
