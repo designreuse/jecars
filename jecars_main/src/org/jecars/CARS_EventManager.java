@@ -20,6 +20,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.logging.*;
 import javax.jcr.LoginException;
 import javax.jcr.Node;
@@ -88,7 +89,7 @@ public class CARS_EventManager {
   
   static private File              gEVENTLOGFILE  = new File( "jecars.log" );
   static private boolean           gENABLELOG     = true;
-  static private SimpleDateFormat  gLOGTIMEFORMAT = new SimpleDateFormat( "[dd/MMM/yyyy:HH:mm:ss Z]" );
+  static private SimpleDateFormat  gLOGTIMEFORMAT = new SimpleDateFormat( "[dd/MMM/yyyy:HH:mm:ss Z]", Locale.US );
 
 
   /** Creates a new instance of CARS_EventManager
