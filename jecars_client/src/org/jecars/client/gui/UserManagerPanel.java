@@ -389,7 +389,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
       try {
         mCreateUser.setEnabled( false );
         mRemoveUser.setEnabled( false );
-        mModifyUser.setEnabled( false );
+//        mModifyUser.setEnabled( false );
         final String nameID = mNameID.getText();
         final String groupID = mGroupNameID.getText();
         if (pIC.equals( ITEMCHANGED.NAMEID )) {
