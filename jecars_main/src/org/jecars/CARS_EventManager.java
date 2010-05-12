@@ -88,6 +88,7 @@ public class CARS_EventManager {
   static final private Object EVENTLOCK = new Object();
   
   static private File              gEVENTLOGFILE  = new File( "jecars.log" );
+  static final private Object       EVENTFILELOCK = new Object();
   static private boolean           gENABLELOG     = true;
   static private SimpleDateFormat  gLOGTIMEFORMAT = new SimpleDateFormat( "[dd/MMM/yyyy:HH:mm:ss Z]", Locale.US );
 
@@ -674,24 +675,26 @@ public class CARS_EventManager {
    * @param pUserAgent
    * @throws IOException
    */
-  synchronized static public void addLogEntry(
+  static public void addLogEntry(
                         final String pClient,   final String pIdentd,  final String pUserId,
                         final String pRequest,  final int pResponse,   final int pSize,
                         final String pReferrer, final String pUserAgent ) throws IOException {
-    FileOutputStream fos = null;
-    try {
-      fos = new FileOutputStream( gEVENTLOGFILE, true );
-      final String line = pClient + " " + pIdentd + " " + pUserId + " " +
-                    gLOGTIMEFORMAT.format(new Date()) + " " +
-                    "\"" + pRequest + "\" " + pResponse + " " + pSize + " " +
-                    "\"" + pReferrer + "\" " + "\"" + pUserAgent + "\"\n";
-      fos.write( line.getBytes() );
-      fos.flush();
-    } catch (Exception e) {
-      gLog.log( Level.SEVERE, null, e );
-    } finally {
-      if (fos!=null) {
-        fos.close();
+    synchronized( EVENTFILELOCK ) {
+      FileOutputStream fos = null;
+      try {
+        fos = new FileOutputStream( gEVENTLOGFILE, true );
+        final String line = pClient + " " + pIdentd + " " + pUserId + " " +
+                      gLOGTIMEFORMAT.format(new Date()) + " " +
+                      "\"" + pRequest + "\" " + pResponse + " " + pSize + " " +
+                      "\"" + pReferrer + "\" " + "\"" + pUserAgent + "\"\n";
+        fos.write( line.getBytes() );
+        fos.flush();
+      } catch (Exception e) {
+        gLog.log( Level.SEVERE, null, e );
+      } finally {
+        if (fos!=null) {
+          fos.close();
+        }
       }
     }
     return;
