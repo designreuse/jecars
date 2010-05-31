@@ -35,6 +35,7 @@ public class JCS_defaultScript {
   public String mTempDir         = "";
   public String mCodeBase        = "";
   public String mBoolOption      = "";
+  public boolean mShowLogin      = false;
 
   public PrintStream mConfigOutput = System.out;
   public PrintStream mStdOutput    = System.out;
@@ -111,8 +112,11 @@ public class JCS_defaultScript {
       if (arg.startsWith( "-codebase=" )) {
         mCodeBase = arg.substring( 10 );
       }
-      if (arg.startsWith( "-bo=" )==true) {
+      if (arg.startsWith( "-bo=" )) {
         mBoolOption = arg.substring( 4 );
+      }
+      if (arg.startsWith( "-showlogin=" )) {
+        mShowLogin = Boolean.parseBoolean( arg.substring( 11 ) );
       }
     }
     return;

@@ -11,6 +11,8 @@
 
 package org.jecars.client.gui;
 
+import javax.swing.DefaultComboBoxModel;
+
 /**
  *
  * @author weert
@@ -33,12 +35,28 @@ public class LoginDialog extends javax.swing.JDialog {
       return (String)mJeCARS_URLs.getSelectedItem();
     }
 
+    public void setServer( final String pServer ) {
+      final DefaultComboBoxModel dcbm = (DefaultComboBoxModel)mJeCARS_URLs.getModel();
+      dcbm.addElement( pServer );
+      mJeCARS_URLs.setSelectedItem( pServer );
+      return;
+    }
+
     public String getUserName() {
       return mUsername.getText();
     }
 
+    public void setUserName( final String pUserName ) {
+      mUsername.setText( pUserName );
+      return;
+    }
+
     public char[] getPassword() {
       return mPassword.getPassword();
+    }
+
+    public void setPassword( char[] pPassword ) {
+      mPassword.setText( String.valueOf( pPassword ) );
     }
 
     /** This method is called from within the constructor to

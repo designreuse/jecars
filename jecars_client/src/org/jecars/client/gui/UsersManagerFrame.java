@@ -70,8 +70,17 @@ public class UsersManagerFrame extends javax.swing.JFrame {
 
         final JCS_defaultScript ds = new JCS_defaultScript();
         ds.parseArguments( args );
-        if (("".equals( ds.mUsername)) || ("".equals( ds.mPassword )) || ("".equals( ds.mJeCARSServer ))) {
+        if (ds.mShowLogin || ("".equals( ds.mUsername)) || ("".equals( ds.mPassword )) || ("".equals( ds.mJeCARSServer ))) {
           final LoginDialog ld = new LoginDialog( null, true );
+          if (!"".equals( ds.mUsername )) {
+            ld.setUserName( ds.mUsername );
+          }
+          if (!"".equals( ds.mPassword )) {
+            ld.setPassword( ds.mPassword.toCharArray() );
+          }
+          if (!"".equals( ds.mJeCARSServer )) {
+            ld.setServer( ds.mJeCARSServer );
+          }
           ld.setVisible( true );
           if (ld.isOk()) {
             ds.mUsername      = ld.getUserName();
