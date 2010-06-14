@@ -160,7 +160,7 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
    */
   @SuppressWarnings("empty-statement")
   @Override
-  public boolean setBodyStream( CARS_Main pMain, Node pInterfaceNode, Node pNode, InputStream pBody, String pMimeType ) throws Exception {
+  public boolean setBodyStream( final CARS_Main pMain, final Node pInterfaceNode, final Node pNode, final InputStream pBody, final String pMimeType ) throws Exception {
     boolean changed = false;
     if (pMimeType==null) return changed;
     if (pMimeType.equals( CARS_Mime.BACKUP_MIMETYPE )) {
@@ -169,16 +169,16 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
     }
     if (pNode.isNodeType( "jecars:datafile" )) {
       if (pBody!=null) {
-        pNode.setProperty( "jcr:data", pBody );
+        pNode.setProperty( "jcr:data", pNode.getSession().getValueFactory().createBinary( pBody ) );
         changed = true;
       }
     } else {
       // **** Find a binary property and stored the data.
-      PropertyDefinition pds[] = pNode.getPrimaryNodeType().getPropertyDefinitions();
+      final PropertyDefinition pds[] = pNode.getPrimaryNodeType().getPropertyDefinitions();
       int i=0;
       for( ; i<pds.length; i++ ) {
         if (pds[i].getRequiredType()==PropertyType.BINARY) {
-          pNode.setProperty( pds[i].getName(), pBody );
+          pNode.setProperty( pds[i].getName(), pNode.getSession().getValueFactory().createBinary( pBody ) );
           i = -1;
           changed = true;
           break;
@@ -240,19 +240,23 @@ public class CARS_DefaultInterface implements CARS_Interface, EventListener {
    */
   @Override
   public Node copyNode( final CARS_Main pMain, final Node pInterfaceNode, final Node pParentNode, final Node pCopyNode, final String pName, final String pPrimType, final JD_Taglist pParams ) throws Exception {
- 
-    final PropertyIterator pi = pCopyNode.getProperties();
-    Property cprop;
-    while( pi.hasNext() ) {
-      cprop = pi.nextProperty();
-      if (cprop.getType()==PropertyType.BINARY) {
-        // **** Binary property
-        pParams.replaceData( cprop.getName(), cprop.getStream() );
-      } else if (pParams.getData( cprop.getName() )==null) {
-        pParams.replaceData( cprop.getName(), cprop.getValue().getString() );
-      }
-    }
-    return addNode( pMain, pInterfaceNode, pParentNode, pName, pPrimType, pParams );
+
+    pMain.getSession().getWorkspace().copy( pCopyNode.getPath(), pParentNode.getPath() + '/' + pName );
+    return pMain.getSession().getNode( pParentNode.getPath() + '/' + pName );
+
+   // **** Changed in v1.3.2
+//    final PropertyIterator pi = pCopyNode.getProperties();
+//    Property cprop;
+//    while( pi.hasNext() ) {
+//      cprop = pi.nextProperty();
+//      if (cprop.getType()==PropertyType.BINARY) {
+//        // **** Binary property
+//        pParams.replaceData( cprop.getName(), cprop.getStream() );
+//      } else if (pParams.getData( cprop.getName() )==null) {
+//        pParams.replaceData( cprop.getName(), cprop.getValue().getString() );
+//      }
+//    }
+//    return addNode( pMain, pInterfaceNode, pParentNode, pName, pPrimType, pParams );
   }
 
 

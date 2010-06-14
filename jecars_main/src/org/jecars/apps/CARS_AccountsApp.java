@@ -22,12 +22,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -233,7 +231,7 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
     if (auth.startsWith( AUTHKEY_PREFIX )) {
       auth = auth.substring( AUTHKEY_PREFIX.length() );
     } else {
-      throw new RepositoryException( "Node " + pNode.getPath() + " is not a authkey node" );
+      throw new RepositoryException( "Node " + pNode.getPath() + " is not an authkey node" );
     }
     return auth;
   }

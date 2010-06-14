@@ -45,13 +45,13 @@ import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.jecars.CARS_AccessManager;
 import org.jecars.CARS_ActionContext;
+import org.jecars.CARS_DefaultMain;
 import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
 import org.jecars.backup.JB_ExportData;
 import org.jecars.backup.JB_Options;
-import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.output.CARS_InputStream;
 import org.jecars.tools.*;
 
@@ -499,7 +499,8 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
       if (users.hasNode( "UserManager" )==false) {
         Node user = users.addNode( "UserManager", "jecars:User" );
         user.setProperty( "jecars:Fullname", "UserManager" );
-        user.setProperty( "jecars:Password_crypt", CARS_PasswordService.getInstance().encrypt("jecars") );
+        CARS_DefaultMain.setCryptedProperty( user, "jecars:Password_crypt", "jecars" );
+//        user.setProperty( "jecars:Password_crypt", CARS_PasswordService.getInstance().encrypt("jecars") );
         Node group = groups.getNode( "UserManagers" );
 //        CARS_Utils.addMultiProperty( group, "jecars:GroupMembers", user.getUUID() );
         CARS_Utils.addMultiProperty( group, "jecars:GroupMembers", user.getPath(), false );

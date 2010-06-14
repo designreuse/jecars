@@ -34,9 +34,6 @@ import nl.msd.jdots.JD_Taglist;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.jecars.jaas.CARS_PasswordService;
 import org.apache.jackrabbit.core.TransientRepository;
-import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.log4j.PropertyConfigurator;
 import org.jecars.apps.CARS_AccountsApp;
@@ -458,7 +455,8 @@ public class CARS_Factory {
       final Node anon = users.addNode( "anonymous" );
       anon.setProperty( "jecars:Fullname", "anonymous" );
       anon.setProperty( "jecars:Source", internalSource.getPath() );
-      anon.setProperty( "jecars:Password_crypt", CARS_PasswordService.getInstance().encrypt("anonymous") );
+      CARS_DefaultMain.setCryptedProperty( anon, "jecars:Password_crypt", "anonymous" );
+//      anon.setProperty( "jecars:Password_crypt", CARS_PasswordService.getInstance().encrypt("anonymous") );
     }
 
     if (!accountsNode.hasNode( "jecars:P_anonymous" )) {
@@ -1022,11 +1020,14 @@ public class CARS_Factory {
   public void performPostAction( final CARS_ActionContext pContext ) throws AccessDeniedException, CredentialExpiredException {
     CARS_Main main = null;
     try {
+      final String fet = _getFET( pContext );
       pContext.setAction( CARS_ActionContext.gDefActionPOST );
       main = createMain( pContext );      
       pContext.setMain( main );
       final String pathinfo = pContext.getPathInfo();
-      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "POST " + pathinfo );
+      if ((fet==null) || (fet.indexOf( "WRITE" )==-1)) {
+        gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "POST " + pathinfo );
+      }
       if (pathinfo.lastIndexOf( '/' )==-1) {
         throw new PathNotFoundException( pathinfo );
       } else {
@@ -1086,17 +1087,20 @@ public class CARS_Factory {
    * @param pMain
    * @throws Exception
    */
-  public void performPutAction( final CARS_ActionContext pContext, final CARS_Main pMain ) throws Exception {
+  public void performPutAction( final CARS_ActionContext pContext, final CARS_Main pMain ) throws AccessDeniedException, CredentialExpiredException {
     CARS_Main main = pMain;
     try {
 //      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
+      final String fet = _getFET( pContext );
       pContext.setAction( CARS_ActionContext.gDefActionPUT );
       if (main==null) {
         main = createMain( pContext );
         pContext.setMain( main );
       }
       final String pathinfo = pContext.getPathInfo();
-      gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "PUT " + pathinfo );
+      if ((fet==null) || (fet.indexOf( "WRITE" )==-1)) {
+        gEventManager.addEvent( main, main.getLoginUser(), null, null, "URL", "WRITE", "PUT " + pathinfo );
+      }
       if (pathinfo.lastIndexOf( '/' )!=-1) {
         // **** Store the given parameters
         final JD_Taglist paramsTL = pContext.getQueryPartsAsTaglist();
