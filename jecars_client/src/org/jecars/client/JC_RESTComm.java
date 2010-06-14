@@ -414,7 +414,9 @@ public class JC_RESTComm implements Serializable {
    */
   public JD_Taglist sendMessagePOST( JC_Clientable pClient, HttpURLConnection pConn, InputStream pContents, String pContentsType, long pContentsLength ) throws Exception {
     boolean asGet = false;
-    if (pClient!=null) asGet = pClient.getHttpOperation( JC_Clientable.POST_AS_GET );
+    if (pClient!=null) {
+      asGet = pClient.getHttpOperation( JC_Clientable.POST_AS_GET );
+    }
     JD_Taglist tags = new JD_Taglist();
     if (asGet) {
 //      gLog.log( Level.INFO, "POST (AS GET): " + pConn.getURL() );
@@ -431,7 +433,7 @@ public class JC_RESTComm implements Serializable {
       if (pClient.isInChunkedStreamingMode()) {
         applyContentsLength( pConn, pContentsLength );
       }
-      OutputStream os = pConn.getOutputStream();
+      final OutputStream os = pConn.getOutputStream();
       try {
         sendInputStreamToOutputStream( 50000, pContents, os );
       } finally {

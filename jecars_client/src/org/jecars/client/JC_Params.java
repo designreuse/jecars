@@ -46,6 +46,12 @@ public class JC_Params implements Serializable {
   private String                    mVCSLabel           = null;
   private boolean                   mForce              = false;
 
+  static final public String SPECIAL_PREFIX           = "!_#_!";
+  static final public String UNSTRUCT_PREFIX_BOOLEAN  = SPECIAL_PREFIX + "UB";
+  static final public String UNSTRUCT_PREFIX_DOUBLE   = SPECIAL_PREFIX + "UD";
+  static final public String UNSTRUCT_PREFIX_MSTRINGS = SPECIAL_PREFIX + "UMS";
+
+
   /** createParams
    *
    * use the JC_Clientable.createParams() call
