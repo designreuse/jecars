@@ -261,15 +261,17 @@ public class CARS_DavRequestImpl implements WebdavRequest, DavConstants {
      * @see #HEADER_OVERWRITE
      * @see DavServletRequest#isOverwrite()
      */
+    @Override
     public boolean isOverwrite() {
-        return new OverwriteHeader(httpRequest).isOverwrite();
+      return new OverwriteHeader(httpRequest).isOverwrite();
     }
 
     /**
      * @see DavServletRequest#getDepth(int)
      */
-    public int getDepth(int defaultValue) {
-        return DepthHeader.parse(httpRequest, defaultValue).getDepth();
+    @Override
+    public int getDepth( final int pDefaultValue) {
+      return DepthHeader.parse(httpRequest, pDefaultValue).getDepth();
     }
 
     /**

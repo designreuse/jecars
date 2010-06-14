@@ -35,7 +35,7 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
   static private final int   MIN_REMOVEDOBJECTS_FOR_LOG = 4;
   static private final long  MAX_ACCESSMANAGER_CACHE    = 1000000L;
   static private final long  CHECKEVERY                 = 30000L; // **** 30 seconds
-  static private final int   DATASTORE_GC_TIMES         = 10;     // **** Datastore garbage collect every (10*30) seconds
+  static private       int   gDATASTORE_GC_TIMES        = 20;     // **** Datastore garbage collect every (20*30) seconds
 
   static private final Object    LOCK = new Object();
 
@@ -68,7 +68,16 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
     super();
     return;
   }
-  
+
+  /** setDatastoreGCTimes
+   *
+   * @param pTimes -1 will disable the garbage collector
+   */
+  static public void setDatastoreGCTimes( final int pTimes ) {
+    gDATASTORE_GC_TIMES = pTimes;
+    return;
+  }
+
   /** shutdown the expire manager
    */
   public void shutdown() {
@@ -110,11 +119,13 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
     if ((System.currentTimeMillis()-CHECKEVERY)>mLastExpireCheck) {
       try {
         synchronized( LOCK ) {
-          if ((++mDataStoreGCCurrent)==DATASTORE_GC_TIMES) {
+          if ((++mDataStoreGCCurrent)==gDATASTORE_GC_TIMES) {
             GarbageCollector gc = null;
             try {
               gc = ((SessionImpl)mSession).createDataStoreGarbageCollector();
+//     System.out.println(" GC : MARK Started");
               gc.mark();
+//     System.out.println(" GC : SWEEP Started");
               final int du = gc.sweep();
               if (du>0) {
                 LOG.info( "ExpireManager: Ready removing " + du + " datastore objects" );

@@ -31,6 +31,7 @@
  */
 package org.jecars.webdav;
 
+import java.net.HttpURLConnection;
 import org.apache.jackrabbit.webdav.*;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.lock.LockManager;
@@ -151,6 +152,21 @@ public class CARS_DavResourceFactory implements DavResourceFactory {
         }
     }
 
+    /** getRepoPath
+     * 
+     * @param pLocator
+     * @return
+     */
+    static public String getRepoPath( final DavResourceLocator pLocator ) {
+      String repoPath = pLocator.getRepositoryPath();
+      final String wsPath = pLocator.getWorkspacePath();
+      if (!"/webdav".equals( wsPath )) {
+        repoPath = wsPath + repoPath;
+      }
+      return repoPath;
+    }
+
+
     /**
      * Returns the <code>Node</code> corresponding to the given locator or
      * <code>null</code> if it does not exist or if the existing item represents
@@ -168,15 +184,25 @@ public class CARS_DavResourceFactory implements DavResourceFactory {
         final CARS_DavSession cds = (CARS_DavSession)sessionImpl;
         if (pAC     ==null) pAC      = cds.getActionContext();
         if (pFactory==null) pFactory = cds.getFactory();
-        final String repoPath = locator.getRepositoryPath();
+//        final String repoPath = locator.getResourcePath();
+        String repoPath = getRepoPath( locator );
+//        String repoPath = locator.getRepositoryPath();
+//        final String wsPath = locator.getWorkspacePath();
+//        if (!"/webdav".equals( wsPath )) {
+//          repoPath = wsPath + repoPath;
+//        }
 //        if (repoPath.startsWith( "/webdav" )) {
 //          repoPath = repoPath.substring( "/webdav".length() );
 //        }
 //        Session session = CARS_Factory.getSystemApplicationSession();
 //        node = (Node)session.getItem(repoPath);
         pAC.setPathInfo( repoPath );
+        pAC.setError( null );
+        pAC.setErrorCode( HttpURLConnection.HTTP_OK );
         pFactory.performGetAction( pAC, pAC.getMain() );
-        node = pAC.getThisNode();
+        if (pAC.getErrorCode()==HttpURLConnection.HTTP_OK) {
+          node = pAC.getThisNode();
+        }
 //        pAC.getMain().destroy();
 //      } catch (PathNotFoundException e) {
 //        e.printStackTrace();
