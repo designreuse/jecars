@@ -20,6 +20,9 @@
 <jecars = 'http://jecars.org'>
 
 
+[jecars:digestauth] mixin
+- jecars:HA1    (String)
+
 [jecars:permissionable] mixin
 - jecars:Actions    (String)    multiple < '(read|add_node|set_property|get_property|remove|acl_read|acl_edit)'
 - jecars:Delegate   (Boolean)

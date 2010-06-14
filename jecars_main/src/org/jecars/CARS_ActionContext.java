@@ -1600,7 +1600,8 @@ public class CARS_ActionContext {
   public String getAtomID( Node pNode ) throws Exception {
     try {
 //      return "urn:uuid:" + pNode.getUUID();
-      return "urn:uuid:" + pNode.getPath();
+//      return "urn:uuid:" + pNode.getPath();
+      return "urn:uuid:" + pNode.getIdentifier();
     } catch (Exception e) {
       return transportString(pNode.getPath());
     }

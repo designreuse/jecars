@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 NLR - National Aerospace Laboratory
+ * Copyright 2007-2010 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.jecars;
 
+import com.google.gdata.util.common.base.StringUtil;
+import java.security.MessageDigest;
 import java.util.logging.Logger;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
@@ -32,6 +34,7 @@ import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.UserPrincipal;
 import org.apache.jackrabbit.core.security.authentication.CredentialsCallback;
 import org.jecars.apps.CARS_AccountsApp;
+import org.jecars.servlets.JeCARS_RESTServlet;
 
 /**
  * CARS_LoginModule
@@ -205,6 +208,9 @@ public class CARS_LoginModule implements LoginModule {
                     synchronized( loginSession ) {
 //                      loginSession.refresh( false );
                       if (userName.startsWith( CARS_AccountsApp.AUTHKEY_PREFIX )) {
+
+                        // ********************************************
+                        // **** Google AUTH key
 //                      System.out.println( " CHECK KEY = " + userName );
                         final String authKey = userName;
 //                        final Node keyNode = getKeyNode( authKey );
@@ -233,6 +239,8 @@ public class CARS_LoginModule implements LoginModule {
                           }
                         }
                       } else {
+
+                        // ********************************************
                         // **** Normal username/password
                         final Node users = CARS_Factory.getSystemLoginSession().getRootNode().getNode( CARS_AccessManager.gUsersPath );
                         if (users.hasNode( userName )) {
@@ -241,13 +249,26 @@ public class CARS_LoginModule implements LoginModule {
                             // **** The user is suspended
                             throw new AccountLockedException( userName + " is suspended" );
                           }
-//                          if (userName.equals( CARS_AccessManager.gUSERNAME_GRANTALL )==true) {
-//                            authenticated = true;
-//                          } else if (user.hasProperty( CARS_AccessManager.gPasswordProperty )) {
-                          if (user.hasProperty( CARS_AccessManager.gPasswordProperty )) {
-                            if (user.getProperty( CARS_AccessManager.gPasswordProperty ).getString().equals(
-                              CARS_PasswordService.getInstance().encrypt(new String(sc.getPassword()) ) )) {
-                              authenticated = true;
+
+                          final String password = new String( sc.getPassword() );
+
+                          if (password.startsWith( JeCARS_RESTServlet.AUTH_TYPE.DIGEST.toString() )) {
+                            if ((user.isNodeType( "jecars:digestauth" ) && (user.hasProperty( "jecars:HA1" )))) {
+                              final String checkPass = password.substring( JeCARS_RESTServlet.AUTH_TYPE.DIGEST.toString().length()+1 );
+                              final String[] pass = checkPass.split( "\n" );
+                              final String response = pass[0];
+                              final MessageDigest md = MessageDigest.getInstance( "MD5" );
+                              final byte[] md5 = md.digest( (user.getProperty( "jecars:HA1" ).getString() + pass[1]).getBytes() );
+                              if (StringUtil.bytesToHexString( md5 ).equals( response )) {
+                                authenticated = true;
+                              }
+                            }
+                          } else {
+                            if (user.hasProperty( CARS_AccessManager.gPasswordProperty )) {
+                              if (user.getProperty( CARS_AccessManager.gPasswordProperty ).getString().equals(
+                                CARS_PasswordService.getInstance().encrypt(password) )) {
+                                authenticated = true;
+                              }
                             }
                           }
                         }

@@ -18,10 +18,15 @@ package org.jecars.servlets;
 
 import com.google.gdata.data.DateTime;
 import com.google.gdata.util.ParseException;
+import com.google.gdata.util.common.base.StringUtil;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +43,7 @@ import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.apps.CARS_AccountsApp;
+import org.jecars.jaas.CARS_Digest;
 import org.jecars.support.BASE64Decoder;
 import org.jecars.tools.CARS_DefaultToolInterface;
 
@@ -56,8 +62,85 @@ public class JeCARS_RESTServlet extends HttpServlet {
   static private final AtomicInteger THREADCOUNT    = new AtomicInteger(0);
   static private final CARS_Factory  CARSFACTORY    = new CARS_Factory();
 
+  static public enum AUTH_TYPE { BASIC, DIGEST };
+
+  static public  final String           WWW_AUTH       = "WWW-Authenticate";
+  static private       String           gHOSTNAME      = "jecars.org";
+  static private       String           gOPAQUE        = "JeCARS";
+  static private       String           gNONCE_PREFIX  = "PRE_";
+  static private       String           gNONCE_POSTFIX = "_POST";
+  static private       String           gREALM         = null;
+  static private       String           gBASIC_REALM   = null;
+  static private       String           gDIGEST_REALM  = null;
+  static private       MessageDigest    gMD;
+  static private final Object           MD_LOCK = new Object();
+
+  static private    AUTH_TYPE           gCURRENT_AUTH  = AUTH_TYPE.BASIC;
+  static private    EnumSet<AUTH_TYPE>  gALLOWED_AUTH  = EnumSet.of( AUTH_TYPE.DIGEST, AUTH_TYPE.BASIC );
+
   static private JeCARS_WebDAVServlet gWebdav = new JeCARS_WebDAVServlet();
 
+  {
+    try {
+      gMD = MessageDigest.getInstance( "MD5" );
+    } catch( NoSuchAlgorithmException ne ) {
+      gLog.log( Level.SEVERE, ne.getMessage(), ne );
+    }
+  }
+
+
+  /** setHostname
+   * 
+   * @param pHostname
+   */
+  static public void setHostname( final String pHostname ) {
+    gHOSTNAME     = pHostname;
+    setRealm( gHOSTNAME );
+    gBASIC_REALM  = null;
+    gDIGEST_REALM = null;
+    return;
+  }
+
+  /** setRealm
+   *
+   * @param pRealm
+   */
+  static public void setRealm( final String pRealm ) {
+    gREALM = pRealm;
+    return;
+  }
+
+  /** getRealm
+   * 
+   * @return
+   */
+  static public String getRealm() {
+    return gREALM;
+  }
+
+  /** getCurrentRealm
+   *
+   * @return
+   */
+  static public String getCurrentRealm() {
+    if (gCURRENT_AUTH.equals( AUTH_TYPE.BASIC )) {
+      // **** BASIC auth
+      if (gBASIC_REALM==null) {
+        gBASIC_REALM = "BASIC realm=\"" + gREALM + "\"";
+      }
+      return gBASIC_REALM;
+    } else {
+      // **** DIGEST
+      synchronized( MD_LOCK ) {
+        if (gDIGEST_REALM==null) {
+          gDIGEST_REALM = "Digest realm=\"" + gREALM +
+                          "\",qop=\"auth\",opaque=\"" + StringUtil.bytesToHexString( gMD.digest( gOPAQUE.getBytes() )) + "\",nonce=\"";
+        }
+        final String nonce = gNONCE_PREFIX + System.nanoTime() + gNONCE_POSTFIX;
+        return gDIGEST_REALM + StringUtil.bytesToHexString( nonce.getBytes() ) + "\"";
+      }
+    }
+  }
 
   /** init
    * 
@@ -66,6 +149,9 @@ public class JeCARS_RESTServlet extends HttpServlet {
   @Override
   public void init() throws ServletException {
     gLog.log( Level.INFO, "Using " + CARS_Main.PRODUCTNAME + " version: " + CARS_Main.VERSION );
+
+    setHostname( gHOSTNAME );
+    setRealm(    gHOSTNAME );
 
     // **** Initialize circle of trust file
     final String cotf = getInitParameter( "CIRCLE_OF_TRUST_FILE" );
@@ -208,14 +294,18 @@ public class JeCARS_RESTServlet extends HttpServlet {
      * @return
      * @throws java.lang.Exception
      */
-    protected CARS_ActionContext createActionContext( final HttpServletRequest pRequest, final HttpServletResponse pResponse ) throws IOException, ParseException {
+    protected CARS_ActionContext createActionContext( final HttpServletRequest pRequest, final HttpServletResponse pResponse ) throws IOException, ParseException, NoSuchAlgorithmException {
       CARS_ActionContext ac = null;
       // **** Get Authorization header
       String auth = pRequest.getHeader( "Authorization" );
       if (auth!=null) {
         String username = null, password = null;
-        if (auth.toUpperCase().startsWith("BASIC ")) {
+        if (auth.toUpperCase().startsWith("BASIC ") && gALLOWED_AUTH.contains( AUTH_TYPE.BASIC )) {
+
+          // ****
+          // **** BASIC Auth
           // **** Get encoded user and password, comes after "BASIC "
+          // ****
           final String userpassEncoded = auth.substring(6);
           final String encoding = new String( BASE64Decoder.decodeBuffer( userpassEncoded ));
           // **** Check our user list to see if that user and password are "allowed"
@@ -224,10 +314,28 @@ public class JeCARS_RESTServlet extends HttpServlet {
           username = encoding.substring( 0, in);
           password = encoding.substring( in+1 );          
           ac = CARS_ActionContext.createActionContext( username, password.toCharArray() );
-        }
-        if (auth.toUpperCase().startsWith("GOOGLELOGIN AUTH=")) {
+
+        } else if (auth.toUpperCase().startsWith("DIGEST ") && gALLOWED_AUTH.contains( AUTH_TYPE.DIGEST )) {
+
+          // ****
+          // **** DIGEST Auth
+          // ****
+          final HashMap<String, String> authMap = CARS_Digest.parseAuthenticationString( auth );
+          final MessageDigest md = MessageDigest.getInstance( "MD5" );
+          username   = authMap.get( "username" );
+          final String uri = authMap.get( "uri" );
+          final byte[] md5 = md.digest( ( pRequest.getMethod() + ":" + uri ).getBytes() );
+          final String ha2 = StringUtil.bytesToHexString( md5 );
+          password = authMap.get( "response" ) + "\n:" + authMap.get( "nonce" ) + ":" + authMap.get( "nc" ) + ":" + authMap.get( "cnonce" ) + ":" + authMap.get( "qop" ) + ":" + ha2;
+          ac = CARS_ActionContext.createActionContext( username, (AUTH_TYPE.DIGEST.toString() + "|" + password).toCharArray() );
+
+        } else if (auth.toUpperCase().startsWith("GOOGLELOGIN AUTH=")) {
           final String key = auth.substring( 17 );
-          ac = CARS_ActionContext.createActionContext( key );          
+          ac = CARS_ActionContext.createActionContext( key );
+        } else {
+          // **** Authorization not reconized
+          pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
+          pResponse.sendError( pResponse.SC_UNAUTHORIZED );
         }
       }
       
@@ -247,15 +355,15 @@ public class JeCARS_RESTServlet extends HttpServlet {
 
       final String pathInfo = pRequest.getPathInfo();
       if ((auth==null) && (pathInfo!=null)) {
-        if (pathInfo.equals( "/accounts/login" )) {
+        if ("/accounts/login".equals( pathInfo )) {
 //        // **** Not allowed, so report (s)he's unauthorized
-          pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+          pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
           pResponse.sendError( pResponse.SC_UNAUTHORIZED );
         } else {
           if (pathInfo.startsWith( "/accounts/" )) {
             ac = CARS_ActionContext.createActionContext( "anonymous", "anonymous".toCharArray() );
           } else {
-            pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+            pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );
           }
         }
@@ -474,7 +582,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             }
           } catch( AccessDeniedException ade ) {
             // **** Not allowed, so report (s)he's unauthorized
-            pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+            pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );            
           } catch (CredentialExpiredException cee) {
             pResponse.setHeader( "Location", cee.getMessage() );
@@ -528,7 +636,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             pResponse.setStatus( ac.getErrorCode() );
           } catch( AccessDeniedException ade ) {
             // **** Not allowed, so report (s)he's unauthorized
-            pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+            pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );            
           } catch (CredentialExpiredException cee) {
             pResponse.setHeader( "Location", cee.getMessage() );
@@ -595,7 +703,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             pResponse.setStatus( ac.getErrorCode() );
           } catch( AccessDeniedException ade ) {
             // **** Not allowed, so report (s)he's unauthorized
-            pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+            pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );            
           } finally {
             if (sis!=null) sis.close();
@@ -643,7 +751,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             pResponse.setStatus( ac.getErrorCode() );
           } catch( AccessDeniedException ade ) {
             // **** Not allowed, so report (s)he's unauthorized
-            pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+            pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );            
           } finally {
             ac.destroy();
@@ -691,7 +799,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             pResponse.setStatus( ac.getErrorCode() );
           } catch( AccessDeniedException ade ) {
             // **** Not allowed, so report (s)he's unauthorized
-            pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+            pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
             pResponse.sendError( pResponse.SC_UNAUTHORIZED );            
           } finally {
             outp.flush();
@@ -757,7 +865,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
               gWebdav.service( pRequest, pResponse, ac, CARSFACTORY );
             } catch( AccessDeniedException ade ) {
               // **** Not allowed, so report (s)he's unauthorized
-              pResponse.setHeader( "WWW-Authenticate", "BASIC realm=\"JeCARS\"" );
+              pResponse.setHeader( WWW_AUTH, getCurrentRealm() );
               pResponse.sendError( pResponse.SC_UNAUTHORIZED );
             } catch (CredentialExpiredException cee) {
               pResponse.setHeader( "Location", cee.getMessage() );

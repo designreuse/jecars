@@ -18,6 +18,9 @@ package org.jecars;
 import com.google.gdata.util.common.base.StringUtil;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.logging.*;
 import javax.jcr.*;
@@ -29,6 +32,7 @@ import nl.msd.jdots.JD_Taglist;
 import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.apps.CARS_DefaultInterface;
 import org.jecars.apps.CARS_Interface;
+import org.jecars.servlets.JeCARS_RESTServlet;
 import org.jecars.version.CARS_VersionManager;
 import org.w3c.dom.NamedNodeMap;
 
@@ -46,7 +50,11 @@ public class CARS_DefaultMain implements CARS_Main {
   static final public  String INTERFACECLASS     = "InterfaceClass";
   static final public  String DEF_INTERFACECLASS = DEFAULTNS + INTERFACECLASS;
 
-  static final private String UNSTRUCT_PREFIX_DOUBLE = "!#!D";
+  static final public String SPECIAL_PREFIX           = "!_#_!";
+  static final public String PREFIX_VALUE_REMOVE      = SPECIAL_PREFIX + "VREMOVE";
+  static final public String UNSTRUCT_PREFIX_DOUBLE    = SPECIAL_PREFIX + "UD";
+  static final public String UNSTRUCT_PREFIX_BOOLEAN  = SPECIAL_PREFIX  + "UB";
+  static final public String UNSTRUCT_PREFIX_MSTRINGS = SPECIAL_PREFIX  + "UMS";
   static final private Value[] VALUE0 = new Value[0];
 
   private final transient CARS_Factory  mFactory;
@@ -340,7 +348,8 @@ public class CARS_DefaultMain implements CARS_Main {
     Node nn = n.addNode( pID, pUserNodeType );
     nn.setProperty( DEFAULTNS + "Source", getUserSources().getNode( "internal" ).getPath() );
     nn.setProperty( DEFAULTNS + "Fullname", pID );
-    nn.setProperty( DEFAULTNS + "Password_crypt", CARS_PasswordService.getInstance().encrypt(new String(pPassword)) );
+    CARS_DefaultMain.setCryptedProperty( nn, "jecars:Password_crypt", new String(pPassword) );
+//s    nn.setProperty( DEFAULTNS + "Password_crypt", CARS_PasswordService.getInstance().encrypt(new String(pPassword)) );
     Node gn = getGroups();
     Node world = gn.getNode( "World" );
 //    addReference( world, DEFAULTNS + "GroupMembers", nn );
@@ -463,9 +472,19 @@ public class CARS_DefaultMain implements CARS_Main {
 
     Property prop;
     if (pNode.hasProperty( pPropName )) {
+
+      prop = pNode.getProperty( pPropName );
+
+      // **** Check the specials
+      if (PREFIX_VALUE_REMOVE.equals( pValue )) {
+        if (prop!=null) {
+          prop.remove();
+        }
+        return null;
+      }
+
       // **********************************************************************
       // **** Property exists... modification
-      prop = pNode.getProperty( pPropName );
       if (prop.getDefinition().isMultiple()) {
         // **** Multiple values
         String paramValue = pValue;
@@ -620,7 +639,9 @@ public class CARS_DefaultMain implements CARS_Main {
           if ((pNode.isNodeType( "nt:unstructured" )) ||
               (pNode.isNodeType( "jecars:mixin_unstructured" ))) {
             if (pValue.startsWith( UNSTRUCT_PREFIX_DOUBLE )) {
-              prop = pNode.setProperty( pPropName, Double.parseDouble( pValue ) );
+              prop = pNode.setProperty( pPropName, Double.parseDouble( pValue.substring( UNSTRUCT_PREFIX_DOUBLE.length() ) ) );
+            } else if (pValue.startsWith( UNSTRUCT_PREFIX_BOOLEAN )) {
+              prop = pNode.setProperty( pPropName, Boolean.parseBoolean( pValue.substring( UNSTRUCT_PREFIX_BOOLEAN.length() ) ) );
             } else {
               prop = pNode.setProperty( pPropName, pValue );
             }
@@ -634,8 +655,9 @@ public class CARS_DefaultMain implements CARS_Main {
         switch( pd.getRequiredType() ) {
           case PropertyType.BOOLEAN:   { prop = pNode.setProperty( pPropName, Boolean.parseBoolean(pValue) ); break; }
           case PropertyType.STRING:    { 
-             if (pPropName.endsWith( "_crypt" )) {               
-               prop = pNode.setProperty( pPropName, CARS_PasswordService.getInstance().encrypt( pValue ) );
+             if (pPropName.endsWith( "_crypt" )) {
+//               prop = pNode.setProperty( pPropName, CARS_PasswordService.getInstance().encrypt( pValue ) );
+               prop = setCryptedProperty( pNode, pPropName, pValue );
              } else {
                prop = pNode.setProperty( pPropName, pValue );
              }
@@ -653,9 +675,14 @@ public class CARS_DefaultMain implements CARS_Main {
       
       }
     } else {
-              
       // **************************************************************************
       // **** New property
+
+      // **** Check the specials
+      if (PREFIX_VALUE_REMOVE.equals( pValue )) {
+        return null;
+      }
+
       PropertyDefinition pd = CARS_Utils.getPropertyDefinition( pNode, pPropName );
       if (pd==null) {
         // **** Check if the property is part of a mixin nodetype
@@ -666,7 +693,15 @@ public class CARS_DefaultMain implements CARS_Main {
           // **** Check if the node inherits from nt:unstructured
           if ((pNode.isNodeType( "nt:unstructured" )) ||
               (pNode.isNodeType( "jecars:mixin_unstructured" ))) {
-            prop = pNode.setProperty( pPropName, pValue );
+            if (pValue.startsWith( UNSTRUCT_PREFIX_DOUBLE )) {
+              prop = pNode.setProperty( pPropName, Double.parseDouble( pValue.substring( UNSTRUCT_PREFIX_DOUBLE.length() ) ) );
+            } else if (pValue.startsWith( UNSTRUCT_PREFIX_BOOLEAN )) {
+              prop = pNode.setProperty( pPropName, Boolean.parseBoolean( pValue.substring( UNSTRUCT_PREFIX_BOOLEAN.length() ) ) );
+            } else if (pValue.startsWith( UNSTRUCT_PREFIX_MSTRINGS )) {
+              prop = pNode.setProperty( pPropName, pValue.substring( UNSTRUCT_PREFIX_MSTRINGS.length() ).split( "\n" ) );
+            } else {
+              prop = pNode.setProperty( pPropName, pValue );
+            }
             return prop;
           } else {
             throw new Exception( "No definition for propertytype: " + pPropName );
@@ -751,7 +786,8 @@ public class CARS_DefaultMain implements CARS_Main {
           case PropertyType.BOOLEAN:   { prop = pNode.setProperty( pPropName, Boolean.parseBoolean(pValue) ); break; }
           case PropertyType.STRING:    { 
              if (pPropName.endsWith( "_crypt" )) {               
-               prop = pNode.setProperty( pPropName, CARS_PasswordService.getInstance().encrypt( pValue ) );
+               //prop = pNode.setProperty( pPropName, CARS_PasswordService.getInstance().encrypt( pValue ) );
+               prop = setCryptedProperty( pNode, pPropName, pValue );
              } else {
                prop = pNode.setProperty( pPropName, pValue );
              }
@@ -771,7 +807,31 @@ public class CARS_DefaultMain implements CARS_Main {
     
     return prop;
   }
-  
+
+  /** setCryptedProperty
+   *
+   * @param pNode
+   * @param pPropName
+   * @param pValue
+   * @return
+   * @throws RepositoryException
+   * @throws NoSuchAlgorithmException
+   * @throws UnsupportedEncodingException
+   */
+  static public Property setCryptedProperty( final Node pNode, final String pPropName, final String pValue ) throws RepositoryException, NoSuchAlgorithmException, UnsupportedEncodingException {
+    final Property prop = pNode.setProperty( pPropName, CARS_PasswordService.getInstance().encrypt( pValue ) );
+    if (pNode.isNodeType( "jecars:User" )) {
+      if (!pNode.isNodeType( "jecars:digestauth" )) {
+        pNode.addMixin( "jecars:digestauth" );
+      }
+      final MessageDigest md = MessageDigest.getInstance( "MD5" );
+      final byte[] md5 = md.digest( ( pNode.getName() + ":" + JeCARS_RESTServlet.getRealm() + ":" + pValue ).getBytes() );
+      final String ha1 = StringUtil.bytesToHexString( md5 );
+      pNode.setProperty( "jecars:HA1", ha1 );
+    }
+    return prop;
+  }
+
   /** Set the jecars:Id property on the given node
    * @param pNode The node
    * @throws java.lang.Exception when an exception occurs
@@ -956,6 +1016,7 @@ koasdkaso
 //    if (pKey.equals( "jecars:X-HTTP-Method-Override" )) return true;
     if ("jecars:GOOGLELOGIN_AUTH".equals(  pKey )) return true;
     if ("jecars:EventCollectionID".equals( pKey )) return true;
+    if ("jecars:FET".equals( pKey )) return true;
     if (pKey.startsWith( "jecars:X-" )) return true;
     return false;
   }
@@ -1222,10 +1283,10 @@ koasdkaso
           versionTL.putData( key, pParamsTL.getData( key ) );
         } else if (!isPOSTParameter( key )) {
           data = (String)pParamsTL.getData( key );
-          if (cars!=null) {              
-            cars.setParamProperty( this, interfaceClass, cnode, key, data );
-          } else {
+          if (cars==null) {
             di.setParamProperty( this, null, cnode, key, data );
+          } else {
+            cars.setParamProperty( this, interfaceClass, cnode, key, data );
           }
           modified = true;
         }
