@@ -29,7 +29,9 @@ import org.jecars.client.nt.JC_PermissionNode;
  * @version $Id: JC_Nodeable.java,v 1.27 2009/06/23 22:38:59 weertj Exp $
  */
 public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
-  
+
+  String getID();
+  void   setID( final String pID );
 
   /** getSelfLink
    * Get the complete link (including base URL) to itself or null when unknown.

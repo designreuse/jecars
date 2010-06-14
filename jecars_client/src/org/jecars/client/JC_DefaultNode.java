@@ -83,6 +83,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
   private String                      mSourceObjectUrl  = null;
   private String                      mNodeType         = null;
   private long                        mLastModified     = 0L;
+  private String                      mID               = null;
   private final EnumSet<PROPS>        mNodeProps        = EnumSet.of( PROPS.NONE );
   
   /** JC_DefaultNode
@@ -101,6 +102,17 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     } catch( Exception e ) {      
     }
     return false;
+  }
+
+  @Override
+  public String getID() {
+    return mID;
+  }
+
+  @Override
+  public void setID( final String pID ) {
+    mID = pID;
+    return;
   }
 
   /** copyToNode
@@ -542,11 +554,13 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
               pathBuffer.addChildPath( entry.getTitle() );
               nodeable.setParent( this );
               nodeable.setName( entry.getTitle() );
+              nodeable.setID(   entry.getId() );
               nodeable.setJCPath( pathBuffer );
             } else {
               // **** This node is not a child... probably result of a query
               nodeable.setParent( this );
               nodeable.setName( entry.getTitle() );
+              nodeable.setID(   entry.getId() );
               nodeable.setPath( nodeable.mSelfLink.substring( pClient.getServerPath().length() ) );
               List<Content> conlist = entry.getContents();
               for (Content cl : conlist) {
@@ -1811,6 +1825,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
             final WireFeedInput wfinput = new WireFeedInput();
             wfinput.setXmlHealerOn( false );
             final Feed atomFeed = (Feed)wfinput.build( new InputStreamReader( is, JC_RESTComm.CHARENCODE ));
+            mID           = atomFeed.getId();
             mLastModified = atomFeed.getUpdated().getTime();
             final List lol = atomFeed.getOtherLinks();
             final Iterator loli = lol.iterator();
