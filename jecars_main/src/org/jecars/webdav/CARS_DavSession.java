@@ -29,7 +29,7 @@ public class CARS_DavSession extends DavSessionImpl {
   private CARS_ActionContext mAC      = null;
   private CARS_Factory       mFactory = null;
 
-  public CARS_DavSession( Session ses ) {
+  public CARS_DavSession( final Session ses ) {
     super(ses);
     return;
   }
@@ -38,7 +38,7 @@ public class CARS_DavSession extends DavSessionImpl {
    * 
    * @param pAC
    */
-  public void setActionContext( CARS_ActionContext pAC ) {
+  public void setActionContext( final CARS_ActionContext pAC ) {
     mAC = pAC;
     return;
   }
@@ -55,7 +55,7 @@ public class CARS_DavSession extends DavSessionImpl {
    * 
    * @param pFactory
    */
-  public void setFactory( CARS_Factory pFactory ) {
+  public void setFactory( final CARS_Factory pFactory ) {
     mFactory = pFactory;
     return;
   }

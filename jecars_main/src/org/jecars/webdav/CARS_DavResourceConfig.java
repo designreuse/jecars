@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
 
 /** CARS_DavResourceConfig
@@ -46,7 +47,7 @@ public class CARS_DavResourceConfig extends ResourceConfig {
     if (pItem.isNode()) {
       Node n = (Node)pItem;
       try {
-        if (n.isNodeType( "nt:resource" )==true) return false;
+        if (n.isNodeType( "nt:resource" )) return false;
       } catch( RepositoryException e ) {
         gLog.log( Level.WARNING, e.getMessage(), e );
       }
@@ -54,5 +55,12 @@ public class CARS_DavResourceConfig extends ResourceConfig {
     }
     return false;
   }
+
+  @Override
+  public PropertyManager getPropertyManager() {
+        return super.getPropertyManager();
+  }
+
+
 
 }

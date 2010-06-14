@@ -93,23 +93,37 @@ import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Binary;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.security.auth.login.CredentialExpiredException;
+import org.apache.commons.httpclient.HttpConnection;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 import org.apache.jackrabbit.webdav.simple.ItemFilter;
 import org.apache.jackrabbit.webdav.simple.ResourceConfig;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.tika.detect.Detector;
 import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_DefaultMain;
+import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
 import org.jecars.apps.CARS_DefaultInterface;
+import org.jecars.apps.CARS_Interface;
 import org.jecars.support.CARS_Mime;
 
 /** CARS_DavResource
@@ -354,15 +368,15 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
      * @throws IOException if the export fails.
      */
     @Override
-    public void spool(OutputContext outputContext) throws IOException {
-      if (exists() && outputContext != null) {
+    public void spool( final OutputContext pOutputContext ) throws IOException {
+      if (exists() && pOutputContext != null) {
         try {
-          Node n = getNode();
-          if (n.isNodeType( "nt:resource" )==true) {
-            OutputStream os = outputContext.getOutputStream();
+          final Node n = getNode();
+          if (n.isNodeType( "nt:resource" )) {
+            final OutputStream os = pOutputContext.getOutputStream();
             if (os!=null) {
               CARS_Utils.sendInputStreamToOutputStream( 10000, n.getProperty( "jcr:data" ).getStream(),
-                        outputContext.getOutputStream() );
+                        pOutputContext.getOutputStream() );
             }
           }
         } catch( Exception re ) {
@@ -392,14 +406,19 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 //              System.out.println(" okok " + ddp.getName().getName() + " = " + ddp.getValue() );
 //          }
 //        }
+//        DavPropertyName[] dpn = properties.getPropertyNames();
+//        for (DavPropertyName dp : dpn) {
+//            System.out.println("ijijd " + dp.getName() );
+//        }
         return properties;
     }
 
     /**
      * @see DavResource#getPropertyNames()
      */
+    @Override
     public DavPropertyName[] getPropertyNames() {
-        return getProperties().getPropertyNames();
+      return getProperties().getPropertyNames();
     }
 
     /**
@@ -410,6 +429,8 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
             return;
         }
 
+        final Namespace jecarsns = Namespace.getNamespace( "jecars", "http://jecars:org" );
+
         try {
             config.getPropertyManager().exportProperties(getPropertyExportContext(), isCollection());
         } catch (RepositoryException e) {
@@ -418,7 +439,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 
         // set (or reset) fundamental properties
         if (getDisplayName() != null) {
-            properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName()));
+            properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, getDisplayName() ));
         }
         if (isCollection()) {
             properties.add(new ResourceType(ResourceType.COLLECTION));
@@ -433,13 +454,13 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
         // **** last modified
         String lastModified = null;
         try {
-          if (node.hasProperty( "jecars:Modified")==true) {
+          if (node.hasProperty( "jecars:Modified")) {
             lastModified = DavConstants.modificationDateFormat.format( node.getProperty( "jecars:Modified" ).getDate().getTime() );
-          } else if (node.hasProperty( "jecars:Published")==true) {
+          } else if (node.hasProperty( "jecars:Published")) {
             lastModified = DavConstants.modificationDateFormat.format( node.getProperty( "jecars:Published" ).getDate().getTime() );
-          } else if (node.hasProperty( "jcr:lastModified")==true) {
+          } else if (node.hasProperty( "jcr:lastModified")) {
             lastModified = DavConstants.modificationDateFormat.format( node.getProperty( "jcr:lastModified" ).getDate().getTime() );
-          } else if (node.hasProperty( "jcr:created" )==true) {
+          } else if (node.hasProperty( "jcr:created" )) {
             lastModified = DavConstants.modificationDateFormat.format( node.getProperty( "jcr:created" ).getDate().getTime() );
           }
         } catch(RepositoryException re ) {
@@ -463,8 +484,8 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 
         // **** mimeType
         try {
-          if (node.hasProperty( "jcr:mimeType" )==true) {
-            String ct = IOUtil.buildContentType( node.getProperty( "jcr:mimeType" ).getString(), "utf-8" );
+          if (node.hasProperty( "jcr:mimeType" )) {
+            final String ct = IOUtil.buildContentType( node.getProperty( "jcr:mimeType" ).getString(), "utf-8" );
             properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTTYPE, ct ));
           }
         } catch(RepositoryException re ) {
@@ -473,20 +494,46 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 
         // **** contentLength
         try {
-          if (node.hasProperty( "jecars:ContentLength" )==true) {
+          if (node.hasProperty( "jecars:ContentLength" )) {
             properties.add(new DefaultDavProperty(DavPropertyName.GETCONTENTLENGTH, node.getProperty( "jecars:ContentLength" ).getString() ));
           }
         } catch(RepositoryException re ) {
           log.warn("Error while accessing resource properties", re );
         }
 
-        if (rfc4122Uri != null) {
-            properties.add(new HrefProperty(BindConstants.RESOURCEID, rfc4122Uri, true));
+        // **** Add other properties
+        try {
+          final PropertyIterator pi = node.getProperties();
+          while( pi.hasNext() ) {
+            final Property prop = pi.nextProperty();
+            if (prop.getName().startsWith( "jecars:" )) {
+              if (prop.getDefinition().getRequiredType()!=PropertyType.BINARY) {
+                final DefaultDavProperty ddp;
+                if (node.hasProperty( prop.getName() + "_NS" )) {
+                  final Namespace ns = Namespace.getNamespace( node.getProperty( prop.getName() + "_NS" ).getString() );
+                  ddp = new DefaultDavProperty(
+                        DavPropertyName.create( prop.getName().substring( "jecars:".length() ), ns ),
+                        prop.getString() );
+                } else {
+                  ddp = new DefaultDavProperty(
+                        DavPropertyName.create( prop.getName().substring( "jecars:".length() ), jecarsns ),
+                        prop.getString() );
+                }
+                properties.add( ddp );
+              }
+            }
+          }
+        } catch(RepositoryException re ) {
+          log.warn("Error while accessing jecars properties", re );
         }
 
-        Set parentElements = getParentElements();
+        if (rfc4122Uri != null) {
+          properties.add(new HrefProperty(BindConstants.RESOURCEID, rfc4122Uri, true));
+        }
+
+        final Set parentElements = getParentElements();
         if (!parentElements.isEmpty()) {
-            properties.add(new ParentSet(parentElements));
+          properties.add(new ParentSet(parentElements));
         }
 
         /* set current lock information. If no lock is set to this resource,
@@ -494,11 +541,31 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
         properties.add(new LockDiscovery(getLock(Type.WRITE, Scope.EXCLUSIVE)));
 
         /* lock support information: all locks are lockable. */
-        SupportedLock supportedLock = new SupportedLock();
+        final SupportedLock supportedLock = new SupportedLock();
         supportedLock.addEntry(Type.WRITE, Scope.EXCLUSIVE);
         properties.add(supportedLock);
 
+        // **** Additional WebDAV Collection Properties
+        // **** http://greenbytes.de/tech/webdav/draft-hopmann-collection-props-00.txt
+        try {
+          if (node.getDepth()==0) {
+            properties.add(new DefaultDavProperty(DavPropertyName.create( "isroot" ), "1" ));
+          }
+          if (node.isNodeType( "jecars:permissionable" )) {
+            properties.add(new DefaultDavProperty(DavPropertyName.create( "ishidden" ), "1" ));
+          }
+          properties.add(new DefaultDavProperty(DavPropertyName.create( "id" ), node.getIdentifier() ));
+          if (node.isNodeType( "jecars:datafolder" )) {
+            properties.add(new DefaultDavProperty(DavPropertyName.create( "isfolder" ), "1" ));
+          } else if (node.isNodeType( "jecars:datafile" )) {
+            properties.add(new DefaultDavProperty(DavPropertyName.create( "isfolder" ), "0" ));
+          }
+        } catch(RepositoryException re ) {
+          log.warn("Error while accessing resource properties", re );
+        }
+
         propsInitialized = true;
+        return;
     }
 
     /**
@@ -572,16 +639,24 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
         return alterProperties(changeList);
     }
 
-    public MultiStatusResponse alterProperties(List changeList) throws DavException {
+    /** alterProperties
+     * 
+     * @param pChangeList
+     * @return
+     * @throws DavException
+     */
+    public MultiStatusResponse alterProperties( final List pChangeList ) throws DavException {
         if (isLocked(this)) {
-            throw new DavException(DavServletResponse.SC_LOCKED);
+          throw new DavException(DavServletResponse.SC_LOCKED);
         }
         if (!exists()) {
-            throw new DavException(DavServletResponse.SC_NOT_FOUND);
+          throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
+        final MultiStatusResponse msr = new MultiStatusResponse(getHref(), null);
         try {
-            Map failures = config.getPropertyManager().alterProperties(getPropertyImportContext(changeList), isCollection());
+            final CARS_DavPropertyManager dpm = new CARS_DavPropertyManager( this );
+            final Map failures = dpm.alterProperties(getPropertyImportContext(pChangeList), isCollection());
+//            Map failures = config.getPropertyManager().alterProperties(getPropertyImportContext(pChangeList), isCollection());
             if (failures.isEmpty()) {
                 // save all changes together (reverted in case this fails)
                 node.save();
@@ -594,7 +669,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
                complete action. in case of failure set the status to 'failed-dependency'
                in order to indicate, that altering those names/properties would
                have succeeded, if no other error occured.*/
-            Iterator it = changeList.iterator();
+            final Iterator it = pChangeList.iterator();
             while (it.hasNext()) {
                 Object o = it.next();
                 int statusCode;
@@ -631,7 +706,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
         DavResource parent = null;
         if (getResourcePath() != null && !getResourcePath().equals("/")) {
             String parentPath = Text.getRelativeParent(getResourcePath(), 1);
-            if (parentPath.equals("")) {
+            if ("".equals(parentPath)) {
                 parentPath = "/";
             }
             DavResourceLocator parentloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), parentPath);
@@ -672,36 +747,42 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
     }
 
     /**
-     * Adds a new member to this resource.
+     * Adds a new pMember to this resource.
      *
      * @see DavResource#addMember(DavResource, org.apache.jackrabbit.webdav.io.InputContext)
      */
     @Override
-    public void addMember(DavResource member, InputContext inputContext) throws DavException {
+    public void addMember( final DavResource pMember, final InputContext pInputContext ) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
-        if (isLocked(this) || isLocked(member)) {
+        if (isLocked(this) || isLocked(pMember)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
         try {
             // don't allow creation of nodes if this resource represents a protected
             // item or if the new resource would be filtered out
-            if (isFilteredResource(member) || node.getDefinition().isProtected()) {
-                log.debug("Forbidden to add member: " + member.getDisplayName());
+            if (isFilteredResource(pMember) || node.getDefinition().isProtected()) {
+                log.debug("Forbidden to add member: " + pMember.getDisplayName());
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             }
 
-            String memberName = Text.getName(member.getLocator().getRepositoryPath());
-            ImportContext ctx = getImportContext(inputContext, memberName);
+            final String memberName = Text.getName( pMember.getLocator().getRepositoryPath() );
+            final ImportContext ctx = getImportContext( pInputContext, memberName );
 //            try {
-//              if (!config.getIOManager().importContent(ctx, member)) {
+//              if (!config.getIOManager().importContent(ctx, pMember)) {
 //                // any changes should have been reverted in the importer
 //                throw new DavException(DavServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
 //              }
 //            } catch( IOException ie ) {
-                final CARS_DavSession davSession = (CARS_DavSession)member.getSession();
-                if (!member.isCollection()) {
+                final CARS_DavSession davSession = (CARS_DavSession)pMember.getSession();
+                if (pMember.isCollection()) {
+                  if (node.isNodeType( "jecars:Dav_deftypes" ) && node.hasProperty( "jecars:Dav_DefaultFolderType" )) {
+                    node.addNode( memberName, node.getProperty( "jecars:Dav_DefaultFolderType" ).getString() );
+                  } else {
+                    node.addNode( memberName, "jecars:datafolder" );
+                  }
+                } else {
                   if (node.isNodeType( "jecars:Dav_deftypes" ) && node.hasProperty( "jecars:Dav_DefaultFileType" )) {
                     final CARS_DefaultInterface di = new CARS_DefaultInterface();
                     final CARS_Main main = davSession.getActionContext().getMain();
@@ -710,19 +791,17 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
                     cnode.setProperty( "jecars:ContentLength", ctx.getContentLength() );
                     main.getSession().save();
                     di.nodeAddedAndSaved( main, null, cnode );
-
-
-/*
-                    Node cnode = node.addNode( memberName, node.getProperty( "jecars:Dav_DefaultFileType" ).getString() );
-                    cnode.setProperty( "jcr:mimeType", ctx.getMimeType() );
-                    Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis( ctx.getModificationTime() );
-                    cnode.setProperty( "jcr:lastModified", c );
-                    cnode.setProperty( "jcr:data", ctx.getInputStream() );
-                    cnode.setProperty( "jecars:ContentLength", ctx.getContentLength() );
- */
                   } else {
-                    final CARS_DefaultInterface di = new CARS_DefaultInterface();
+                    final Node interfaceNode;
+                    final CARS_Interface di;
+                    if (node.hasProperty( CARS_DefaultMain.DEF_INTERFACECLASS )) {
+                      interfaceNode = node;
+                      final String clss = node.getProperty( CARS_DefaultMain.DEF_INTERFACECLASS ).getString();
+                      di = (CARS_Interface)Class.forName( clss ).newInstance();
+                    } else {
+                      interfaceNode = null;
+                      di = new CARS_DefaultInterface();
+                    }
                     final CARS_Main main = davSession.getActionContext().getMain();
                     final Node cnode = di.addNode( main, null, node, memberName, "jecars:datafile", null );
 //                    Node cnode = node.addNode( memberName, "jecars:datafile" );
@@ -731,18 +810,17 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
                     if (("application/octet-stream".equals( mimeType )) || ("text/plain".equals( mimeType ))) {
                       mimeType = CARS_Mime.getMIMEType( memberName, null );
                     }
-                    cnode.setProperty( "jcr:mimeType", mimeType );
-                    final Calendar c = Calendar.getInstance();
-                    c.setTimeInMillis( ctx.getModificationTime() );
-                    cnode.setProperty( "jcr:lastModified", c );
-                    cnode.setProperty( "jcr:data", ctx.getInputStream() );
+//                    cnode.setProperty( "jcr:mimeType", mimeType );
+//                    final Calendar c = Calendar.getInstance();
+//                    c.setTimeInMillis( ctx.getModificationTime() );
+//                    cnode.setProperty( "jcr:lastModified", c );
+                    di.setBodyStream( main, interfaceNode, cnode, ctx.getInputStream(), mimeType );
+//                    final Binary bin = node.getSession().getValueFactory().createBinary( ctx.getInputStream() );
+//                    cnode.setProperty( "jcr:data", bin );
+//                    cnode.setProperty( "jcr:data", ctx.getInputStream() );
                     cnode.setProperty( "jecars:ContentLength", ctx.getContentLength() );
-                  }
-                } else {
-                  if (node.isNodeType( "jecars:Dav_deftypes" ) && node.hasProperty( "jecars:Dav_DefaultFolderType" )) {
-                    node.addNode( memberName, node.getProperty( "jecars:Dav_DefaultFolderType" ).getString() );
-                  } else {
-                    node.addNode( memberName, "jecars:datafolder" );
+                    main.getSession().save();
+                    di.nodeAddedAndSaved( main, interfaceNode, cnode );
                   }
                 }
 //            }
@@ -764,33 +842,35 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
      * @see DavResource#removeMember(DavResource)
      */
     @Override
-    public void removeMember(DavResource member) throws DavException {
-        if (!exists() || !member.exists()) {
+    public void removeMember( final DavResource pMember) throws DavException {
+        if (!exists() || !pMember.exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        if (isLocked(this) || isLocked(member)) {
+        if (isLocked(this) || isLocked(pMember)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
 
         // don't allow removal of nodes, that would be filtered out
-        if (isFilteredResource(member)) {
-            log.debug("Avoid removal of filtered resource: " + member.getDisplayName());
+        if (isFilteredResource(pMember)) {
+            log.debug("Avoid removal of filtered resource: " + pMember.getDisplayName());
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
 
 
         try {
-            String itemPath = member.getLocator().getRepositoryPath();
-            Item memItem = getJcrSession().getItem(itemPath);
+//            String itemPath = pMember.getLocator().getRepositoryPath();
+//            Item memItem = getJcrSession().getItem(itemPath);
+            final CARS_DavResource cdr = (CARS_DavResource)pMember;
+            final Node memItem = cdr.getNode();
             //TODO once jcr2 is out: simply call removeShare()
 //            if (memItem instanceof org.apache.jackrabbit.api.jsr283.Node) {
 //                org.apache.jackrabbit.api.jsr283.Node n = (org.apache.jackrabbit.api.jsr283.Node) memItem;
 //                n.removeShare();
 //            } else {
-                final CARS_DavSession davSession = (CARS_DavSession)member.getSession();
+                final CARS_DavSession davSession = (CARS_DavSession)pMember.getSession();
                 final CARS_DefaultInterface di = new CARS_DefaultInterface();
                 final CARS_Main main = davSession.getActionContext().getMain();
-                di.removeNode( main, null, (Node)memItem, null);
+                di.removeNode( main, null, memItem, null);
 //                memItem.remove();
 //            }
             getJcrSession().save();
@@ -800,7 +880,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
                 if (!isJsrLockable()) {
                     ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
                     if (lock != null) {
-                        lockManager.releaseLock(lock.getToken(), member);
+                        lockManager.releaseLock(lock.getToken(), pMember);
                     }
                 }
             } catch (DavException e) {
@@ -814,35 +894,73 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
         }
     }
 
+    /** move
+     * 
+     * @param destination
+     * @throws DavException
+     */
+    @Override
+    public void move( final DavResource pDestination ) throws DavException {
+      move( pDestination );
+      return;
+    }
+
     /**
      * @see DavResource#move(DavResource)
      */
-    @Override
-    public void move( final DavResource destination ) throws DavException {
+    public void move( final DavResource pDestination, final String pOverwrite ) throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
         if (isLocked(this)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
-        if (isFilteredResource(destination)) {
+        if (isFilteredResource(pDestination)) {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
-        // make sure, that src and destination belong to the same workspace
-        checkSameWorkspace(destination.getLocator());
-        try {
-//            String destItemPath = destination.getLocator().getRepositoryPath();
+        // make sure, that src and pDestination belong to the same workspace
+        checkSameWorkspace(pDestination.getLocator());
+//            String destItemPath = pDestination.getLocator().getRepositoryPath();
             final CARS_DavSession ses = (CARS_DavSession)session;
-            final CARS_ActionContext ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
-            String path = getLocator().getResourcePath();
-            if (path.startsWith( "/webdav" )) {
-              path = path.substring( "/webdav".length() );
+            final CARS_ActionContext ac;
+            try {
+              ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
+            } catch( CloneNotSupportedException ce ) {
+              throw new JcrDavException( ce, DavServletResponse.SC_INTERNAL_SERVER_ERROR );
             }
-            ac.setPathInfo( path );
-            ac.setQueryString( CARS_DefaultMain.DEFAULTNS + "title=" + destination.getLocator().getResourcePath() );
-            ses.getFactory().performPutAction( ac, ac.getMain() );
+//            final CARS_DavSession   ses = (CARS_DavSession)session;
+//            final CARS_ActionContext ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
+            final String scrPath  = CARS_DavResourceFactory.getRepoPath( getLocator() );
+            final String destPath = CARS_DavResourceFactory.getRepoPath( pDestination.getLocator() ); // ac.getPathInfo();
+//            String path = getLocator().getResourcePath();
+//            if (path.startsWith( "/webdav" )) {
+//              path = path.substring( "/webdav".length() );
+//            }
 
-//            ac.setPathInfo( destination.getLocator().getResourcePath() );
+            if (OverwriteHeader.OVERWRITE_FALSE.equals( pOverwrite )) {
+              // **** Check if resource already exists
+              final Session admSession = CARS_Factory.getSystemApplicationSession();
+              synchronized( admSession ) {
+                try {
+                  admSession.getNode( destPath );
+                  // **** Error not allowed
+                  throw new JcrDavException( new ItemExistsException( destPath ), DavServletResponse.SC_PRECONDITION_FAILED );
+                } catch( RepositoryException re ) {
+                }
+              }
+            }
+
+            try {
+              ac.setPathInfo( scrPath );
+              ac.setQueryString( CARS_DefaultMain.DEFAULTNS + "title=" + pDestination.getLocator().getResourcePath() );
+              ses.getFactory().performPutAction( ac, ac.getMain() );
+            } catch (CredentialExpiredException cee) {
+              throw new JcrDavException( cee, DavServletResponse.SC_METHOD_NOT_ALLOWED );
+            } catch (AccessDeniedException ade) {
+              throw new JcrDavException( ade, DavServletResponse.SC_METHOD_NOT_ALLOWED );
+            }
+
+//            ac.setPathInfo( pDestination.getLocator().getResourcePath() );
 //            final Map map = ac.getParameterMap();
 //            final String[] link = {""};
 //            final String[] rel = {"via"};
@@ -852,54 +970,97 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 //            map.put( "$0.link.href", href );
 //            ac.setParameterMap( map );
 //            ses.getFactory().performPostAction( ac );
-        } catch (RepositoryException e) {
-            throw new JcrDavException(e);
-        } catch (Exception e) {
-            throw new JcrDavException( e, DavServletResponse.SC_METHOD_NOT_ALLOWED );
-        }
     }
 
-    /**
-     * @see DavResource#copy(DavResource, boolean)
+    /** copy
+     *
+     * @param pDestination
+     * @param pShallow
+     * @throws DavException
      */
     @Override
     public void copy( final DavResource pDestination, final boolean pShallow ) throws DavException {
+      copy( pDestination, pShallow, "T" );
+      return;
+    }
+
+    /** copy
+     *
+     * @param pDestination
+     * @param pShallow
+     * @param pOverwrite
+     * @throws DavException
+     */
+    public void copy( final DavResource pDestination, final boolean pShallow, final String pOverwrite ) throws DavException {
+        final CARS_DavResource destination = (CARS_DavResource)pDestination;
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
-        if (isLocked(pDestination)) {
+        if (isLocked(destination)) {
             throw new DavException(DavServletResponse.SC_LOCKED);
         }
-        if (isFilteredResource(pDestination)) {
+        if (isFilteredResource(destination)) {
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
-        if (pShallow && isCollection()) {
+//        if (pShallow && isCollection()) {
             // TODO: currently no support for shallow copy; however this is
             // only relevant if the source resource is a collection, because
             // otherwise it doesn't make a difference
-            throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
+//            throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
+//        }
+        // make sure, that src and pDestination belong to the same workspace
+        checkSameWorkspace(destination.getLocator());
+
+
+        final CARS_DavSession ses = (CARS_DavSession)session;
+        final CARS_ActionContext ac;
+        try {
+          ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
+        } catch( CloneNotSupportedException ce ) {
+          throw new JcrDavException( ce, DavServletResponse.SC_INTERNAL_SERVER_ERROR );
         }
-        // make sure, that src and destination belong to the same workspace
-        checkSameWorkspace(pDestination.getLocator());
+        final String srcPath  = locator.getRepositoryPath();
+        final String destPath = CARS_DavResourceFactory.getRepoPath( destination.getLocator() ); // ac.getPathInfo();
+        ac.setPathInfo( destPath );
+
+        if (OverwriteHeader.OVERWRITE_FALSE.equals( pOverwrite )) {
+          // **** Check if resource already exists
+          final Session admSession = CARS_Factory.getSystemApplicationSession();
+          synchronized( admSession ) {
+            try {
+//              final String path = pDestination.getNode().getPath();//ses.getActionContext().getPathInfo();
+              admSession.getNode( destPath );
+              // **** Error not allowed
+              throw new JcrDavException( new ItemExistsException( destPath ), DavServletResponse.SC_PRECONDITION_FAILED );
+            } catch( RepositoryException re ) {
+            }
+          }
+        }
+
         try {
 //            String destItemPath = pDestination.getLocator().getRepositoryPath();
 //            getJcrSession().getWorkspace().copy(locator.getRepositoryPath(), destItemPath);
-            final CARS_DavSession ses = (CARS_DavSession)session;
-            CARS_ActionContext ac = CARS_ActionContext.createActionContext( ses.getActionContext() );
-            Map map = ac.getParameterMap();
-            String[] link = {""};
-            String[] rel = {"via"};
-            String[] href = {ac.getBaseContextURL() + locator.getRepositoryPath() };// destItemPath.substring(0, destItemPath.lastIndexOf('/'))};
+
+
+//            ac.setPathInfo( pDestination.getNode().getPath() );
+            final Map map = ac.getParameterMap();
+            final String[] link = {""};
+            final String[] rel = {"via"};
+            final String[] href = {ac.getBaseContextURL() + srcPath};// destItemPath.substring(0, destItemPath.lastIndexOf('/'))};
             map.put( "$0.link", link );
             map.put( "$0.link.rel", rel );
             map.put( "$0.link.href", href );
             ac.setParameterMap( map );
             ses.getFactory().performPostAction( ac );
-//        } catch (PathNotFoundException e) {
-            // according to rfc 2518: missing parent
-//            throw new DavException(DavServletResponse.SC_CONFLICT, e.getMessage());
-        } catch (Exception e) {
-            throw new JcrDavException( e, DavServletResponse.SC_METHOD_NOT_ALLOWED );
+            if (ac.getErrorCode()==HttpURLConnection.HTTP_NOT_FOUND) {
+              throw new JcrDavException( ac.getError(), DavServletResponse.SC_CONFLICT );
+            }
+        } catch (CredentialExpiredException cee) {
+          throw new JcrDavException( cee, DavServletResponse.SC_METHOD_NOT_ALLOWED );
+        } catch (AccessDeniedException ade) {
+          throw new JcrDavException( ade, DavServletResponse.SC_METHOD_NOT_ALLOWED );
+        } catch( RepositoryException re ) {
+          throw new JcrDavException( re, DavServletResponse.SC_INTERNAL_SERVER_ERROR );
         }
     }
 
@@ -923,7 +1084,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
     /**
      * @see DavResource#getLock(Type, Scope)
      */
-    public ActiveLock getLock(Type type, Scope scope) {
+    public ActiveLock getLock( final Type type, final Scope scope) {
         ActiveLock lock = null;
         if (exists() && Type.WRITE.equals(type) && Scope.EXCLUSIVE.equals(scope)) {
             // try to retrieve the repository lock information first
@@ -1012,8 +1173,18 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
     /**
      * @see DavResource#unlock(String)
      */
-    public void unlock(String lockToken) throws DavException {
-        ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
+    @Override
+    public void unlock( final String lockToken ) throws DavException {
+        final ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
+ if (lock!=null) {
+     try {
+     System.out.println(" ---0--0 " + node.getPath());
+    String ll = lock.getToken();
+     System.out.println("  asjioasjio " + ll + " ::: " + lockToken);
+     } catch(RepositoryException re ) {
+       re.printStackTrace();
+     }
+ }
         if (lock == null) {
             throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
         } else if (lock.isLockedByToken(lockToken)) {
@@ -1158,17 +1329,17 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
     /**
      * Returns a new <code>ImportContext</code>
      *
-     * @param inputCtx
+     * @param pInputCtx
      * @param systemId
      * @return a new <code>ImportContext</code>
      * @throws IOException
      */
-    protected ImportContext getImportContext(InputContext inputCtx, String systemId) throws IOException {
+    protected ImportContext getImportContext( final InputContext pInputCtx, final String pSystemId ) throws IOException {
   // **** TODO, resolve for Jackrabbit v2.0
 //      throw new UnsupportedOperationException( "resolve for Jackrabbit v2.0" );
-//        return new ImportContextImpl(node, systemId, inputCtx, config.getMimeResolver());
-        Detector d = config.getDetector();
-        return new ImportContextImpl( node, systemId, inputCtx, (inputCtx!=null) ? inputCtx.getInputStream() : null, new DefaultIOListener(log), d );
+//        return new ImportContextImpl(node, systemId, pInputCtx, config.getMimeResolver());
+      final Detector d = config.getDetector();
+      return new ImportContextImpl( node, pSystemId, pInputCtx, (pInputCtx!=null) ? pInputCtx.getInputStream() : null, new DefaultIOListener(log), d );
     }
 
     /**
@@ -1187,7 +1358,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
     /**
      * Returns a new <code>PropertyImportContext</code>.
      *
-     * @param changeList
+     * @param pChangeList
      * @return
      */
     protected PropertyImportContext getPropertyImportContext(List changeList) {

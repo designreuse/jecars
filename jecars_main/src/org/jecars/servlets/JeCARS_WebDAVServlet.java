@@ -69,6 +69,7 @@ import org.apache.jackrabbit.webdav.bind.BindInfo;
 import org.apache.jackrabbit.webdav.bind.BindableResource;
 import org.apache.jackrabbit.webdav.bind.RebindInfo;
 import org.apache.jackrabbit.webdav.bind.UnbindInfo;
+import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.InputContextImpl;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -82,8 +83,12 @@ import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 import org.apache.jackrabbit.webdav.ordering.OrderingResource;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.PropContainer;
 import org.apache.jackrabbit.webdav.search.SearchConstants;
 import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.search.SearchResource;
@@ -110,6 +115,7 @@ import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.webdav.CARS_DavRequestImpl;
+import org.jecars.webdav.CARS_DavResource;
 import org.jecars.webdav.CARS_DavResourceConfig;
 import org.jecars.webdav.CARS_DavResourceFactory;
 import org.jecars.webdav.CARS_DavSessionProvider;
@@ -161,7 +167,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jackrabbit.webdav.simple.resourcepath";
 
     /**
-     * the resource path prefix
+     * the pResource path prefix
      */
     private String resourcePathPrefix;
 
@@ -179,7 +185,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     private LockManager lockManager;
 
     /**
-     * the resource factory
+     * the pResource factory
      */
     private DavResourceFactory resourceFactory;
 
@@ -299,11 +305,11 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Returns the <code>DavResourceFactory</code>. If no request factory has
+     * Returns the <code>DavResourceFactory</code>. If no pRequest factory has
      * been set or created a new instance of {@link ResourceFactoryImpl} is
      * returned.
      *
-     * @return the resource factory
+     * @return the pResource factory
      * @see AbstractWebdavServlet#getResourceFactory()
      */
     @Override
@@ -356,7 +362,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * Returns the <code>SessionProvider</code>. If no session provider has been
      * set or created a new instance of {@link SessionProviderImpl} that extracts
-     * credentials from the request's <code>Authorization</code> header is
+     * credentials from the pRequest's <code>Authorization</code> header is
      * returned.
      *
      * @return the session provider
@@ -370,7 +376,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
 
     /**
      * Factory method for creating the credentials provider to be used for
-     * accessing the credentials associated with a request. The default
+     * accessing the credentials associated with a pRequest. The default
      * implementation returns a {@link BasicCredentialsProvider} instance,
      * but subclasses can override this method to add support for other
      * types of credentials.
@@ -432,9 +438,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Returns the resource configuration to be applied
+     * Returns the pResource configuration to be applied
      *
-     * @return the resource configuration.
+     * @return the pResource configuration.
      */
     public ResourceConfig getResourceConfig() throws ServletException {
         // fallback if no config present
@@ -447,7 +453,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Set the resource configuration
+     * Set the pResource configuration
      *
      * @param config
      */
@@ -459,10 +465,10 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
 
 
     /**
-     * Service the given request.
+     * Service the given pRequest.
      *
-     * @param request
-     * @param response
+     * @param pRequest
+     * @param pResponse
      * @param pAC
      * @throws javax.servlet.ServletException
      * @throws java.io.IOException
@@ -470,11 +476,11 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     protected void service( final HttpServletRequest request, final HttpServletResponse response,
                             final CARS_ActionContext pAC,     final CARS_Factory pFactory ) throws ServletException, Exception {
 
-//        WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory());
-//     System.out.println(" adsdsad " + request.getContextPath() );
-//     System.out.println(" adsdsad1 " + request.getPathInfo() );
-//     System.out.println(" adsdsad1 " + request.getRequestURI() );
-//     System.out.println(" adsdsad1 " + request.getServletPath() );
+//        WebdavRequest webdavRequest = new WebdavRequestImpl(pRequest, getLocatorFactory());
+//     System.out.println(" adsdsad " + pRequest.getContextPath() );
+//     System.out.println(" adsdsad1 " + pRequest.getPathInfo() );
+//     System.out.println(" adsdsad1 " + pRequest.getRequestURI() );
+//     System.out.println(" adsdsad1 " + pRequest.getServletPath() );
         final WebdavRequest webdavRequest = new CARS_DavRequestImpl( request, getLocatorFactory(), request.getContextPath() + request.getServletPath() );
         // **** DeltaV requires 'Cache-Control' header for all methods except 'VERSION-CONTROL' and 'REPORT'.
         final int methodCode = DavMethods.getMethodCode(request.getMethod());
@@ -523,7 +529,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
                 webdavResponse.sendError(e);
               } else {
                 webdavResponse.sendError(e.getErrorCode(), cause.getMessage() );
-                cause.printStackTrace();
+//                cause.printStackTrace();
               }
             }
         } finally {
@@ -552,17 +558,17 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * Executes the respective method in the given webdav context
      *
-     * @param request
-     * @param response
+     * @param pRequest
+     * @param pResponse
      * @param method
-     * @param resource
+     * @param pResource
      * @throws ServletException
      * @throws IOException
      * @throws DavException
      */
     @Override
-    protected boolean execute(WebdavRequest request, WebdavResponse response,
-                              int method, DavResource resource)
+    protected boolean execute( final WebdavRequest request, final WebdavResponse response,
+                               final int method, final DavResource resource )
             throws ServletException, IOException, DavException {
 
         switch (method) {
@@ -599,9 +605,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
             case DavMethods.DAV_OPTIONS:
                 doOptions(request, response, resource);
                 break;
-//            case DavMethods.DAV_LOCK:   // **** TODO
-//                doLock(request, response, resource);
-//                break;
+            case DavMethods.DAV_LOCK:   // **** TODO
+                doLock(request, response, resource);
+                break;
             case DavMethods.DAV_UNLOCK:
                 doUnlock(request, response, resource);
                 break;
@@ -679,9 +685,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The OPTION method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      */
     protected void doOptions(WebdavRequest request, WebdavResponse response,
                              DavResource resource) throws IOException, DavException {
@@ -694,7 +700,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
                 response.addHeader(SearchConstants.HEADER_DASL, "<" + langs[i] + ">");
             }
         }
-        // with DeltaV the OPTIONS request may contain a Xml body.
+        // with DeltaV the OPTIONS pRequest may contain a Xml body.
         OptionsResponse oR = null;
         OptionsInfo oInfo = request.getOptionsInfo();
         if (oInfo != null && resource instanceof DeltaVResource) {
@@ -710,119 +716,165 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The HEAD method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      */
     protected void doHead(WebdavRequest request, WebdavResponse response,
                           DavResource resource) throws IOException {
-        spoolResource(request, response, resource, false);
+        spoolResource( request, response, resource, false );
+        return;
     }
 
     /**
      * The GET method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      */
     protected void doGet(WebdavRequest request, WebdavResponse response,
                          DavResource resource) throws IOException {
-        spoolResource(request, response, resource, true);
+        spoolResource( request, response, resource, true );
+        return;
     }
 
-    /**
-     * @param request
-     * @param response
-     * @param resource
-     * @param sendContent
+    /** spoolResource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
+     * @param pSendContent
      * @throws IOException
      */
-    private void spoolResource(WebdavRequest request, WebdavResponse response,
-                               DavResource resource, boolean sendContent)
+    private void spoolResource( final WebdavRequest pRequest, final WebdavResponse pResponse,
+                                final DavResource pResource,  final boolean pSendContent)
             throws IOException {
 
-        if (!resource.exists()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        if (!pResource.exists()) {
+            pResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
 
-        long modSince = request.getDateHeader("If-Modified-Since");
+        final long modSince = pRequest.getDateHeader("If-Modified-Since");
         if (modSince > UNDEFINED_TIME) {
-            long modTime = resource.getModificationTime();
-            // test if resource has been modified. note that formatted modification
+            final long modTime = pResource.getModificationTime();
+            // test if pResource has been modified. note that formatted modification
             // time lost the milli-second precision
             if (modTime != UNDEFINED_TIME && (modTime / 1000 * 1000) <= modSince) {
-                // resource has not been modified since the time indicated in the
+                // pResource has not been modified since the time indicated in the
                 // 'If-Modified-Since' header.
-                response.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+                pResponse.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
             }
         }
 
-        // spool resource properties and ev. resource content.
-        OutputStream out = (sendContent) ? response.getOutputStream() : null;
-        resource.spool(getOutputContext(response, out));
-        response.flushBuffer();
+        // spool pResource properties and ev. pResource content.
+        final OutputStream out = (pSendContent) ? pResponse.getOutputStream() : null;
+        if (out!=null) {
+          pResource.spool(getOutputContext(pResponse, out));
+          pResponse.flushBuffer();
+        } else {
+          pResponse.setStatus(HttpServletResponse.SC_OK );
+        }
+        return;
     }
 
     /**
      * The PROPFIND method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      */
-    protected void doPropFind(WebdavRequest request, WebdavResponse response,
-                              DavResource resource) throws IOException, DavException {
+    @Override
+    protected void doPropFind( final WebdavRequest pRequest, final WebdavResponse pResponse,
+                               final DavResource   pResource ) throws IOException, DavException {
 
-        if (!resource.exists()) {
-            response.sendError(DavServletResponse.SC_NOT_FOUND);
+        if (!pResource.exists()) {
+            pResponse.sendError(DavServletResponse.SC_NOT_FOUND);
             return;
         }
-
-        int depth = request.getDepth(DEPTH_INFINITY);
-        DavPropertyNameSet requestProperties = request.getPropFindProperties();
-        int propfindType = request.getPropFindType();
+        final int depth = pRequest.getDepth(DEPTH_INFINITY);
+        final DavPropertyNameSet requestProperties = pRequest.getPropFindProperties();
+        final int propfindType = pRequest.getPropFindType();
 
         MultiStatus mstatus = new MultiStatus();
-        mstatus.addResourceProperties(resource, requestProperties, propfindType, depth);
-        response.sendMultiStatus(mstatus);
+
+/*
+
+            PropContainer status200 = new DavPropertySet();
+            // clone set of property, since several resources could use this again
+          DavPropertyNameSet propNameSet = new DavPropertyNameSet(requestProperties);
+//          DavPropertyNameIterator it = requestProperties.iterator();
+//          while( it.hasNext() ) {
+//            DavPropertyName dpn = it.nextPropertyName();
+//            propNameSet.add( DavPropertyName.create( dpn.getName() ) );
+//          }
+
+            // Add requested properties or all non-protected properties, or
+            // non-protected properties plus requested properties (allprop/include)
+            DavPropertyIterator iter = pResource.getProperties().iterator();
+            while (iter.hasNext()) {
+                DavProperty property = iter.nextProperty();
+                boolean allDeadPlusRfc4918LiveProperties =
+                    propfindType == PROPFIND_ALL_PROP || propfindType == PROPFIND_ALL_PROP_INCLUDE;
+             DavPropertyName remName = property.getName();
+//             remName = DavPropertyName.create( remName.getName() );
+                boolean wasRequested = propNameSet.remove(remName);
+
+                if ((allDeadPlusRfc4918LiveProperties && !property.isInvisibleInAllprop()) || wasRequested) {
+                    status200.addContent(property);
+                }
+            }
+
+            if (!propNameSet.isEmpty() && propfindType != PROPFIND_ALL_PROP) {
+                PropContainer status404 = new DavPropertySet();
+                DavPropertyNameIterator iter1 = propNameSet.iterator();
+                while (iter1.hasNext()) {
+                    DavPropertyName propName = iter1.nextPropertyName();
+                    status404.addContent(propName);
+                }
+            }
+*/
+
+        mstatus.addResourceProperties(pResource, requestProperties, propfindType, depth);
+        pResponse.sendMultiStatus(mstatus);
     }
 
     /**
      * The PROPPATCH method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      */
-    protected void doPropPatch(WebdavRequest request, WebdavResponse response,
-                               DavResource resource)
-            throws IOException, DavException {
+    @Override
+    protected void doPropPatch( final WebdavRequest pRequest, final WebdavResponse pResponse,
+                                final DavResource   pResource ) throws IOException, DavException {
 
-        List changeList = request.getPropPatchChangeList();
+        final List changeList = pRequest.getPropPatchChangeList();
         if (changeList.isEmpty()) {
-            response.sendError(DavServletResponse.SC_BAD_REQUEST);
-            return;
+          pResponse.sendError(DavServletResponse.SC_BAD_REQUEST);
+          return;
         }
 
-        MultiStatus ms = new MultiStatus();
-        MultiStatusResponse msr = resource.alterProperties(changeList);
+        final MultiStatus          ms = new MultiStatus();
+        final MultiStatusResponse msr = pResource.alterProperties(changeList);
         ms.addResponse(msr);
-        response.sendMultiStatus(ms);
+        pResponse.sendMultiStatus(ms);
+        return;
     }
 
     /**
      * The POST method. Delegate to PUT
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
@@ -834,71 +886,83 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The PUT method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
-    protected void doPut(WebdavRequest request, WebdavResponse response,
-                         DavResource resource) throws IOException, DavException {
+    protected void doPut(WebdavRequest pRequest, WebdavResponse pResponse,
+                         DavResource pResource) throws IOException, DavException {
 
-        DavResource parentResource = resource.getCollection();
+        final CARS_DavResource parentResource = (CARS_DavResource)pResource.getCollection();
         if (parentResource == null || !parentResource.exists()) {
             // parent does not exist
-            response.sendError(DavServletResponse.SC_CONFLICT);
+            pResponse.sendError(DavServletResponse.SC_CONFLICT);
             return;
         }
 
         int status;
-        // test if resource already exists
-        if (resource.exists()) {
+        // test if pResource already exists
+        if (pResource.exists()) {
             status = DavServletResponse.SC_NO_CONTENT;
+            pResource.getCollection().removeMember( pResource );
         } else {
             status = DavServletResponse.SC_CREATED;
         }
 
-        parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
-        response.setStatus(status);
+//        String overwrite = pRequest.getHeader( "Overwrite" );
+//        if (overwrite==null) {
+//          overwrite = OverwriteHeader.OVERWRITE_TRUE;
+//        }
+
+        parentResource.addMember(pResource, getInputContext(pRequest, pRequest.getInputStream()));
+        pResponse.setStatus(status);
+        return;
     }
 
     /**
      * The MKCOL method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
-    protected void doMkCol(WebdavRequest request, WebdavResponse response,
-                           DavResource resource) throws IOException, DavException {
+    @Override
+    protected void doMkCol( final WebdavRequest request, final WebdavResponse response,
+                            final DavResource resource ) throws IOException, DavException {
 
-        DavResource parentResource = resource.getCollection();
+        final DavResource parentResource = resource.getCollection();
         if (parentResource == null || !parentResource.exists() || !parentResource.isCollection()) {
-            // parent does not exist or is not a collection
-            response.sendError(DavServletResponse.SC_CONFLICT);
-            return;
+          // **** parent does not exist or is not a collection
+          response.sendError(DavServletResponse.SC_CONFLICT);
+          return;
         }
-        // shortcut: mkcol is only allowed on deleted/non-existing resources
+        // **** shortcut: mkcol is only allowed on deleted/non-existing resources
         if (resource.exists()) {
-            response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+          response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
+          return;
         }
 
         if (request.getContentLength() > 0 || request.getHeader("Transfer-Encoding") != null) {
-            parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
+          response.setStatus( 415 );
+          return;
+//          parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
         } else {
-            parentResource.addMember(resource, getInputContext(request, null));
+          parentResource.addMember(resource, getInputContext(request, null));
         }
-        response.setStatus(DavServletResponse.SC_CREATED);
+        response.setStatus( DavServletResponse.SC_CREATED );
+        return;
     }
 
     /**
      * The DELETE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
@@ -916,63 +980,78 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The COPY method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
-    protected void doCopy(WebdavRequest request, WebdavResponse response,
-                          DavResource resource) throws IOException, DavException {
+    @Override
+    protected void doCopy( final WebdavRequest pRequest, final WebdavResponse pResponse,
+                           final DavResource   pResource ) throws IOException, DavException {
 
-        // only depth 0 and infinity is allowed
-        int depth = request.getDepth(DEPTH_INFINITY);
+        // **** only depth 0 and infinity is allowed
+        final int depth = pRequest.getDepth(DEPTH_INFINITY);
         if (!(depth == DEPTH_0 || depth == DEPTH_INFINITY)) {
-            response.sendError(DavServletResponse.SC_BAD_REQUEST);
-            return;
+          pResponse.sendError(DavServletResponse.SC_BAD_REQUEST);
+          return;
         }
 
-        DavResource destResource = getResourceFactory().createResource(request.getDestinationLocator(), request, response);
-        int status = validateDestination(destResource, request, true);
+        final DavResource destResource = getResourceFactory().createResource( pRequest.getDestinationLocator(), pRequest, pResponse );
+        int status = validateDestination( destResource, pRequest, true );
         if (status > DavServletResponse.SC_NO_CONTENT) {
-            response.sendError(status);
-            return;
+          pResponse.sendError(status);
+          return;
         }
 
-        resource.copy(destResource, depth == DEPTH_0);
-        response.setStatus(status);
+        String overwrite = pRequest.getHeader( "Overwrite" );
+        if (overwrite==null) {
+          overwrite = OverwriteHeader.OVERWRITE_TRUE;
+        }
+
+        ((CARS_DavResource)pResource).copy( destResource, depth == DEPTH_0, overwrite );
+        if (status==DavServletResponse.SC_OK) {
+          status = DavServletResponse.SC_CREATED;
+        }
+        pResponse.setStatus(status);
+        return;
     }
 
     /**
      * The MOVE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
-    protected void doMove(WebdavRequest request, WebdavResponse response,
-                          DavResource resource) throws IOException, DavException {
+    protected void doMove( final WebdavRequest pRequest, final WebdavResponse pResponse,
+                           final DavResource pResource) throws IOException, DavException {
 
-        DavResource destResource = getResourceFactory().createResource(request.getDestinationLocator(), request, response);
-        int status = validateDestination(destResource, request, true);
+        String overwrite = pRequest.getHeader( "Overwrite" );
+        if (overwrite==null) {
+          overwrite = OverwriteHeader.OVERWRITE_TRUE;
+        }
+
+        final DavResource destResource = getResourceFactory().createResource(pRequest.getDestinationLocator(), pRequest, pResponse);
+        final int status = validateDestination( destResource, pRequest, true );
         if (status > DavServletResponse.SC_NO_CONTENT) {
-            response.sendError(status);
+            pResponse.sendError(status);
             return;
         }
-//        DavResource parent = resource.getCollection();
-        resource.move(destResource);
-//        parent.removeMember(resource); // **** JeCARS performs a copy instead of a move
-        response.setStatus(status);
+//        DavResource parent = pResource.getCollection();
+        ((CARS_DavResource)pResource).move( destResource, overwrite );
+//        parent.removeMember(pResource); // **** JeCARS performs a copy instead of a move
+        pResponse.setStatus(status);
     }
 
     /**
      * The BIND method
      *
-     * @param request
-     * @param response
-     * @param resource the collection resource to which a new member will be added
+     * @param pRequest
+     * @param pResponse
+     * @param pResource the collection pResource to which a new member will be added
      * @throws IOException
      * @throws DavException
      */
@@ -1001,9 +1080,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The REBIND method
      *
-     * @param request
-     * @param response
-     * @param resource the collection resource to which a new member will be added
+     * @param pRequest
+     * @param pResponse
+     * @param pResource the collection pResource to which a new member will be added
      * @throws IOException
      * @throws DavException
      */
@@ -1032,9 +1111,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The UNBIND method
      *
-     * @param request
-     * @param response
-     * @param resource the collection resource from which a member will be removed
+     * @param pRequest
+     * @param pResponse
+     * @param pResource the collection pResource from which a member will be removed
      * @throws IOException
      * @throws DavException
      */
@@ -1047,25 +1126,25 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Validate the given destination resource and return the proper status
+     * Validate the given destination pResource and return the proper status
      * code: Any return value greater/equal than {@link DavServletResponse#SC_NO_CONTENT}
      * indicates an error.
      *
-     * @param destResource destination resource to be validated.
-     * @param request
+     * @param destResource destination pResource to be validated.
+     * @param pRequest
      * @return status code indicating whether the destination is valid.
      */
-    private int validateDestination(DavResource destResource, WebdavRequest request, boolean checkHeader)
+    private int validateDestination( final DavResource destResource, final WebdavRequest request, final boolean checkHeader)
             throws DavException {
 
         if (checkHeader) {
-            String destHeader = request.getHeader(HEADER_DESTINATION);
-            if (destHeader == null || "".equals(destHeader)) {
-                return DavServletResponse.SC_BAD_REQUEST;
-            }
+          final String destHeader = request.getHeader(HEADER_DESTINATION);
+          if (destHeader == null || "".equals(destHeader)) {
+            return DavServletResponse.SC_BAD_REQUEST;
+          }
         }
         if (destResource.getLocator().equals(request.getRequestLocator())) {
-            return DavServletResponse.SC_FORBIDDEN;
+          return DavServletResponse.SC_FORBIDDEN;
         }
 
         int status;
@@ -1075,7 +1154,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
                 if (!request.matchesIfHeader(destResource)) {
                     return DavServletResponse.SC_PRECONDITION_FAILED;
                 } else {
-                    // overwrite existing resource
+                    // overwrite existing pResource
                     destResource.getCollection().removeMember(destResource);
                     status = DavServletResponse.SC_NO_CONTENT;
                 }
@@ -1094,56 +1173,56 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The LOCK method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
-    protected void doLock(WebdavRequest request, WebdavResponse response,
-                          DavResource resource) throws IOException, DavException {
+    protected void doLock( final WebdavRequest pRequest, final WebdavResponse pResponse,
+                           final DavResource pResource) throws IOException, DavException {
 
-        LockInfo lockInfo = request.getLockInfo();
+        final LockInfo lockInfo = pRequest.getLockInfo();
         if (lockInfo.isRefreshLock()) {
             // refresh any matching existing locks
-            ActiveLock[] activeLocks = resource.getLocks();
-            List lList = new ArrayList();
+            final ActiveLock[] activeLocks = pResource.getLocks();
+            final List lList = new ArrayList();
             for (int i = 0; i < activeLocks.length; i++) {
                 // adjust lockinfo with type/scope retrieved from the lock.
                 lockInfo.setType(activeLocks[i].getType());
                 lockInfo.setScope(activeLocks[i].getScope());
 
-                DavProperty etagProp = resource.getProperty(DavPropertyName.GETETAG);
-                String etag = etagProp != null ? String.valueOf(etagProp.getValue()) : "";
-                if (request.matchesIfHeader(resource.getHref(), activeLocks[i].getToken(), etag)) {
-                    lList.add(resource.refreshLock(lockInfo, activeLocks[i].getToken()));
+                final DavProperty etagProp = pResource.getProperty(DavPropertyName.GETETAG);
+                final String etag = etagProp != null ? String.valueOf(etagProp.getValue()) : "";
+                if (pRequest.matchesIfHeader(pResource.getHref(), activeLocks[i].getToken(), etag)) {
+                    lList.add(pResource.refreshLock(lockInfo, activeLocks[i].getToken()));
                 }
             }
             if (lList.isEmpty()) {
                 throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
             }
-            ActiveLock[] refreshedLocks = (ActiveLock[]) lList.toArray(new ActiveLock[lList.size()]);
-            response.sendRefreshLockResponse(refreshedLocks);
+            final ActiveLock[] refreshedLocks = (ActiveLock[]) lList.toArray(new ActiveLock[lList.size()]);
+            pResponse.sendRefreshLockResponse(refreshedLocks);
         } else {
             // create a new lock
-            ActiveLock lock = resource.lock(lockInfo);
-            response.sendLockResponse(lock);
+            final ActiveLock lock = pResource.lock(lockInfo);
+            pResponse.sendLockResponse(lock);
         }
     }
 
     /**
      * The UNLOCK method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      */
-    protected void doUnlock(WebdavRequest request, WebdavResponse response,
-                            DavResource resource) throws DavException {
+    protected void doUnlock( final WebdavRequest request, final WebdavResponse response,
+                             final DavResource resource) throws DavException {
         // get lock token from header
-        String lockToken = request.getLockToken();
-        TransactionInfo tInfo = request.getTransactionInfo();
+        final String lockToken = request.getLockToken();
+        final TransactionInfo tInfo = request.getTransactionInfo();
         if (tInfo != null) {
             ((TransactionResource) resource).unlock(lockToken, tInfo);
         } else {
@@ -1155,9 +1234,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The ORDERPATCH method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
@@ -1184,9 +1263,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The SUBSCRIBE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
@@ -1212,9 +1291,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The UNSUBSCRIBE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
@@ -1234,9 +1313,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The POLL method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws IOException
      * @throws DavException
      */
@@ -1257,9 +1336,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The VERSION-CONTROL method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1276,9 +1355,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The LABEL method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1292,7 +1371,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
         } else if (resource instanceof VersionControlledResource) {
             ((VersionControlledResource) resource).label(labelInfo);
         } else {
-            // any other resource type that does not support a LABEL request
+            // any other pResource type that does not support a LABEL pRequest
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
@@ -1300,9 +1379,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The REPORT method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1327,9 +1406,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The CHECKIN method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1349,9 +1428,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The CHECKOUT method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1368,9 +1447,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The UNCHECKOUT method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1387,9 +1466,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The MERGE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1408,9 +1487,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The UPDATE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1429,9 +1508,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The MKWORKSPACE method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1459,9 +1538,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The MKACTIVITY method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1489,19 +1568,19 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
             return;
         }
 
-        // try to add the new activity resource
+        // try to add the new activity pResource
         parentResource.addMember(resource, getInputContext(request, request.getInputStream()));
 
-        // Note: mandatory cache control header has already been set upon response creation.
+        // Note: mandatory cache control header has already been set upon pResponse creation.
         response.setStatus(DavServletResponse.SC_CREATED);
     }
 
     /**
      * The BASELINECONTROL method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1522,18 +1601,18 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
         // TODO : missing method on VersionControlledResource
         throw new DavException(DavServletResponse.SC_NOT_IMPLEMENTED);
         /*
-        ((VersionControlledResource) resource).addBaselineControl(request.getRequestDocument());
-        // Note: mandatory cache control header has already been set upon response creation.
-        response.setStatus(DavServletResponse.SC_OK);
+        ((VersionControlledResource) pResource).addBaselineControl(pRequest.getRequestDocument());
+        // Note: mandatory cache control header has already been set upon pResponse creation.
+        pResponse.setStatus(DavServletResponse.SC_OK);
         */
     }
 
     /**
      * The SEARCH method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1549,8 +1628,8 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
             SearchInfo sR = SearchInfo.createFromXml(doc.getDocumentElement());
             response.sendMultiStatus(((SearchResource) resource).search(sR));
         } else {
-            // request without request body is valid if requested resource
-            // is a 'query' resource.
+            // pRequest without pRequest body is valid if requested pResource
+            // is a 'query' pResource.
             response.sendMultiStatus(((SearchResource) resource).search(null));
         }
     }
@@ -1558,9 +1637,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     /**
      * The ACL method
      *
-     * @param request
-     * @param response
-     * @param resource
+     * @param pRequest
+     * @param pResponse
+     * @param pResource
      * @throws DavException
      * @throws IOException
      */
@@ -1579,9 +1658,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Return a new <code>InputContext</code> used for adding resource members
+     * Return a new <code>InputContext</code> used for adding pResource members
      *
-     * @param request
+     * @param pRequest
      * @param in
      * @return
      * @see #spoolResource(WebdavRequest, WebdavResponse, DavResource, boolean)
@@ -1591,10 +1670,10 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
     }
 
     /**
-     * Return a new <code>OutputContext</code> used for spooling resource properties and
-     * the resource content
+     * Return a new <code>OutputContext</code> used for spooling pResource properties and
+     * the pResource content
      *
-     * @param response
+     * @param pResponse
      * @param out
      * @return
      * @see #doPut(WebdavRequest, WebdavResponse, DavResource)
