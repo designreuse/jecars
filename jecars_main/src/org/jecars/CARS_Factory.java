@@ -448,7 +448,8 @@ public class CARS_Factory {
       final Node admin = users.addNode( "Administrator" );
       admin.setProperty( "jecars:Fullname", "Administrator" );
       admin.setProperty( "jecars:Source", internalSource.getPath() );
-      admin.setProperty( "jecars:Password_crypt", CARS_PasswordService.getInstance().encrypt("admin") );
+      CARS_DefaultMain.setCryptedProperty( admin, "jecars:Password_crypt", "admin" );
+//      admin.setProperty( "jecars:Password_crypt", CARS_PasswordService.getInstance().encrypt("admin") );
     }
     if (!users.hasNode( "anonymous" )) {
       // **** anonymous
