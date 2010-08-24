@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
@@ -37,11 +38,8 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.data.GarbageCollector;
-import org.apache.jackrabbit.core.state.CacheManager;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.jecars.CARS_AccessManager;
 import org.jecars.CARS_ActionContext;
@@ -61,6 +59,8 @@ import org.jecars.tools.*;
  * @version $Id: CARS_AdminApp.java,v 1.32 2009/06/19 11:55:41 weertj Exp $
  */
 public class CARS_AdminApp extends CARS_DefaultInterface {
+
+  static final protected Logger LOG = Logger.getLogger( "org.jecars.apps" );
 
   static final private CARS_AdminApp ADMINAPP = new CARS_AdminApp();
 
@@ -273,10 +273,12 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
    * @throws java.io.IOException
    */
   private void jecars_CleanAndGC( CARS_Main pMain ) throws RepositoryException, ItemStateException, IOException {
+    LOG.info( "AdminApp: Start GarbageCollector" );
     final GarbageCollector gc  = ((SessionImpl)CARS_Factory.getSystemApplicationSession()).createDataStoreGarbageCollector();
-    gc.scan();
-    gc.stopScan();
-    int du = gc.deleteUnused();
+    gc.mark();
+    final int du = gc.sweep();
+    gc.close();
+    LOG.info( "AdminApp: Ready removing " + du + " datastore objects" );
     final CARS_ActionContext ac = pMain.getContext();
     ac.setErrorCode( HttpURLConnection.HTTP_OK );
     String report;
@@ -285,16 +287,16 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
     final ByteArrayInputStream bais = new ByteArrayInputStream( report.getBytes() );
     ac.setContentsResultStream( bais, "text/plain" );
     
-    final RepositoryImpl rep = (RepositoryImpl)CARS_Factory.getSystemApplicationSession().getRepository();
-    final CacheManager cache = rep.getCacheManager();
-    cache.setMaxMemory( 1 );
-
-    final SessionImpl ses = (SessionImpl)CARS_Factory.getSystemApplicationSession();
-    final WorkspaceImpl workspace = (WorkspaceImpl)ses.getWorkspace();
-    workspace.getItemStateManager().dispose();
-    
-    // **** Close all sessions
-    CARS_Factory.closeAllSessions();
+//    final RepositoryImpl rep = (RepositoryImpl)CARS_Factory.getSystemApplicationSession().getRepository();
+//    final CacheManager cache = rep.getCacheManager();
+//    cache.setMaxMemory( 1 );
+//
+//    final SessionImpl ses = (SessionImpl)CARS_Factory.getSystemApplicationSession();
+//    final WorkspaceImpl workspace = (WorkspaceImpl)ses.getWorkspace();
+//    workspace.getItemStateManager().dispose();
+//
+//    // **** Close all sessions
+//    CARS_Factory.closeAllSessions();
 
     System.gc();
     return;

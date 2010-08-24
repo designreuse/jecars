@@ -43,11 +43,6 @@ import org.jecars.CARS_CustomException;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
-import org.jecars.client.JC_Clientable;
-import org.jecars.client.JC_Exception;
-import org.jecars.client.JC_Factory;
-import org.jecars.client.JC_GDataAuth;
-import org.jecars.client.JC_InfoApp;
 import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.support.BASE64Encoder;
 import org.jecars.support.Base64;
@@ -141,9 +136,9 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
     final List<String> tss = getTrustedServers();
     for( final String ts : tss ) {
       try {
-        final JC_Clientable client = JC_Factory.createClient( ts );
-        client.setCredentials( JC_GDataAuth.create( pAuth ));
-        final JC_InfoApp info = new JC_InfoApp( client );
+        final org.jecars.client.JC_Clientable client = org.jecars.client.JC_Factory.createClient( ts );
+        client.setCredentials( org.jecars.client.JC_GDataAuth.create( pAuth ));
+        final org.jecars.client.JC_InfoApp info = new org.jecars.client.JC_InfoApp( client );
         un = info.whoAmI();
         if (un!=null) {
 
@@ -167,7 +162,7 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
 
           break;
         }
-      } catch(JC_Exception je) {
+      } catch(org.jecars.client.JC_Exception je) {
         LOG.log( Level.WARNING, je.getMessage(), je );
       }
     }

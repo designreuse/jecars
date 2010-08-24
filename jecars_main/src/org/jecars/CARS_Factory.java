@@ -472,7 +472,7 @@ public class CARS_Factory {
       p.setProperty( "jecars:Actions", rr );
       p.setProperty( "jecars:Principal", anons );
     }
-    
+
     if (!def.hasNode( "Data" )) {
       Node df = def.addNode( "Data", "jecars:datafolder" );
     }
@@ -628,7 +628,7 @@ public class CARS_Factory {
           final String clss = apps.getProperty( "jecars:InterfaceClass" ).getString();
           final CARS_Interface ic = (CARS_Interface)Class.forName( clss ).newInstance();
           ic.init( null, apps );
-        } catch (Exception e) {
+        } catch (Throwable e) {
           gLog.log( Level.SEVERE, "initApplicationSources", e );
         }
       }
@@ -978,8 +978,11 @@ public class CARS_Factory {
         }
       }
       pContext.setCanBeCachedResult( pContext.getQueryString()==null );
-      final Node cnode = main.getNode( pContext.getPathInfo(), null, false );
-      pContext.setThisNode( cnode );
+      try {
+        final Node cnode = main.getNode( pContext.getPathInfo(), null, false );
+        pContext.setThisNode( cnode );
+      } catch( CARS_RESTMethodHandled cr ) {
+      }
       pContext.prepareResult(); // **** This will cache the result so we can close the connection
     } catch (AccountLockedException ale) {
       pContext.setErrorCode( HttpURLConnection.HTTP_UNAUTHORIZED );

@@ -34,12 +34,13 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
 
   static private final int   MIN_REMOVEDOBJECTS_FOR_LOG = 4;
   static private final long  MAX_ACCESSMANAGER_CACHE    = 1000000L;
-  static private final long  CHECKEVERY                 = 30000L; // **** 30 seconds
+  static private       long  gCHECKEVERY                = 30000L; // **** 30 seconds
   static private       int   gDATASTORE_GC_TIMES        = 20;     // **** Datastore garbage collect every (20*30) seconds
+  static private       boolean gDISABLED                = false;
 
   static private final Object    LOCK = new Object();
 
-  private transient long        mLastExpireCheck    = 0L;
+  private transient long        mLastExpireCheck    = System.currentTimeMillis();
   private transient int         mDataStoreGCCurrent = 0;      // **** Datastore garbage collect every (10*30) seconds
   private transient Session     mSession            = null;
 
@@ -48,16 +49,18 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
   @Override
   protected void toolRun() throws Exception {
     super.toolRun();
-    try {
-      final Node n = getTool();
-      mSession = n.getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
-      purge();
-    } catch (ConstraintViolationException cve) {
-      cve.printStackTrace();
-      LOG.log( Level.SEVERE, cve.getMessage(), cve );
-    } finally {
-      mSession.logout();
-      mSession = null;
+    if (!gDISABLED) {
+      try {
+        final Node n = getTool();
+        mSession = n.getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
+        purge();
+      } catch (ConstraintViolationException cve) {
+        cve.printStackTrace();
+        LOG.log( Level.SEVERE, cve.getMessage(), cve );
+      } finally {
+        mSession.logout();
+        mSession = null;
+      }
     }
     return;
   }
@@ -75,6 +78,15 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
    */
   static public void setDatastoreGCTimes( final int pTimes ) {
     gDATASTORE_GC_TIMES = pTimes;
+    return;
+  }
+
+  /** setExpireCheckTime
+   *
+   * @param pCheckEvery
+   */
+  static public void setExpireCheckTime( final long pCheckEvery ) {
+    gCHECKEVERY = pCheckEvery;
     return;
   }
 
@@ -116,7 +128,7 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
     if (mSession==null) {
       return;
     }
-    if ((System.currentTimeMillis()-CHECKEVERY)>mLastExpireCheck) {
+    if ((System.currentTimeMillis()-gCHECKEVERY)>mLastExpireCheck) {
       try {
         synchronized( LOCK ) {
           if ((++mDataStoreGCCurrent)==gDATASTORE_GC_TIMES) {
@@ -256,7 +268,7 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
    */
   @Override
   public long getDelayInSecs() {
-    return CHECKEVERY/1000;
+    return gCHECKEVERY/1000;
   }
 
   /** createToolSession
