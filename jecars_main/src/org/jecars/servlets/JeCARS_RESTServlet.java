@@ -424,8 +424,9 @@ public class JeCARS_RESTServlet extends HttpServlet {
         }
       } catch (IOException ioe ) {
         if ((ioe.getCause()!=null) && (ioe.getCause().getMessage()!=null)) {
-          if (ioe.getCause().getMessage().indexOf( "Connection reset by peer" )==-1) {
-            gLog.log( Level.WARNING, null, ioe );     // **** Tracker [1822777]
+          if ((ioe.getCause().getMessage().indexOf( "Connection reset by peer" )==-1) ||
+              (ioe.getCause().getMessage().indexOf( "Software caused connection abort" )==-1)) {
+//            gLog.log( Level.WARNING, null, ioe );     // **** Tracker [1822777]
           }
         } else {
          gLog.log( Level.WARNING, null, ioe );
@@ -443,8 +444,9 @@ public class JeCARS_RESTServlet extends HttpServlet {
             os.close();
           } catch (IOException ioe) {
             if ((ioe.getCause()!=null) && (ioe.getCause().getMessage()!=null)) {
-              if (ioe.getCause().getMessage().indexOf( "Connection reset by peer" )==-1) {
-                gLog.log( Level.WARNING, null, ioe );     // **** Tracker [1822777]
+              if ((ioe.getCause().getMessage().indexOf( "Connection reset by peer" )==-1) ||
+                  (ioe.getCause().getMessage().indexOf( "Software caused connection abort" )==-1)) {
+//                gLog.log( Level.WARNING, null, ioe );     // **** Tracker [1822777]
               }
             } else {
              gLog.log( Level.WARNING, null, ioe );
@@ -546,7 +548,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setParameterMap( pRequest.getParameterMap() );
             ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ':' + pRequest.getServerPort() );
             CARSFACTORY.performGetAction( ac, null );
-            final long lastMod = ac.getLastModified();
+//            final long lastMod = ac.getLastModified();
             boolean getResult = true;
 //            if (ac.getIfNoneMatch()!=null) {
               // **** Check for if the ETag is the same
