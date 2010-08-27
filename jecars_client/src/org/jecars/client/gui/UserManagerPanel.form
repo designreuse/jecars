@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.1" encoding="UTF-8" ?>
 
 <Form version="1.3" maxVersion="1.7" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <AuxValues>
@@ -19,7 +19,7 @@
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                  <Component id="jPanel1" alignment="0" max="32767" attributes="1"/>
+                  <Component id="jPanel1" alignment="0" pref="975" max="32767" attributes="1"/>
                   <Component id="jPanel3" alignment="0" max="32767" attributes="1"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
@@ -123,6 +123,10 @@
                                           <Group type="102" attributes="0">
                                               <Component id="mSetNewPassword" min="-2" max="-2" attributes="0"/>
                                               <EmptySpace max="-2" attributes="0"/>
+                                              <Component id="mSealUser" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace max="-2" attributes="0"/>
+                                              <Component id="mUnsealUser" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace max="-2" attributes="0"/>
                                               <Component id="mSetPasswordMessage" pref="237" max="32767" attributes="0"/>
                                           </Group>
                                           <Group type="102" attributes="0">
@@ -165,6 +169,8 @@
                           <Component id="mNewPassword" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="mSetPasswordMessage" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="mSetNewPassword" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="mSealUser" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="mUnsealUser" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="jPanel4" max="32767" attributes="0"/>
@@ -298,7 +304,7 @@
                   <Layout>
                     <DimensionLayout dim="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
                               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                                   <Component id="jLabel4" max="32767" attributes="1"/>
                                   <Component id="jLabel3" alignment="0" pref="71" max="32767" attributes="1"/>
@@ -390,6 +396,22 @@
                 <Property name="selected" type="boolean" value="true"/>
                 <Property name="text" type="java.lang.String" value="Default Membership"/>
               </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="mSealUser">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Seal User"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="mSealUserActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="mUnsealUser">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Unseal User"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="mUnsealUserActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
@@ -506,7 +528,7 @@
                       <Component id="mRemoveMembership" max="32767" attributes="1"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="mAddMemberShip" min="-2" pref="159" max="-2" attributes="1"/>
-                      <EmptySpace min="-2" pref="98" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="260" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -603,7 +625,7 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="mAddGroupMemberName" pref="196" max="32767" attributes="0"/>
+                      <Component id="mAddGroupMemberName" pref="358" max="32767" attributes="0"/>
                       <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
                       <Component id="mAddGroupMembership" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -673,7 +695,7 @@
                           <Component id="mGroupTitle" max="32767" attributes="1"/>
                           <Component id="mGroupNameID" alignment="0" pref="115" max="32767" attributes="1"/>
                       </Group>
-                      <EmptySpace min="-2" pref="217" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="379" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>

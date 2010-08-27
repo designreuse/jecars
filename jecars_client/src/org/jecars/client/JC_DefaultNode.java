@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -511,8 +512,8 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
    * @param pNode
    * @param pLink
    */
-  private void _addLinkInfo( JC_DefaultNode pNode, Link pLink ) {
-    if (pLink.getRel().equals( "self" )==true) {
+  private void _addLinkInfo( final JC_DefaultNode pNode, final Link pLink ) {
+    if (pLink.getRel().equals( "self" )) {
       JC_Path selfPath = new JC_Path( pLink.getHref() );
       selfPath.ensureDecode();
       pNode.mSelfLink = selfPath.toString();
@@ -1503,7 +1504,9 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       } else if (prop instanceof JC_DefaultProperty) {
         // **** Is normal property?
         if (prop.getValue()==null) {
-          if (pValue!=null) {
+          if (pValue==null) {
+            ((JC_DefaultProperty)prop)._setValue( pName, (String)null );
+          } else {
             if(!prop.isNew()) {
               prop.setChanged( true );
               setChanged(true);
@@ -2225,12 +2228,14 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
             final String location = (String)tags.getData( "Location" );
             if (location!=null) {
               final String serverPath = pClient.getServerPath();
-              final int length = serverPath.length();
-              final String newPath = location.substring(length);
-              this.setPath(newPath);
-              final String name = this.getJCPath().getBaseName();
-              this.setName(name);
-              this.setProperty( JC_Defs.ATOM_TITLE, name);
+              final URI  uri = new URI( serverPath );
+              final URI luri = new URI( location );
+              final int length = uri.getPath().length();
+              final String newPath = luri.getPath().substring(length);
+              setPath(newPath);
+              final String name = getJCPath().getBaseName();
+              setName(name);
+              setProperty( JC_Defs.ATOM_TITLE, name);
             }
           } else {
             throw JC_Utils.createCommException( tags, "while creating object ", pUrl );
