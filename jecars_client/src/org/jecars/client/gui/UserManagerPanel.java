@@ -19,6 +19,7 @@ package org.jecars.client.gui;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -26,11 +27,14 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import org.jecars.client.JC_Clientable;
+import org.jecars.client.JC_DefaultNode;
+import org.jecars.client.JC_Defs;
 import org.jecars.client.JC_Exception;
 import org.jecars.client.JC_Filter;
 import org.jecars.client.JC_Nodeable;
 import org.jecars.client.JC_Params;
 import org.jecars.client.JC_RESTComm;
+import org.jecars.client.JC_Rights;
 import org.jecars.client.nt.JC_GroupNode;
 import org.jecars.client.nt.JC_GroupsNode;
 import org.jecars.client.nt.JC_PermissionNode;
@@ -471,6 +475,8 @@ public class UserManagerPanel extends javax.swing.JPanel {
         mEmail = new javax.swing.JTextField();
         mClearData = new javax.swing.JButton();
         mDefaultMembership = new javax.swing.JCheckBox();
+        mSealUser = new javax.swing.JButton();
+        mUnsealUser = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         mGroupsList = new javax.swing.JList();
@@ -619,7 +625,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(mLastName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(35, Short.MAX_VALUE))
+                .addContainerGap(38, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
@@ -645,6 +651,20 @@ public class UserManagerPanel extends javax.swing.JPanel {
         mDefaultMembership.setSelected(true);
         mDefaultMembership.setText("Default Membership");
 
+        mSealUser.setText("Seal User");
+        mSealUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mSealUserActionPerformed(evt);
+            }
+        });
+
+        mUnsealUser.setText("Unseal User");
+        mUnsealUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                mUnsealUserActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -666,6 +686,10 @@ public class UserManagerPanel extends javax.swing.JPanel {
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(jPanel2Layout.createSequentialGroup()
                                         .addComponent(mSetNewPassword)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(mSealUser)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(mUnsealUser)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(mSetPasswordMessage, javax.swing.GroupLayout.DEFAULT_SIZE, 237, Short.MAX_VALUE))
                                     .addGroup(jPanel2Layout.createSequentialGroup()
@@ -697,7 +721,9 @@ public class UserManagerPanel extends javax.swing.JPanel {
                     .addComponent(jLabel2)
                     .addComponent(mNewPassword, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(mSetPasswordMessage)
-                    .addComponent(mSetNewPassword))
+                    .addComponent(mSetNewPassword)
+                    .addComponent(mSealUser)
+                    .addComponent(mUnsealUser))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -771,7 +797,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
                 .addComponent(mRemoveMembership, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(mAddMemberShip, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(98, 98, 98))
+                .addGap(260, 260, 260))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -834,7 +860,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(mAddGroupMemberName, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
+                .addComponent(mAddGroupMemberName, javax.swing.GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
                 .addGap(8, 8, 8)
                 .addComponent(mAddGroupMembership)
                 .addContainerGap())
@@ -870,13 +896,13 @@ public class UserManagerPanel extends javax.swing.JPanel {
             mRemoveGroupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mRemoveGroupLayout.createSequentialGroup()
                 .addGroup(mRemoveGroupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, 78, Short.MAX_VALUE))
+                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(mRemoveGroupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(mGroupTitle)
                     .addComponent(mGroupNameID, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE))
-                .addGap(217, 217, 217))
+                .addGap(379, 379, 379))
         );
         mRemoveGroupLayout.setVerticalGroup(
             mRemoveGroupLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -972,7 +998,7 @@ public class UserManagerPanel extends javax.swing.JPanel {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 817, Short.MAX_VALUE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 975, Short.MAX_VALUE)
                     .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -1267,6 +1293,53 @@ public class UserManagerPanel extends javax.swing.JPanel {
       return;
     }//GEN-LAST:event_mModifyUserActionPerformed
 
+    private void mSealUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mSealUserActionPerformed
+      try {
+        final JC_UserNode user = mUsers.getUser( mNameID.getText() );
+        if (user==null) {
+          throw new JC_Exception( "User " + mNameID.getText() + " doesn't exists" );
+        } else {
+          final Collection<String> rights = new ArrayList<String>();
+          rights.add( JC_Rights.R_READ );
+          rights.add( JC_Rights.R_GETPROPERTY );
+          rights.add( JC_Rights.R_DELEGATE );
+          final JC_DefaultNode permN = (JC_DefaultNode)user.getNode( "jecars:P_UserPermission" );
+          final JC_PermissionNode perm = (JC_PermissionNode)permN.morphToNodeType();
+          perm.setProperty( "jecars:Principal", "+" + user.getPath() );
+          perm.setRights( rights );
+          perm.save();
+        }
+      } catch( JC_Exception je ) {
+        reportError( je );
+      }
+      return;
+    }//GEN-LAST:event_mSealUserActionPerformed
+
+    private void mUnsealUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mUnsealUserActionPerformed
+      try {
+        final JC_UserNode user = mUsers.getUser( mNameID.getText() );
+        if (user==null) {
+          throw new JC_Exception( "User " + mNameID.getText() + " doesn't exists" );
+        } else {
+          final Collection<String> rights = new ArrayList<String>();
+          rights.add( JC_Rights.R_ADDNODE );
+          rights.add( JC_Rights.R_GETPROPERTY );
+          rights.add( JC_Rights.R_READ );
+          rights.add( JC_Rights.R_REMOVE );
+          rights.add( JC_Rights.R_SETPROPERTY );
+          rights.add( JC_Rights.R_DELEGATE );
+          final JC_DefaultNode permN = (JC_DefaultNode)user.getNode( "jecars:P_UserPermission" );
+          final JC_PermissionNode perm = (JC_PermissionNode)permN.morphToNodeType();
+          perm.setProperty( "jecars:Principal", "+" + user.getPath() );
+          perm.setRights( rights );
+          perm.save();
+        }
+      } catch( JC_Exception je ) {
+        reportError( je );
+      }
+      return;
+    }//GEN-LAST:event_mUnsealUserActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
@@ -1310,8 +1383,10 @@ public class UserManagerPanel extends javax.swing.JPanel {
     private javax.swing.JButton mRemoveMembership;
     private javax.swing.JButton mRemoveUser;
     private javax.swing.JButton mRemoveUser1;
+    private javax.swing.JButton mSealUser;
     private javax.swing.JButton mSetNewPassword;
     private javax.swing.JLabel mSetPasswordMessage;
+    private javax.swing.JButton mUnsealUser;
     private javax.swing.JCheckBox mUserMayAccess;
     private javax.swing.JList mUsersList;
     private javax.swing.JScrollPane mUsersScroll;
