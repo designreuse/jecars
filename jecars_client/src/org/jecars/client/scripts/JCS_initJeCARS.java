@@ -30,7 +30,7 @@ import org.jecars.client.nt.JC_PermissionNode;
  */
 public class JCS_initJeCARS {
 
-  public String mJeCARSServer = "http://localhost:8080/stanlytrack/cars";
+  public String mJeCARSServer = "http://localhost:8080/cars";
   public String mUsername = "Administrator";
   public String mPassword = "admin";
 
