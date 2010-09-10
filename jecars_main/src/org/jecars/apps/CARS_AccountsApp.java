@@ -44,6 +44,7 @@ import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
 import org.jecars.jaas.CARS_PasswordService;
+import org.jecars.servlets.JeCARS_RESTServlet;
 import org.jecars.support.BASE64Encoder;
 import org.jecars.support.Base64;
 
@@ -134,42 +135,81 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
   static public String checkCircleOfTrust( final String pAuth ) throws RepositoryException {
     String un = null;
     final List<String> tss = getTrustedServers();
+    final String cfc = JeCARS_RESTServlet.getCurrentFullContext();
     for( final String ts : tss ) {
-      try {
-        final org.jecars.client.JC_Clientable client = org.jecars.client.JC_Factory.createClient( ts );
-        client.setCredentials( org.jecars.client.JC_GDataAuth.create( pAuth ));
-        final org.jecars.client.JC_InfoApp info = new org.jecars.client.JC_InfoApp( client );
-        un = info.whoAmI();
-        if (un!=null) {
+      if (!ts.equals(cfc)) {
+          try {
+            final org.jecars.client.JC_Clientable client = org.jecars.client.JC_Factory.createClient( ts );
+            client.setCredentials( org.jecars.client.JC_GDataAuth.create( pAuth ));
+            final org.jecars.client.JC_InfoApp info = new org.jecars.client.JC_InfoApp( client );
+            un = info.whoAmI();
+            if (un!=null) {
 
-          // **** Copy the key to the current jecars
-          final Session appSession = CARS_Factory.getSystemApplicationSession();
-          synchronized( appSession ) {
-            final Node clientLogin = appSession.getNode( "/accounts/ClientLogin" );
-            final String nodeAuthKey = AUTHKEY_PREFIX + pAuth;
-            if (!clientLogin.hasNode( nodeAuthKey )) {
-              clientLogin.addNode( nodeAuthKey, "jecars:root" );
+              // **** Copy the key to the current jecars
+              final Session appSession = CARS_Factory.getSystemApplicationSession();
+              synchronized( appSession ) {
+                final Node clientLogin = appSession.getNode( "/accounts/ClientLogin" );
+                final String nodeAuthKey = AUTHKEY_PREFIX + pAuth;
+                if (!clientLogin.hasNode( nodeAuthKey )) {
+                  clientLogin.addNode( nodeAuthKey, "jecars:root" );
+                }
+                final Node authKey = clientLogin.getNode( nodeAuthKey );
+                final Calendar c = Calendar.getInstance();
+                c.add( Calendar.MINUTE, 15 );
+                authKey.setProperty( CARS_ActionContext.gDefTitle, un );
+                authKey.setProperty( CARS_ActionContext.gDefExpireDate, c );
+                authKey.setProperty( CARS_ActionContext.gDefBody, "Key is copied from " + client.getServerPath() );
+                CARS_Utils.setCurrentModificationDate( authKey.getParent() );
+                appSession.save();
+              }
+
+              break;
             }
-            final Node authKey = clientLogin.getNode( nodeAuthKey );
-            final Calendar c = Calendar.getInstance();
-            c.add( Calendar.MINUTE, 15 );
-            authKey.setProperty( CARS_ActionContext.gDefTitle, un );
-            authKey.setProperty( CARS_ActionContext.gDefExpireDate, c );
-            authKey.setProperty( CARS_ActionContext.gDefBody, "Key is copied from " + client.getServerPath() );
-            CARS_Utils.setCurrentModificationDate( authKey.getParent() );
-            appSession.save();
+          } catch(Exception je) {
+            LOG.log( Level.WARNING, je.getMessage(), je );
           }
-
-          break;
-        }
-      } catch(org.jecars.client.JC_Exception je) {
-        LOG.log( Level.WARNING, je.getMessage(), je );
       }
     }
     return un;
   }
 
+  /** Will be be called only once, when JeCARS is started
+   * @param pMain the CARS_Main object
+   * @param pInterfaceNode the Node which defines the application source
+   */
+  @Override
+  public void init( final CARS_Main pMain, final Node pInterfaceNode ) throws Exception {
+    super.init( pMain, pInterfaceNode );    
+    final Session appSession = CARS_Factory.getSystemApplicationSession();
+    final Node sysParentNode = appSession.getNode( pInterfaceNode.getPath() );
+    synchronized( appSession ) {
+      if (!sysParentNode.hasNode( "ClientLogin" )) {
+        createClientLoginFolder( sysParentNode, "ClientLogin" );
+      }
+    }
+    return;
+  }
 
+
+  /** createClientLoginFolder
+   * 
+   * @param pParent
+   * @param pName
+   * @throws RepositoryException
+   */
+  private void createClientLoginFolder( final Node pParent, final String pName ) throws RepositoryException {
+    // **** ClientLogin
+    final Node newNode = pParent.addNode( pName, "jecars:unstructured" );
+    newNode.addMixin( "jecars:permissionable" );
+    final String[] prin = {"/JeCARS/default/Groups/DefaultReadGroup"};
+    newNode.setProperty( "jecars:Principal", prin );
+    final String[] acts = {"read","get_property"};
+    newNode.setProperty( "jecars:Actions", acts );
+    pParent.save();
+    return;
+  }
+
+  
   /** getNodes
    * @param pMain
    * @param pInterfaceNode
@@ -263,13 +303,7 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
         if (sysParentNode.hasNode( pName )) {
           newNode = sysParentNode.getNode( pName );
         } else {
-          newNode = sysParentNode.addNode( pName, "jecars:unstructured" );
-          newNode.addMixin( "jecars:permissionable" );
-          final String[] prin = {"/JeCARS/default/Groups/DefaultReadGroup"};
-          newNode.setProperty( "jecars:Principal", prin );
-          final String[] acts = {"read","get_property"};
-          newNode.setProperty( "jecars:Actions", acts );
-          sysParentNode.save();
+          createClientLoginFolder( sysParentNode, pName );
 //          newNode.setProperty( "jecars:KeyValidForHours", gKeyValidInHours );
         }
 
