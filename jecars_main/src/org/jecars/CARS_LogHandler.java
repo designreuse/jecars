@@ -90,30 +90,32 @@ public class CARS_LogHandler extends Handler {
   @Override
   public void publish( final LogRecord pRecord ) {
     if (mSystemEventsFolder!=null) {
-      try {
-        Session ses = mSystemEventsFolder.getSession();
-        Node user = null;      
-        if (pRecord.getLoggerName()!=null) {
+      if (pRecord.getSourceClassName().startsWith( "org.jecars")) {
           try {
-            user = ses.getRootNode().getNode( pRecord.getLoggerName().substring(1) );
-          } catch( Exception e ) {
+            Session ses = mSystemEventsFolder.getSession();
+            Node user = null;        
+            if (pRecord.getLoggerName()!=null) {
+              try {
+                user = ses.getRootNode().getNode( pRecord.getLoggerName().substring(1) );
+              } catch( Exception e ) {
+              }
+            }
+            Node source = null;
+            if (pRecord.getSourceClassName()!=null) {
+              try {
+                source = ses.getRootNode().getNode( pRecord.getSourceClassName().substring(1) );
+              } catch (Exception e) {           
+              }
+            }
+            if (pRecord.getParameters()!=null) {
+              String[] params = (String[])pRecord.getParameters();
+              CARS_Factory.gEventManager.addException( null, user, source, null, params[0], params[1], pRecord.getThrown(), pRecord.getMessage() );
+            } else {
+              CARS_Factory.gEventManager.addException( null, user, source, null, "SYS", pRecord.getLevel().getName(), pRecord.getThrown(), pRecord.getMessage() );
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
           }
-        }
-        Node source = null;
-        if (pRecord.getSourceClassName()!=null) {
-          try {
-            source = ses.getRootNode().getNode( pRecord.getSourceClassName().substring(1) );
-          } catch (Exception e) {           
-          }
-        }
-        if (pRecord.getParameters()!=null) {
-          String[] params = (String[])pRecord.getParameters();
-          CARS_Factory.gEventManager.addException( null, user, source, null, params[0], params[1], pRecord.getThrown(), pRecord.getMessage() );
-        } else {
-          CARS_Factory.gEventManager.addException( null, user, source, null, "SYS", pRecord.getLevel().getName(), pRecord.getThrown(), pRecord.getMessage() );
-        }
-      } catch (Exception e) {
-        e.printStackTrace();
       }
     }
     return;

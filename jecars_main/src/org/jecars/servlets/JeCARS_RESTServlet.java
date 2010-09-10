@@ -74,7 +74,8 @@ public class JeCARS_RESTServlet extends HttpServlet {
   static private       String           gDIGEST_REALM  = null;
   static private       MessageDigest    gMD;
   static private final Object           MD_LOCK = new Object();
-
+  static private       String           gCurrentFullContext = null;
+  
   static protected volatile AUTH_TYPE           gCURRENT_AUTH  = AUTH_TYPE.BASIC;
   static protected volatile EnumSet<AUTH_TYPE>  gALLOWED_AUTH  = EnumSet.of( AUTH_TYPE.DIGEST, AUTH_TYPE.BASIC );
 
@@ -88,7 +89,14 @@ public class JeCARS_RESTServlet extends HttpServlet {
     }
   }
 
-
+  /** getCurrentFullContext
+   * 
+   * @return
+   */
+  static public String getCurrentFullContext() {
+    return gCurrentFullContext;
+  }
+  
   /** setHostname
    * 
    * @param pHostname
@@ -149,7 +157,7 @@ public class JeCARS_RESTServlet extends HttpServlet {
   @Override
   public void init() throws ServletException {
     gLog.log( Level.INFO, "Using " + CARS_Main.PRODUCTNAME + " version: " + CARS_Main.VERSION );
-
+    
     setHostname( gHOSTNAME );
     setRealm(    gHOSTNAME );
 
@@ -542,11 +550,13 @@ public class JeCARS_RESTServlet extends HttpServlet {
         final CARS_ActionContext ac = createActionContext( pRequest, pResponse );
         if (ac!=null) {
           try {
+            final String baseurl = pRequest.getScheme() + "://" + pRequest.getServerName()  + ':' + pRequest.getServerPort();
             ac.setContextPath( pRequest.getContextPath() + pRequest.getServletPath() );
             ac.setPathInfo( new String(pRequest.getPathInfo().getBytes( "ISO-8859-1" ), "UTF-8" ) );
             ac.setQueryString( q );
             ac.setParameterMap( pRequest.getParameterMap() );
-            ac.setBaseURL( pRequest.getScheme() + "://" + pRequest.getServerName()  + ':' + pRequest.getServerPort() );
+            ac.setBaseURL( baseurl );
+            gCurrentFullContext = ac.getBaseContextURL();
             CARSFACTORY.performGetAction( ac, null );
 //            final long lastMod = ac.getLastModified();
             boolean getResult = true;
