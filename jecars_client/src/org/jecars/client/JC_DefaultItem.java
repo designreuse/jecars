@@ -124,6 +124,11 @@ public class JC_DefaultItem implements JC_Itemable, Serializable, Cloneable {
   }
 
   @Override
+  public void save( final JC_Params pParams ) throws JC_Exception {
+    return;
+  }
+
+  @Override
   public void save() throws JC_Exception {
     return;
   }

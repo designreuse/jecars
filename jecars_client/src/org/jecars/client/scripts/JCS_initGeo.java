@@ -26,7 +26,7 @@ import org.jecars.client.JC_Nodeable;
  */
 public class JCS_initGeo {
 
-  public String mJeCARSServer = "http://localhost:8080/gcars";
+  public String mJeCARSServer = "http://localhost:8080/cars";
   public String mUsername = "Administrator";
   public String mPassword = "admin";
 
@@ -71,7 +71,7 @@ public class JCS_initGeo {
   public static void main(String[] args) {
     try {
       JCS_initGeo initJ = new JCS_initGeo();
-      initJ.mJeCARSServer = "http://localhost:8080/stanlytrack/cars";
+      initJ.mJeCARSServer = "http://localhost:8080/cars";
       initJ.startInit();
     } catch( Exception e ) {
       e.printStackTrace();

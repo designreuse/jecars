@@ -44,6 +44,10 @@ public interface JC_Itemable {
   /** save
    */
   void save() throws JC_Exception;
+
+  /** save
+   */
+  void save( final JC_Params pParams ) throws JC_Exception;
   
   /** refresh
    * 

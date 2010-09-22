@@ -430,7 +430,7 @@ public class JC_RESTComm implements Serializable {
       pConn.setDoInput(true);
       pConn.setUseCaches(false);
       pConn.setRequestProperty( "Content-Type", pContentsType );//"application/x-www-form-urlencoded" );    
-      if (pClient.isInChunkedStreamingMode()) {
+      if ((pClient!=null) && (pClient.isInChunkedStreamingMode())) {
         applyContentsLength( pConn, pContentsLength );
       }
       final OutputStream os = pConn.getOutputStream();
