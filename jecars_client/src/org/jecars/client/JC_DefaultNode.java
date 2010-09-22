@@ -1877,11 +1877,17 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       return;
     }
 
+    @Override
+    public void save() throws JC_Exception {
+      save( null );
+      return;
+    }
+
     /** save
      * @throws org.jecars.client.JC_Exception
      */
     @Override
-    public void save() throws JC_Exception {      
+    public void save(  final JC_Params pParams ) throws JC_Exception {
 
       if (!mNodeProps.contains( PROPS.DESTROYED )) {
         try {
@@ -1898,7 +1904,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
           }
 
           if (isRemoved()) {
-            writeRemoval();
+            writeRemoval( pParams );
           }
 
           //3. Write children nodes to JeCARS
@@ -2185,10 +2191,15 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
      * @throws JC_Exception
      * @throws IOException
      */
-    private void writeRemoval() throws JC_Exception, IOException {
+    private void writeRemoval( final JC_Params pParams ) throws JC_Exception, IOException {
       final JC_Clientable client = getClient();
       final StringBuilder url = JC_Utils.getFullNodeURL( client, this );
-      final JC_Params params = client.createParams( JC_RESTComm.DELETE );
+      final JC_Params params;
+      if (pParams==null) {
+        params = client.createParams( JC_RESTComm.DELETE );
+      } else {
+        params = pParams;
+      }
       if (client.getHttpOperation( JC_Clientable.DELETE_AS_GET )) {
         params.setHTTPOverride( JC_RESTComm.DELETE );
       }
