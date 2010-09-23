@@ -554,8 +554,8 @@ public class CARS_EventManager {
       try {
         Session ses = getSession();
         if (ses==null) return;
-        try {
-          synchronized( EVENTLOCK ) {
+        synchronized( EVENTLOCK ) {
+          try {
             Node ef = ses.getRootNode().getNode( "JeCARS/default/Events" );
             Node event = createEventNode( pMain, ef, pUser, pSource, pApplication, pCategory, pType, pMessage, CARS_Main.DEFAULTNS + "Exception" );
             if (pThrow!=null) {
@@ -577,11 +577,11 @@ public class CARS_EventManager {
 
             addLogEntry( pMain, pUser, pSource, pApplication, pCategory, pType, pThrow, pMessage );
 
+          } catch( Exception e ) {
+            ses.refresh( false );
+          } finally {
+            returnSession( ses );
           }
-        } catch( Exception e ) {
-          ses.refresh( false );
-        } finally {
-          returnSession( ses );
         }
       } catch (Exception e) {
         if (CARS_Factory.getLastFactory()!=null) {
