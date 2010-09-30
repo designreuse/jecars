@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.SimpleCredentials;
 import javax.security.auth.*;
 import javax.security.auth.callback.*;
 import javax.security.auth.login.*;
@@ -34,6 +33,7 @@ import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.UserPrincipal;
 import org.apache.jackrabbit.core.security.authentication.CredentialsCallback;
 import org.jecars.apps.CARS_AccountsApp;
+import org.jecars.jaas.CARS_Credentials;
 import org.jecars.servlets.JeCARS_RESTServlet;
 
 /**
@@ -43,7 +43,7 @@ import org.jecars.servlets.JeCARS_RESTServlet;
  */
 public class CARS_LoginModule implements LoginModule {
 
-  private static Logger gLog = Logger.getLogger( "org.jecars" );
+  private static final Logger LOG = Logger.getLogger( "org.jecars" );
 
   private static final String OPT_ANONYMOUS = "anonymousId";
   private static final String OPT_DEFAULT = "defaultUserId";
@@ -191,9 +191,9 @@ public class CARS_LoginModule implements LoginModule {
         mCallbackHandler.handle(new Callback[] { ccb });
         final Credentials creds = ccb.getCredentials();
         if (creds != null) {
-           if (creds instanceof SimpleCredentials) {
+           if (creds instanceof CARS_Credentials) {
               UserPrincipal userP = null;
-              final SimpleCredentials sc = (SimpleCredentials) creds;
+              final CARS_Credentials sc = (CARS_Credentials) creds;
               String userName = CARS_Utils.decode(sc.getUserID());
               final Object attr = sc.getAttribute(SecurityConstants.IMPERSONATOR_ATTRIBUTE);
               if (attr != null && attr instanceof Subject) {
@@ -226,7 +226,7 @@ public class CARS_LoginModule implements LoginModule {
                           }                        
                         } else {
                           // **** Check the circle of trust
-                          userName = CARS_AccountsApp.checkCircleOfTrust( authKey.substring( CARS_AccountsApp.AUTHKEY_PREFIX.length() ) );
+                          userName = CARS_AccountsApp.checkCircleOfTrust( sc, authKey.substring( CARS_AccountsApp.AUTHKEY_PREFIX.length() ) );
                           if ((userName!=null) && users.hasNode( userName )) {
                             final Node user = users.getNode( userName );
                             if (user.hasProperty( CARS_AccessManager.gPasswordProperty )) {

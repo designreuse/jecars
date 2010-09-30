@@ -22,11 +22,10 @@ import nl.msd.jdots.JD_Taglist;
 /**
  * CARS_Main
  *
- * @version $Id: CARS_Main.java,v 1.32 2009/07/31 07:57:14 weertj Exp $
  */
 public interface CARS_Main {
   
-  final static String VERSION_ID    = "v1.3.5";
+  final static String VERSION_ID    = "v1.3.6";
   final static String PRODUCTNAME   = "JeCARS 'Araza'";
   final static String VERSION       = PRODUCTNAME + " " + VERSION_ID;
   final static String MAINFOLDER    = "JeCARS";

@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.data.GarbageCollector;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.util.ISO8601;
+import org.jecars.jaas.CARS_Credentials;
 import org.jecars.tools.CARS_DefaultToolInterface;
 
 /** CARS_ExpireManager
@@ -52,7 +53,7 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
     if (!gDISABLED) {
       try {
         final Node n = getTool();
-        mSession = n.getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
+        mSession = n.getSession().getRepository().login( new CARS_Credentials( CARS_AccessManager.gSuperuserName, "".toCharArray(), null ));
         purge();
       } catch (ConstraintViolationException cve) {
         cve.printStackTrace();
@@ -278,7 +279,7 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
    */
   @Override
   public SessionImpl createToolSession() throws Exception {
-    return (SessionImpl)getTool().getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
+    return (SessionImpl)getTool().getSession().getRepository().login( new CARS_Credentials( CARS_AccessManager.gSuperuserName, "".toCharArray(), null ));
   }
 
 

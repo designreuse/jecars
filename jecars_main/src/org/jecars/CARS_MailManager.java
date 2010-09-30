@@ -30,7 +30,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
@@ -41,6 +40,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import org.apache.commons.mail.SimpleEmail;
+import org.jecars.jaas.CARS_Credentials;
 import org.jecars.tools.CARS_DefaultToolInterface;
 
 /**
@@ -205,7 +205,7 @@ public class CARS_MailManager extends CARS_DefaultToolInterface {
     final Node n = getTool();
     try {
         if (mSession==null) {
-          mSession = n.getSession().getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() ));
+          mSession = n.getSession().getRepository().login( new CARS_Credentials( CARS_AccessManager.gSuperuserName, "".toCharArray(), null ));
         }
         
     //    final Node tool = mSession.getNode( getTool().getPath() );

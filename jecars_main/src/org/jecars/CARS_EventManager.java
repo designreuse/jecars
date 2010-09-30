@@ -26,7 +26,7 @@ import javax.jcr.LoginException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
+import org.jecars.jaas.CARS_Credentials;
 
 /**
  * CARS_EventManager
@@ -172,7 +172,7 @@ public class CARS_EventManager {
   final public Session getSession() throws LoginException, RepositoryException {
     if (mSession==null) {
       try {
-        setSession( CARS_Factory.getRepository().login( new SimpleCredentials( CARS_AccessManager.gSuperuserName, "".toCharArray() )));
+        setSession( CARS_Factory.getRepository().login( new CARS_Credentials( CARS_AccessManager.gSuperuserName, "".toCharArray(), null )));
 //        System.out.println( "Event session login..." + mInUse );
       } catch( LoginException e ) {
         e.printStackTrace();

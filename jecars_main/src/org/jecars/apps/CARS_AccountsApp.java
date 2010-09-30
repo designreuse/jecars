@@ -33,6 +33,7 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -43,6 +44,10 @@ import org.jecars.CARS_CustomException;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
 import org.jecars.CARS_Utils;
+import org.jecars.client.JC_Exception;
+import org.jecars.client.JC_Params;
+import org.jecars.client.JC_RESTComm;
+import org.jecars.jaas.CARS_Credentials;
 import org.jecars.jaas.CARS_PasswordService;
 import org.jecars.servlets.JeCARS_RESTServlet;
 import org.jecars.support.BASE64Encoder;
@@ -132,15 +137,34 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
    * @param pAuth
    * @return
    */
-  static public String checkCircleOfTrust( final String pAuth ) throws RepositoryException {
+  static public String checkCircleOfTrust( final CARS_Credentials pCreds, final String pAuth ) throws RepositoryException, UnsupportedEncodingException {
     String un = null;
     final List<String> tss = getTrustedServers();
     final String cfc = JeCARS_RESTServlet.getCurrentFullContext();
+    final CARS_ActionContext ac = pCreds.getContext();
+    
+    JD_Taglist paramsTL = ac.getQueryPartsAsTaglist();
+    paramsTL = ac.getParameterMapAsTaglist( paramsTL );
+    final List<String> css = paramsTL.getDataList( "jecars:COT.Server" );
+            
     for( final String ts : tss ) {
       if (!ts.equals(cfc)) {
           try {
+
+            // **** Check if we already have contacted this server
+            if (css!=null) {
+              for( final String csentry : css ) {
+                if (ts.equals(csentry)) {
+                  // **** Server already checked
+                  throw new AccessDeniedException( "Not allowed" );
+                }
+              }
+            }
+              
             final org.jecars.client.JC_Clientable client = org.jecars.client.JC_Factory.createClient( ts );
             client.setCredentials( org.jecars.client.JC_GDataAuth.create( pAuth ));
+            final JC_Params params = client.createParams( JC_RESTComm.GET );
+            params.addOtherParameter( "COT.Server", cfc );
             final org.jecars.client.JC_InfoApp info = new org.jecars.client.JC_InfoApp( client );
             un = info.whoAmI();
             if (un!=null) {
@@ -165,7 +189,7 @@ public class CARS_AccountsApp extends CARS_DefaultInterface {
 
               break;
             }
-          } catch(Exception je) {
+          } catch(JC_Exception je) {
             LOG.log( Level.WARNING, je.getMessage(), je );
           }
       }
