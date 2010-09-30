@@ -39,6 +39,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.jecars.apps.CARS_AccountsApp;
 import org.jecars.apps.CARS_AdminApp;
 import org.jecars.apps.CARS_Interface;
+import org.jecars.jaas.CARS_Credentials;
 
 /**
  * CARS_Factory
@@ -65,7 +66,7 @@ public class CARS_Factory {
 
   static final protected Logger gLog = Logger.getLogger( "org.jecars" );
   
-  static private   SimpleCredentials    gSysCreds                 = null;
+  static private   CARS_Credentials     gSysCreds                 = null;
   static protected TransientRepository  gRepository               = null;
   static private   Session              gSystemCarsSession        = null;
   static private   Session              gSystemAccessSession      = null;
@@ -302,7 +303,7 @@ public class CARS_Factory {
    * @param pCreds
    * @throws java.lang.Exception
    */
-  private void initJCR( final SimpleCredentials pCreds ) throws Exception {
+  private void initJCR( final CARS_Credentials pCreds ) throws Exception {
     initJeCARSProperties();
     // **** init log handler
     initLogging();
@@ -377,13 +378,13 @@ public class CARS_Factory {
    * @param pReinit
    * @throws java.lang.Exception
    */
-  public void init( SimpleCredentials pCreds, final boolean pReinit ) throws Exception {
+  public void init( CARS_Credentials pCreds, final boolean pReinit ) throws Exception {
     
     final org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger( "org.apache.jackrabbit.core.TransientRepository" );
     logger.setLevel( org.apache.log4j.Level.ERROR );
       
     if (pCreds==null) {
-      pCreds = new SimpleCredentials( "Superuser", "pw".toCharArray() );
+      pCreds = new CARS_Credentials( "Superuser", "pw".toCharArray(), null );
     }
     gSysCreds = pCreds;
     initJCR( gSysCreds );
@@ -739,7 +740,7 @@ public class CARS_Factory {
   static protected Session getSystemCarsSession() {
     if (gSystemCarsSession==null) {
       try {
-        gSystemCarsSession = gRepository.login( new SimpleCredentials( CARS_AccessManager.gUSERNAME_GRANTALL, "".toCharArray() ));
+        gSystemCarsSession = gRepository.login( new CARS_Credentials( CARS_AccessManager.gUSERNAME_GRANTALL, "".toCharArray(), null ));
         gLog.info( "System jecars session login: " + CARS_AccessManager.gUSERNAME_GRANTALL );
       } catch( Exception e ) {
         e.printStackTrace();
@@ -803,6 +804,24 @@ public class CARS_Factory {
    * @return the CARS_Main interface
    * @throws AccessDeniedException when the actions isn't allowed
    */
+  public CARS_Main createMain( final CARS_Credentials pCreds, final String pWhat ) throws AccessDeniedException {
+    CARS_Main m;
+    try {
+      final Session ses = gRepository.login( pCreds );
+      m = createMain( ses );
+    } catch (Exception e) {
+      throw new AccessDeniedException( e );
+    }
+    return m;
+  }
+
+  /** createMain
+   * Create a CARS_Main interface
+   * @param pCreds use these credentials
+   * @param pWhat not used, use "default"
+   * @return the CARS_Main interface
+   * @throws AccessDeniedException when the actions isn't allowed
+   */
   public CARS_Main createMain( final SimpleCredentials pCreds, final String pWhat ) throws AccessDeniedException {
     CARS_Main m;
     try {
@@ -814,6 +833,7 @@ public class CARS_Factory {
     return m;
   }
 
+  
   /** createMain
    * Create a CARS_Main interface using only the context
    * @param pContext the action context
@@ -829,10 +849,10 @@ public class CARS_Factory {
       if (pContext.getAuthKey()==null) {
         final String userName = pContext.getUsername();
         if (userName.equals( CARS_AccessManager.gSuperuserName)) throw new AccessDeniedException();
-        final SimpleCredentials creds = new SimpleCredentials( userName, pContext.getPassword() );
+        final CARS_Credentials creds = new CARS_Credentials( userName, pContext.getPassword(), pContext );
         ses = gRepository.login( creds );
       } else {
-        final SimpleCredentials creds = new SimpleCredentials( CARS_AccountsApp.AUTHKEY_PREFIX + pContext.getAuthKey(), "".toCharArray() );
+        final CARS_Credentials creds = new CARS_Credentials( CARS_AccountsApp.AUTHKEY_PREFIX + pContext.getAuthKey(), "".toCharArray(), pContext );
         ses = gRepository.login( creds );
       }
       m = createMain( ses );
@@ -961,7 +981,6 @@ public class CARS_Factory {
   public void performGetAction( final CARS_ActionContext pContext, final CARS_Main pMain ) throws CredentialExpiredException, AccessDeniedException  {
     CARS_Main main = pMain;
     try {
-//      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
       final String fet = _getFET( pContext );
       pContext.setAction( CARS_ActionContext.gDefActionGET );
       if (main==null) {
@@ -1094,7 +1113,6 @@ public class CARS_Factory {
   public void performPutAction( final CARS_ActionContext pContext, final CARS_Main pMain ) throws AccessDeniedException, CredentialExpiredException {
     CARS_Main main = pMain;
     try {
-//      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
       final String fet = _getFET( pContext );
       pContext.setAction( CARS_ActionContext.gDefActionPUT );
       if (main==null) {
@@ -1154,7 +1172,6 @@ public class CARS_Factory {
   public void performDeleteAction( CARS_ActionContext pContext ) throws Exception {    
     CARS_Main main = null;
     try {
-//      main = createMain( new SimpleCredentials( pContext.getUsername(), pContext.getPassword() ), "default" );
       pContext.setAction( CARS_ActionContext.gDefActionDELETE );
       main = createMain( pContext );      
       pContext.setMain( main );
