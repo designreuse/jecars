@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2010 NLR - National Aerospace Laboratory
+ * Copyright 2008-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import java.net.URLDecoder;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import org.apache.jackrabbit.util.ISO8601;
 import org.jdom.Attribute;
@@ -1291,6 +1292,39 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     }
     return nodeable;    
   }
+
+  /** addNodes
+   * 
+   * @param pName
+   * @param pNodeType
+   * @param pFolderNodeType
+   * @return
+   * @throws JC_Exception
+   */
+  @Override
+  public JC_Nodeable addNodes( final String pName, final String pNodeType, final String pFolderNodeType ) throws JC_Exception {
+    StringTokenizer st = new StringTokenizer( pName, "/" );
+    JC_Nodeable result = null, run = this;
+    while( st.hasMoreTokens() ) {
+      final String nname = st.nextToken();
+      if (run.hasNode( nname )) {
+        if (st.hasMoreTokens()) {
+          run = run.getNode( nname );
+        } else {
+          result = run.getNode( nname );          
+        }
+      } else {
+        if (st.hasMoreTokens()) {
+          run = run.addNode( nname, pFolderNodeType );
+          run.save();
+        } else {
+          result = run.addNode( nname, pNodeType );
+          result.save();          
+        }
+      }
+    }
+    return result;
+  }
   
   /** addNode
    * 
@@ -2042,6 +2076,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       JC_Params params = client.createParams( JC_RESTComm.PUT );
       JC_FeedXmlOutput output;
       if (putAsGet) {
+        params = JC_Params.createParams();
         params.setHTTPOverride( JC_RESTComm.PUT );
       }              
         
@@ -2079,7 +2114,8 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
       
       url = JC_Utils.getFullNodeURL( client, this );
       if (putAsGet) {
-        params = client.createParams( JC_RESTComm.PUT );
+        params = JC_Params.createParams();
+//        params = client.createParams( JC_RESTComm.PUT );
         params.setHTTPOverride( JC_RESTComm.PUT );
       }
             
@@ -2239,13 +2275,19 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
             final String location = (String)tags.getData( "Location" );
             if (location!=null) {
               final String serverPath = pClient.getServerPath();
-              final URI  uri = new URI( serverPath );
-              final URI luri = new URI( location );
-              final int length = uri.getPath().length();
-              final String newPath = luri.getPath().substring(length);
+              final int length = serverPath.length();
+              final String newPath = location.substring(length);
               setPath(newPath);
               final String name = getJCPath().getBaseName();
               setName(name);
+              // **** TODO
+//              final URI  uri = new URI( serverPath );
+//              final URI luri = new URI( location );
+//              final int length = uri.getPath().length();
+//              final String newPath = luri.getPath().substring(length);
+//              setPath(newPath);
+//              final String name = getJCPath().getBaseName();
+//              setName(name);
               setProperty( JC_Defs.ATOM_TITLE, name);
             }
           } else {

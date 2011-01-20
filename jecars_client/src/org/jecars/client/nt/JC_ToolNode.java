@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 NLR - National Aerospace Laboratory
+ * Copyright 2009-2011 NLR - National Aerospace Laboratory
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -342,6 +342,19 @@ public class JC_ToolNode extends JC_DefaultNode {
     return createTool( pParentNode, pTemplateTool, pToolName, pToolUser, 30 );
   }
 
+  /** createTool
+   * 
+   * @param pParentNode
+   * @param pTemplateTool
+   * @param pToolName
+   * @param pToolUser
+   * @param pExpireMinutes
+   * @return
+   * @throws JC_Exception
+   */
+  static public JC_ToolNode createTool( final JC_Nodeable pParentNode, final String pTemplateTool, final String pToolName, final JC_UserNode pToolUser, final int pExpireMinutes ) throws JC_Exception {
+    return createTool( pParentNode, pTemplateTool, pToolName, pToolUser, pExpireMinutes, "jecars:Tool" );
+  }
 
   /** createTool
    *
@@ -350,11 +363,14 @@ public class JC_ToolNode extends JC_DefaultNode {
    * @param pToolName
    * @param pToolUser if null then no permissions are created
    * @param pExpireMinutes
+   * @param pToolType
    * @return
    * @throws JC_Exception
    */
-  static public JC_ToolNode createTool( final JC_Nodeable pParentNode, final String pTemplateTool, final String pToolName, final JC_UserNode pToolUser, final int pExpireMinutes ) throws JC_Exception {
-    final JC_ToolNode tool = (JC_ToolNode)pParentNode.addNode( pToolName, "jecars:Tool" ).morphToNodeType();
+  static public JC_ToolNode createTool( final JC_Nodeable pParentNode, final String pTemplateTool,
+                    final String pToolName, final JC_UserNode pToolUser, final int pExpireMinutes,
+                    final String pToolType ) throws JC_Exception {
+    final JC_ToolNode tool = (JC_ToolNode)pParentNode.addNode( pToolName, pToolType ).morphToNodeType();
     tool.setProperty( "jecars:ToolTemplate", pTemplateTool );
     if (pToolUser!=null) {
       tool.addMixin( "jecars:permissionable" );

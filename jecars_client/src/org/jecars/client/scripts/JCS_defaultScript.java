@@ -35,6 +35,7 @@ public class JCS_defaultScript {
   public String mTempDir         = "";
   public String mCodeBase        = "";
   public String mBoolOption      = "";
+  public String mHelpOption      = "";
   public boolean mShowLogin      = false;
 
   public PrintStream mConfigOutput = System.out;
@@ -69,7 +70,10 @@ public class JCS_defaultScript {
    * @param args
    */
   public void parseArguments( final String[] args ) {
-      for (String arg : args) {
+    for (String arg : args) {
+      if ("-h".equals( arg )) {
+        mHelpOption = "-h";
+      }
       if (arg.startsWith( "-s=" )) {
         mJeCARSServer = arg.substring( 3 );
       }

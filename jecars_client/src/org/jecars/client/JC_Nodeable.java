@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2010 NLR - National Aerospace Laboratory
+ * Copyright 2008-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,13 +77,24 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    */
   JC_Nodeable                getOrAddNode(     final String pName, final String pNodeType ) throws JC_Exception;
 
+  /** addNodes
+   * 
+   * @param pName
+   * @param pNodeType
+   * @param pFolderNodeType
+   * @return
+   * @throws JC_Exception
+   */
+  JC_Nodeable                addNodes(    final String pName, final String pNodeType, final String pFolderNodeType ) throws JC_Exception;
+
   /** addNode
+   * 
    * @param pName
    * @param pNodeType
    * @return
-   * @throws org.jecars.client.JC_Exception
+   * @throws JC_Exception
    */
-  JC_Nodeable                addNode(     final String pName, final String pNodeType ) throws JC_Exception;
+  JC_Nodeable                addNode(    final String pName, final String pNodeType ) throws JC_Exception;
 
   /** addNode create a new node using other node as reference (copy).
    *  http://jecars.sourceforge.net/jecars_doc.html#Creating_an_object_using_copy

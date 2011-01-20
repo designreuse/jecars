@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2009 NLR - National Aerospace Laboratory
+ * Copyright 2008-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -479,8 +479,8 @@ public class JC_RESTComm implements Serializable {
         os.flush();
         os.close();
       }
-      tags = handleReply( pConn, tags );
     }
+    tags = handleReply( pConn, tags );
     return tags;
   }
 
