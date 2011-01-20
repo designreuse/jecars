@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -385,9 +385,11 @@ public class JeCARS_RESTServlet extends HttpServlet {
       if (ac!=null) {
         ac.setIfModifiedSince( pRequest.getHeader( "If-Modified-Since" ) );
         ac.setIfNoneMatch(     pRequest.getHeader( "If-None-Match"     ) );
-        ac.setRemoteHost( pRequest.getRemoteHost() );
-        ac.setUserAgent(  pRequest.getHeader("User-Agent") );
-        ac.setReferer( pRequest.getHeader("Referer") );
+        ac.setRemoteHost(      pRequest.getRemoteHost() );
+        ac.setUserAgent(       pRequest.getHeader("User-Agent") );
+        ac.setReferer(         pRequest.getHeader("Referer") );
+        ac.setServerPort(      pRequest.getServerPort() );
+        
       }
 
       return ac;

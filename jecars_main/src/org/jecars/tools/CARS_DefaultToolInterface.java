@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import nl.msd.jdots.JD_Taglist;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -52,6 +53,7 @@ import org.jecars.CARS_ActionContext;
 import org.jecars.CARS_EventManager;
 import org.jecars.CARS_Factory;
 import org.jecars.CARS_Main;
+import org.jecars.jaas.CARS_Credentials;
 
 /**
  *  CARS_DefaultToolInterface
@@ -120,13 +122,13 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
 
   /** The tool resource bundles
    */
-  static protected Collection<ResourceBundle> gToolResourceBundles     = new ArrayList<ResourceBundle>();
-  static protected Collection<String>         gToolResourceBundleNames = new ArrayList<String>();
+  static final protected Collection<ResourceBundle> gToolResourceBundles     = new ArrayList<ResourceBundle>();
+  static final protected Collection<String>         gToolResourceBundleNames = new ArrayList<String>();
 
   
   static {
     String bundle = "JeCARS_ToolBundle";
-    if (gToolResourceBundleNames.contains( bundle )==false) {
+    if (!gToolResourceBundleNames.contains( bundle )) {
       gToolResourceBundleNames.add( bundle );
     }
     gScheduledExecutorService = Executors.newScheduledThreadPool( SES_COREPOOLSIZE );
@@ -171,7 +173,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
     @Override
     public void run() {
 //      String toolPath = "";
-      SessionImpl newSession = null;
+      Session newSession = null;
       try {
 //        getTool().save();
         if (mRebuildToolSession) {
@@ -1263,13 +1265,21 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
               // **** - jcr:mimeType     (STRING) mandatory
               // **** - jcr:data         (BINARY) mandatory primary
               // **** - jcr:lastModified (DATE)   mandatory IGNORE
-//              if (pObjectClass.equals( InputStream.class )==true) {
+ //              if (pObjectClass.equals( InputStream.class )==true) {
               col.add( n.getProperty( "jcr:data" ).getStream() );
 //              }
             }
           } else if (pObjectClass.equals( Double.class )) {
             // **** Expecting double (convertable)
             col.add( Double.parseDouble(n.getProperty( "jcr:data" ).getString()) );
+          }
+        } else if (n.isNodeType( "jecars:mix_datafilelink")) {
+          if (pObjectClass.equals( InputStream.class )) {
+            // **** A link to a jecars:datafile node
+            if (n.hasProperty( "jecars:PathToDatafile" )) {
+              final String path = n.getProperty( "jecars:PathToDatafile" ).getValue().getString();
+              col.add( getTool().getSession().getNode( path ).getProperty( "jcr:data" ).getBinary().getStream() );
+            }
           }
         }
       }
@@ -1355,52 +1365,52 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
         */
         switch( pEvent.getEventType() ) {
           case CARS_ToolInstanceEvent.EVENTTYPE_UNKNOWN: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsUNKNOWN" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "UNKNOWN", null, "jecars:ToolEvent" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsUNKNOWN" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "UNKNOWN", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_STATECHANGED: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsSTATE" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "STATE", null, "jecars:ToolEvent" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsSTATE" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "STATE", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_GENERALEXCEPTION: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:Events" + pEvent.getEventLevel().toString().toUpperCase() );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL",
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:Events" + pEvent.getEventLevel().toString().toUpperCase() );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL",
                             pEvent.getEventLevel().toString().toUpperCase(), null, "jecars:ToolEventException" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_TOOLINSTANCEEXCEPTION: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsINSTANCE" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "INSTANCE", null, "jecars:ToolEvent" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsINSTANCE" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "INSTANCE", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_TOOLOUTPUTREPORT: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsOUTPUT" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsOUTPUT" );
 //            Node ef = em.addEvent( getMain(), null, getTool(), events.getPath(), "TOOL", "OUTPUT", null, "jecars:ToolEvent" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "OUTPUT", null, "jecars:ToolEvent" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "OUTPUT", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_TOOLMESSAGE: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsMESSAGE" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "MESSAGE", null, "jecars:ToolEvent" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsMESSAGE" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "MESSAGE", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_STATUSMESSAGE: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsSTATUS" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "STATUS", null, "jecars:ToolEvent" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsSTATUS" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "STATUS", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
           case CARS_ToolInstanceEvent.EVENTTYPE_PROGRESS: {
-            Node events = mToolNode.getNode( "jecars:Events/jecars:EventsPROGRESS" );
-            Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "PROGRESS", null, "jecars:ToolEvent" );
+            final Node events = mToolNode.getNode( "jecars:Events/jecars:EventsPROGRESS" );
+            final Node ef = em.createEventNode( getMain(), getTool(), null, getTool(), events.getPath(), "TOOL", "PROGRESS", null, "jecars:ToolEvent" );
             _setEventProperties( pEvent, ef );
             break;
           }
@@ -1595,7 +1605,7 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    *  @param pHtmlMessage the message itself, this message may contain html markups.
    */
   @Override
-  public void reportStatusMessage( String pHtmlMessage ) {
+  public void reportStatusMessage( final String pHtmlMessage ) {
     reportToInstanceListeners( 
        CARS_DefaultToolInstanceEvent.createEvent( this, CARS_ToolInstanceEvent.EVENTTYPE_STATUSMESSAGE, pHtmlMessage ));
     return;
@@ -1827,8 +1837,15 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
    * @return
    */
   @Override
-  public SessionImpl createToolSession() throws Exception {
-    return (SessionImpl)((SessionImpl)getTool().getSession()).createSession( getTool().getSession().getWorkspace().getName() );
+  public Session createToolSession() throws Exception {
+    if (getUsername()==null) {
+      return (SessionImpl)((SessionImpl)getTool().getSession()).createSession( getTool().getSession().getWorkspace().getName() );
+    } else {
+      return getTool().getSession().getRepository().login( new CARS_Credentials( getUsername(), getPassword(), null ));
+    }
+//    final Session ses = getTool().getSession();
+//    final String name = ses.getWorkspace().getName();   
+//    return (SessionImpl)((SessionImpl)getTool().getSession()).createSession( name );
   }
 
 

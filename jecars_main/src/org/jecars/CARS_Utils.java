@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ public class CARS_Utils {
    * @param pOutput
    * @throws java.lang.Exception
    */
-  static public void sendInputStreamToOutputStream( int pBufferSize, InputStream pInput, OutputStream pOutput ) throws Exception {
+  static public void sendInputStreamToOutputStream( final int pBufferSize, final InputStream pInput, final OutputStream pOutput ) throws IOException {
     final BufferedInputStream  bis = new BufferedInputStream(  pInput );
     final BufferedOutputStream bos = new BufferedOutputStream( pOutput );
     try {
@@ -318,7 +318,8 @@ public class CARS_Utils {
     while( rn!=null ) {
       try {
         String encName = encode(rn.getName());
-        if (rn.getIndex()>1) encName += "[" + rn.getIndex() + "]";
+//        if (rn.getIndex()>1) encName += "[" + rn.getIndex() + "]";
+        if (rn.getIndex()>1) encName += "%5B" + rn.getIndex() + "%5D";
         if (p.equals("")) {
           p = encName + p;
         } else {

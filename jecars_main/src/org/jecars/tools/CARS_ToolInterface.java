@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import nl.msd.jdots.JD_Taglist;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.jecars.CARS_Main;
@@ -392,6 +393,6 @@ public interface CARS_ToolInterface {
    * 
    * @return
    */
-  public SessionImpl createToolSession() throws Exception;
+  public Session createToolSession() throws Exception;
 
 }

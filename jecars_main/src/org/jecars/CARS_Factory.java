@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,11 @@ import javax.jcr.query.QueryResult;
 import javax.security.auth.login.AccountLockedException;
 import javax.security.auth.login.CredentialExpiredException;
 import nl.msd.jdots.JD_Taglist;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.jecars.jaas.CARS_PasswordService;
 import org.apache.jackrabbit.core.TransientRepository;
-import org.apache.jackrabbit.core.state.CacheManager;
+import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.log4j.PropertyConfigurator;
 import org.jecars.apps.CARS_AccountsApp;
 import org.jecars.apps.CARS_AdminApp;
@@ -271,7 +272,7 @@ public class CARS_Factory {
       if (is!=null) {
         final InputStreamReader isr = new InputStreamReader( is );
 // v2.0
-        org.apache.jackrabbit.commons.cnd.CndImporter.registerNodeTypes( isr, pSession );
+        CndImporter.registerNodeTypes( isr, pSession );
 
 //        final org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader cndReader =
 //                    new org.apache.jackrabbit.core.nodetype.compact.CompactNodeTypeDefReader( isr, pCNDS[i+1] );

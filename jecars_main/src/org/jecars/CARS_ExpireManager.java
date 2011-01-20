@@ -73,6 +73,15 @@ public class CARS_ExpireManager extends CARS_DefaultToolInterface {
     return;
   }
 
+  /** setEnabled
+   * 
+   * @param pEnable
+   */
+  static public void setEnabled( final boolean pEnable ) {
+    gDISABLED = !pEnable;
+    return;
+  }
+  
   /** setDatastoreGCTimes
    *
    * @param pTimes -1 will disable the garbage collector

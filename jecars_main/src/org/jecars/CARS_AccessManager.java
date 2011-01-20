@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 //import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.*;
 
 import javax.jcr.AccessDeniedException;
@@ -473,9 +474,14 @@ public class CARS_AccessManager extends DefaultAccessManager implements AccessMa
      * @throws javax.jcr.RepositoryException
      */
     @Override
-    public boolean canRead( final Path pItemPath ) throws RepositoryException {
-      return isGranted( pItemPath, Permission.READ );
-    }
+    public boolean canRead( final Path pItemPath, final ItemId pItemId ) throws RepositoryException {
+      if (pItemPath==null) {
+        final Path path = mHierMgr.getPath(pItemId);
+        return isGranted( path, Permission.READ );          
+      } else {
+        return isGranted( pItemPath, Permission.READ );
+      }
+    }   
 
     /** checkPermission
      *

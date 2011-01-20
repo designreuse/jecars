@@ -1134,6 +1134,7 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
      * @param pRequest
      * @return status code indicating whether the destination is valid.
      */
+    /*
     private int validateDestination( final DavResource destResource, final WebdavRequest request, final boolean checkHeader)
             throws DavException {
 
@@ -1169,7 +1170,9 @@ public class JeCARS_WebDAVServlet extends AbstractWebdavServlet {
         }
         return status;
     }
-
+     * 
+     */
+    
     /**
      * The LOCK method
      *

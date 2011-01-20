@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ import org.jecars.output.CARS_OutputGenerator_HTML;
 import org.jecars.output.CARS_OutputGenerator_JSON;
 import org.jecars.output.CARS_OutputGenerator_Properties;
 import org.jecars.output.CARS_OutputGenerator_TextEntries;
+import org.jecars.output.CARS_OutputGenerator_XML;
+import org.jecars.output.CARS_OutputGenerator_XMLTable;
 import org.jecars.support.CARS_DefaultPropertyIterator;
 import org.jecars.support.CARS_Mime;
 import org.jecars.version.CARS_JCRVersionManager;
@@ -162,6 +164,7 @@ public class CARS_ActionContext {
   private String            mRemoteHost      = "jecars.org";
   private String            mUserAgent       = "-";
   private String            mReferer         = "-";
+  private int               mServerPort      = 80;
 
   /** If true then the If-Modified-Since header is supported
    */
@@ -193,6 +196,10 @@ public class CARS_ActionContext {
         LOG.info( "OutputGenerator 'backup' added" );
         gOutputGenerators.replaceData( "json", new CARS_OutputGenerator_JSON() );
         LOG.info( "OutputGenerator 'json' added" );
+        gOutputGenerators.replaceData( "xml", new CARS_OutputGenerator_XML() );
+        LOG.info( "OutputGenerator 'xml' added" );
+        gOutputGenerators.replaceData( "xmltable", new CARS_OutputGenerator_XMLTable() );
+        LOG.info( "OutputGenerator 'xmltable' added" );
       }
     }
     if (gVersionManagers.isEmpty()) {
@@ -315,6 +322,7 @@ public class CARS_ActionContext {
     ac.mBaseURL         = pContext.mBaseURL;
     ac.mError           = pContext.mError;
     ac.mErrorCode       = pContext.mErrorCode;
+    ac.mServerPort      = pContext.mServerPort;
     // ac.mThisNode
     // ac.mCreatedNode
     // ac.mDeletedNodePaths
@@ -379,6 +387,14 @@ public class CARS_ActionContext {
     return;
   }
 
+  /** getContextPath
+   * 
+   * @return
+   */
+  public String getContextPath() {
+    return mContextPath;
+  }
+  
   /** Get base context URL path
    * @return the URL path, used to construct http links
    */
@@ -840,6 +856,23 @@ public class CARS_ActionContext {
     return mIfModifiedSince;
   }
 
+  /** setServerPort
+   * 
+   * @param pPort
+   */
+  public void setServerPort( final int pPort ) {
+    mServerPort = pPort;
+    return;
+  }
+  
+  /** getServerPort
+   * 
+   * @return
+   */
+  public int getServerPort() {
+    return mServerPort;
+  }
+  
   /** setReferer
    * 
    * @param pReferer

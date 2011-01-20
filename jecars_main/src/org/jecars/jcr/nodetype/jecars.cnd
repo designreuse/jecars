@@ -1,5 +1,5 @@
 // *
-// * Copyright 2007-2010 NLR - National Aerospace Laboratory
+// * Copyright 2007-2011 NLR - National Aerospace Laboratory
 // *
 // * Licensed under the Apache License, Version 2.0 (the "License");
 // * you may not use this file except in compliance with the License.
@@ -137,6 +137,13 @@
 [jecars:datafile] > jecars:dataresource, nt:resource, jecars:urlresource
 - jecars:ContentLength  (Long)
 
+[jecars:mix_link] mixin
+- jecars:Link   (Path)
+
+[jecars:mix_datafilelink] mixin
+- jecars:PathToDatafile (Path)
+
+
 [jecars:configresource] > jecars:datafile, nt:unstructured
 
 [jecars:parameterresource] > jecars:datafile
@@ -158,6 +165,8 @@
 + * (jecars:datafile)
 + * (jecars:root)
 + * (jecars:Permission)
+
+[jecars:mix_datafolder] > jecars:datafolder mixin
 
 [jecars:datafoldermultiple] > jecars:dataresource
 + * (jecars:root) multiple
@@ -370,9 +379,9 @@
 
 [jecars:main] > jecars:root
 - jecars:MajorVersion    (Long)='1'         mandatory autocreated
-- jecars:MinorVersion    (Long)='3'         mandatory autocreated
-- jecars:BuildVersion    (Long)='20100412'  mandatory autocreated
-- jecars:CurrentId       (Long)='0'         mandatory autocreated
+- jecars:MinorVersion    (Long)='4'         mandatory autocreated
+- jecars:BuildVersion    (Long)='20110120'  mandatory autocreated
+- jecars:CurrentId       (Long)='0'       mandatory autocreated
 - jecars:Started         (Date)
 + *
 + jecars:Trashcans (jecars:Trashcans)=jecars:Trashcans autocreated

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 NLR - National Aerospace Laboratory
+ * Copyright 2010-2011 NLR - National Aerospace Laboratory
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,6 +118,24 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
   }
 
 
+  /** processInputDataStream
+   * 
+   * @param pInput
+   * @param pIndex
+   * @throws IOException
+   */
+  protected void processInputDataStream( final InputStream pInput, final int pIndex ) throws IOException {
+    final File inputF = new File( mWorkingDirectory, "input" + pIndex + ".txt" );
+    final FileOutputStream fos = new FileOutputStream( inputF );
+    try {
+      CARS_Utils.sendInputStreamToOutputStream( 50000, pInput, fos );
+      mInputs.add( inputF );
+    } finally {
+      fos.close();
+    }
+    return;
+  }
+          
 
 
   /** toolInput
@@ -153,15 +171,16 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       // **** Copy the Inputs* object to the working directory
       final Collection<InputStream> inputs = (Collection<InputStream>)getInputsAsObject( InputStream.class, null );
       int i = 1;
-      for (InputStream inputStream : inputs) {
-        final File inputF = new File( mWorkingDirectory, "input" + i + ".txt" );
-        final FileOutputStream fos = new FileOutputStream( inputF );
-        try {
-          CARS_Utils.sendInputStreamToOutputStream( 50000, inputStream, fos );
-          mInputs.add( inputF );
-        } finally {
-          fos.close();
-        }
+      for( final InputStream inputStream : inputs ) {
+        processInputDataStream( inputStream, i );
+//        final File inputF = new File( mWorkingDirectory, "input" + i + ".txt" );
+//        final FileOutputStream fos = new FileOutputStream( inputF );
+//        try {
+//          CARS_Utils.sendInputStreamToOutputStream( 50000, inputStream, fos );
+//          mInputs.add( inputF );
+//        } finally {
+//          fos.close();
+//        }
         i++;
       }
 
