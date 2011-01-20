@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -395,7 +395,8 @@ public class CARS_DefaultMain implements CARS_Main {
   
   /** Get groups
    */
-  protected Node getGroups() throws Exception {
+  @Override
+  public Node getGroups() throws Exception {
     return mSession.getRootNode().getNode( CARS_Main.MAINFOLDER + "/default/Groups" );
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010 NLR - National Aerospace Laboratory
+ * Copyright 2007-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,14 +25,14 @@ import nl.msd.jdots.JD_Taglist;
  */
 public interface CARS_Main {
   
-  final static String VERSION_ID    = "v1.3.6";
-  final static String PRODUCTNAME   = "JeCARS 'Araza'";
+  final static String VERSION_ID    = "v1.4.0";
+  final static String PRODUCTNAME   = "JeCARS 'Canistel'";
   final static String VERSION       = PRODUCTNAME + " " + VERSION_ID;
   final static String MAINFOLDER    = "JeCARS";
   final static String DEFAULTNS1    = "jecars";
   final static String DEFAULTNS     = "jecars:";
   final static String DEFAULTAUTHOR = "jecars.org";
-  final static String DEFAULTRIGHTS = "(C) 2010";
+  final static String DEFAULTRIGHTS = "(C) 2011";
   
   void destroy();
   
@@ -93,7 +93,8 @@ public interface CARS_Main {
 //  public Node getGroupSource(         String pGroupSource ) throws Exception;
 //  public void synchronizeGroupSource( String pGroupSource ) throws Exception;
  
-  Node getUsers() throws Exception;
+  Node getUsers()  throws Exception;
+  Node getGroups() throws Exception;
   Node addUser(  String pID, char[] pPassword, String pUserNodeType ) throws Exception;
   Node addUser(  String pID, char[] pPassword ) throws Exception;
   Node addGroup( String pID, String pFullname, String pGroupNodeType ) throws Exception;
