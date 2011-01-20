@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2010 NLR - National Aerospace Laboratory
+ * Copyright 2008-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -391,7 +391,7 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
 //        s.setStream( JC_RESTComm.getResultStream( tags ) );
 //        s.setContentType( (String)tags.getData( "ContentType" ) );
         } else {
-          throw JC_Utils.createCommException( tags, "while retrieving object", pPath );
+          throw JC_Utils.createCommException( tags, "while retrieving object ", pPath );
         }
     } catch( IOException ie ) {
       throw new JC_Exception(ie);
@@ -615,7 +615,7 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
     }
     return dn;
   }
-  
+
   /** canBeMorphed
    * 
    * @param pNode

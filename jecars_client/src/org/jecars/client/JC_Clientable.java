@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2010 NLR - National Aerospace Laboratory
+ * Copyright 2008-2011 NLR - National Aerospace Laboratory
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.jecars.client.observation.JC_ObservationManager;
  */
 public interface JC_Clientable {
 
-  final static public String VERSION_ID = "v1.4.-99";
+  final static public String VERSION_ID = "v1.4.0";
   final static public String VERSION = "JeCARS 'Canistel' Client Development " + VERSION_ID;
 
   @Deprecated
@@ -253,12 +253,12 @@ public interface JC_Clientable {
   boolean canBeMorphed( JC_DefaultNode pNode, final String pNodeType ) throws JC_Exception;
 
   
-    /** createNodeClass
+  /** createNodeClass
    * @param pNodeType   
    * @throws Exception
    */
-  JC_Nodeable createNodeClass( String pNodeType ) throws JC_Exception;
-  
+  JC_Nodeable createNodeClass( final String pNodeType ) throws JC_Exception;
+
   /** addNamespace
    * 
    * @param pId
