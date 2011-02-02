@@ -293,6 +293,14 @@ public interface JC_Nodeable extends JC_Itemable, JC_WebDAVable {
    */
   JC_Nodeable getResolvedNode( final String pName ) throws JC_Exception;
   
+  /** resolve
+   * Resolve the node using the jecars:Link property until a node is encountered without this property
+   * 
+   * @return
+   * @throws JC_Exception
+   */
+  JC_Nodeable resolve() throws JC_Exception;
+
   /** getNumberOfChildNodes
    * 
    * @return

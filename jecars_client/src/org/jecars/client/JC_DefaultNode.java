@@ -951,6 +951,19 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     return nodeable;
   }
 
+  /** resolve
+   * 
+   * @return
+   * @throws JC_Exception
+   */
+  @Override
+  public JC_Nodeable resolve() throws JC_Exception {
+    if (hasProperty( "jecars:Link"  )) {
+      final JC_Nodeable n = getClient().getNode( getProperty( "jecars:Link" ).getValueString() );
+      return n.resolve();
+    }
+    return morphToNodeType();
+  }
 
   /** getResolvedNode
    * 
