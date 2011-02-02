@@ -25,7 +25,7 @@ import nl.msd.jdots.JD_Taglist;
  */
 public interface CARS_Main {
   
-  final static String VERSION_ID    = "v1.4.0";
+  final static String VERSION_ID    = "v1.4.1";
   final static String PRODUCTNAME   = "JeCARS 'Canistel'";
   final static String VERSION       = PRODUCTNAME + " " + VERSION_ID;
   final static String MAINFOLDER    = "JeCARS";
