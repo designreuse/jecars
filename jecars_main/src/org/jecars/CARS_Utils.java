@@ -266,15 +266,18 @@ public class CARS_Utils {
    * @throws IOException when an error occurs
    */
   static public String readAsString( final InputStream pInput ) throws IOException {
+    final InputStreamReader isr = new InputStreamReader(pInput);
+    final BufferedReader br = new BufferedReader(isr);
     try {
-      final InputStreamReader isr = new InputStreamReader(pInput);
-      final BufferedReader br = new BufferedReader(isr);
       final StringBuilder buf = new StringBuilder();
       String line;
-      while((line = br.readLine()) != null)
+      while((line = br.readLine()) != null) {
         buf.append(line).append('\n');
+      }
       return buf.toString();
     } finally {
+      br.close();
+      isr.close();
     }
   }
    

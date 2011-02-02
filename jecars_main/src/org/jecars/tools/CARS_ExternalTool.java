@@ -125,7 +125,26 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
    * @throws IOException
    */
   protected void processInputDataStream( final InputStream pInput, final int pIndex ) throws IOException {
-    final File inputF = new File( mWorkingDirectory, "input" + pIndex + ".txt" );
+    processInputDataStream( pInput, "input" + pIndex + ".txt" );
+//    final File inputF = new File( mWorkingDirectory, "input" + pIndex + ".txt" );
+//    final FileOutputStream fos = new FileOutputStream( inputF );
+//    try {
+//      CARS_Utils.sendInputStreamToOutputStream( 50000, pInput, fos );
+//      mInputs.add( inputF );
+//    } finally {
+//      fos.close();
+//    }
+    return;
+  }
+
+  /** processInputDataStream
+   *
+   * @param pInput
+   * @param pFilename
+   * @throws IOException
+   */
+  protected void processInputDataStream( final InputStream pInput, final String pFilename ) throws IOException {
+    final File inputF = new File( mWorkingDirectory, pFilename );
     final FileOutputStream fos = new FileOutputStream( inputF );
     try {
       CARS_Utils.sendInputStreamToOutputStream( 50000, pInput, fos );
@@ -135,8 +154,17 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
     }
     return;
   }
-          
 
+  protected void processDataStream( final InputStream pInput, final String pFilename ) throws IOException {
+    final File inputF = new File( mWorkingDirectory, pFilename );
+    final FileOutputStream fos = new FileOutputStream( inputF );
+    try {
+      CARS_Utils.sendInputStreamToOutputStream( 50000, pInput, fos );
+    } finally {
+      fos.close();
+    }
+    return;
+  }
 
   /** toolInput
    *
