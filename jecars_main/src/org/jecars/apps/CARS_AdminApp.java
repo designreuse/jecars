@@ -93,7 +93,7 @@ public class CARS_AdminApp extends CARS_DefaultInterface {
           if (!tool.isLocked()) {
             gLog.log( Level.INFO, "Auto start: " + tool.getPath() );
 //            tool.lock( true, true );
-            final CARS_Main main = CARS_Factory.createMain( CARS_Factory.getSystemToolsSession(), null );
+            final CARS_Main main = CARS_Factory.createMain( CARS_Factory.createSystemToolsSession(), null );
             final CARS_ToolInterface ti = CARS_ToolsFactory.getTool( main, tool, null );
             ti.setStateRequest( CARS_ToolInterface.STATEREQUEST_START );
           }
