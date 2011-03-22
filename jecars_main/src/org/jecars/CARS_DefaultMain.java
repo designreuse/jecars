@@ -944,7 +944,8 @@ koasdkaso
 // String xml = CARS_Utils.readAsString( pBody );
 // System.out.println( " ---- ==type = " + pBodyContentType );
 // System.out.println( " ---- ==== " + xml );
-      if (pBodyContentType.startsWith( "application/atom+xml" )) {
+//      if (pBodyContentType.startsWith( "application/atom+xml" )) {
+      if ("application/atom+xml".equals( pBodyContentType )) {
         org.w3c.dom.Document doc = getDocumentBuilder().parse( pBody );
         org.w3c.dom.NodeList nl  = doc.getChildNodes();
         org.w3c.dom.Node      n  = null;
@@ -987,6 +988,22 @@ koasdkaso
           }
         }
         return true;
+      } else if ("application/x-www-form-urlencoded".equals( pBodyContentType )) {
+        final String form = CARS_Utils.readAsString( pBody );
+        if (!"".equals(form)) {
+          final String[] param = form.split( "&" );
+          for( int i=0; i<param.length; i++ ) {
+            final String[] parts = param[i].split( "=", 2 );
+            final String propName = CARS_ActionContext.convertPropertyName( CARS_ActionContext.untransportString(parts[0]));
+            if (parts.length==2) {
+              pParamsTL.replaceData( propName,
+                          CARS_ActionContext.convertValueName( propName, CARS_ActionContext.untransportString(parts[1])) );
+            } else {
+              pParamsTL.replaceData( propName,
+                          CARS_ActionContext.convertValueName( propName, CARS_ActionContext.untransportString("")) );
+            }
+          }
+        }
       }
     }
     return false;
@@ -1292,6 +1309,11 @@ koasdkaso
           modified = true;
         }
       }
+
+      if (pBodyContentType==null) {
+        pBodyContentType = (String)pParamsTL.getData( "jcr:mimeType" );
+      }
+
       if (cars!=null) {
         if (cars.setBodyStream( this, interfaceClass, cnode, pBody, pBodyContentType )) {
           modified = true;

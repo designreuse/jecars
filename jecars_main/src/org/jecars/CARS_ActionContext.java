@@ -2251,7 +2251,7 @@ public class CARS_ActionContext {
    * @return
    * @throws java.lang.Exception
    */
-  public boolean isValidNamespace( String pNamespace ) throws RepositoryException {
+  static public boolean isValidNamespace( String pNamespace ) throws RepositoryException {
     final Session appSession = CARS_Factory.getSystemApplicationSession();
     synchronized( appSession ) {
       final String[] pre = appSession.getNamespacePrefixes();
@@ -2269,7 +2269,7 @@ public class CARS_ActionContext {
    * @return
    * @throws java.lang.Exception
    */
-  public String convertValueName( final String pProperty, final String pValue ) throws RepositoryException {
+  static public String convertValueName( final String pProperty, final String pValue ) throws RepositoryException {
     String p = null;
     if ("jcr:primaryType".equals( pProperty )) {
       if (pValue.indexOf( ':' )!=-1) {
@@ -2293,7 +2293,7 @@ public class CARS_ActionContext {
 
   /** Convert property name, when its starts with an unknown namespace
    */
-  public String convertPropertyName( String pProperty ) {
+  static public String convertPropertyName( String pProperty ) {
     String p = null;    
     for( String ns: gIncludeNS ) {
       if (pProperty.startsWith( ns )==true) return pProperty;

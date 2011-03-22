@@ -787,16 +787,6 @@ public class CARS_Factory {
   static public Session getSystemToolsSession() throws LoginException, RepositoryException {
     return gSystemToolSession;
   }
-
-  /** createSystemToolsSession
-   *
-   * @return
-   * @throws LoginException
-   * @throws RepositoryException
-   */
-  static public Session createSystemToolsSession() throws LoginException, RepositoryException {
-    return gRepository.login( gSysCreds );
-  }
   
   /** createMain
    * @param pSession

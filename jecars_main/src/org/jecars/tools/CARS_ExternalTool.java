@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -187,7 +188,7 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
       mWorkingDirectory = new File( config.getProperty( WORKINGDIRECTORY ).getString() );
       final boolean unique = "true".equals( config.getProperty( GENERATEUNIQUEWORKINGDIRECTORY ).getValue().getString());
       if (unique) {
-        final long id = System.currentTimeMillis();
+        final long id = System.nanoTime();
         getTool().setProperty( "jecars:Id", id );
         mWorkingDirectory = new File( mWorkingDirectory, "wd_" + id );
         if (!mWorkingDirectory.mkdirs()) {
@@ -221,14 +222,23 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
           if (!"jecars:Input".equals(input.getName())) {
             InputStream       is = null;
             FileOutputStream fos = null;
+            Binary           bin = null;
             try {
-              final Binary bin = input.getProperty( "jcr:data" ).getBinary();
-              is = bin.getStream();
+              if (input.hasProperty( "jecars:URL" )) {
+                final String path = input.getProperty( "jecars:URL" ).getValue().getString();
+                is = new URL( path ).openStream();
+              } else {
+                bin = input.getProperty( "jcr:data" ).getBinary();
+                is = bin.getStream();
+              }
               final File inputResFile = new File( mWorkingDirectory, input.getName() );
               copiedInputs.put( input.getName(), inputResFile );
               fos = new FileOutputStream( inputResFile );
               CARS_Utils.sendInputStreamToOutputStream( 50000, is, fos );
             } finally {
+              if (bin!=null) {
+                bin.dispose();
+              }
               if (fos!=null) {
                 fos.close();
               }

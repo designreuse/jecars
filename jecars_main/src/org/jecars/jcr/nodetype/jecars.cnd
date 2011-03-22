@@ -380,7 +380,7 @@
 [jecars:main] > jecars:root
 - jecars:MajorVersion    (Long)='1'         mandatory autocreated
 - jecars:MinorVersion    (Long)='4'         mandatory autocreated
-- jecars:BuildVersion    (Long)='20110120'  mandatory autocreated
+- jecars:BuildVersion    (Long)='20110321'  mandatory autocreated
 - jecars:CurrentId       (Long)='0'       mandatory autocreated
 - jecars:Started         (Date)
 + *
@@ -506,4 +506,21 @@
 
 [jecars:Obs_Server] > jecars:root
 + * (jecars:Obs_Listener)=jecars:Obs_Listener multiple
+
+
+// ****************************************************************************
+// **** Spatial nodetypes
+
+[jecars:mixin_georect] mixin
+- jecars:geo_type   (String)    mandatory   // **** The coordinate type, LATLON, RD, UTM
+- jecars:geo_x1     (Double)    mandatory
+- jecars:geo_y1     (Double)    mandatory
+- jecars:geo_x2     (Double)    mandatory
+- jecars:geo_y2     (Double)    mandatory
+- jecars:geo_width  (Double)    mandatory
+- jecars:geo_height (Double)    mandatory
+
+[jecars:mixin_geogrid] > jecars:mixin_georect mixin
+- jecars:geo_gridsizex   (Double) mandatory
+- jecars:geo_gridsizey   (Double) mandatory
 

@@ -35,7 +35,7 @@ public class CARS_ToolInterfaceApp extends CARS_DefaultInterface {
    * @return
    */
   protected String getToBeCheckedInterface() {
-    return "none";
+    return "org.jecars.tools.CARS_ToolInterfaceApp";
   }
 
   /** isCorrectInterface
