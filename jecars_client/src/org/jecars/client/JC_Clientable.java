@@ -30,7 +30,7 @@ import org.jecars.client.observation.JC_ObservationManager;
  */
 public interface JC_Clientable {
 
-  final static public String VERSION_ID = "v1.4.1";
+  final static public String VERSION_ID = "v1.4.3";
   final static public String VERSION = "JeCARS 'Canistel' Client Development " + VERSION_ID;
 
   @Deprecated

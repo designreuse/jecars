@@ -85,8 +85,9 @@ public class JC_Utils {
    JC_HttpException e;
    if ((pTags!=null) && (pTags.getData( "ErrorStream" )!=null)) {
      try {
-       e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL,
-                          JC_Utils.readAsString( JC_RESTComm.getErrorStream( pTags ) ) );
+       final String error = JC_Utils.readAsString( JC_RESTComm.getErrorStream( pTags ) );
+       e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, error );
+//                          JC_Utils.readAsString( JC_RESTComm.getErrorStream( pTags ) ) );
 //                          JC_Utils.readAsString( (InputStream)pTags.getData( JC_RESTComm.ERRORSTREAM ) ) );
      } catch( IOException ioe ) {
        e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, ioe.getMessage() );
