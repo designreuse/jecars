@@ -1281,6 +1281,17 @@ public class CARS_DefaultToolInterface implements CARS_ToolInterface, CARS_ToolI
               col.add( getTool().getSession().getNode( path ).getProperty( "jcr:data" ).getBinary().getStream() );
             }
           }
+        } else if (n.isNodeType( "jecars:mix_link")) {
+          final List<Node> recursioncheck = new ArrayList<Node>();
+          Node runnode = n;
+          while( runnode.hasProperty( "jecars:Link" ) ) {
+            recursioncheck.add( runnode );
+            runnode = runnode.getProperty( "jecars:Link" ).getNode();
+            if ((recursioncheck.size()>100) || recursioncheck.contains( runnode )) {
+              throw new IllegalArgumentException( "Recursion in input node detected (jecars:Link)" );
+            }
+          }
+          col.add( n.getProperty( "jcr:data" ).getBinary().getStream() );
         }
       }
     }

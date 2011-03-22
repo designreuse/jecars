@@ -777,20 +777,54 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 //            } catch( IOException ie ) {
                 final CARS_DavSession davSession = (CARS_DavSession)pMember.getSession();
                 if (pMember.isCollection()) {
-                  if (node.isNodeType( "jecars:Dav_deftypes" ) && node.hasProperty( "jecars:Dav_DefaultFolderType" )) {
-                    node.addNode( memberName, node.getProperty( "jecars:Dav_DefaultFolderType" ).getString() );
+                  // ********************
+                  // **** Add a directory
+                  final Node interfaceNode;
+                  final CARS_Interface di;
+                  if (node.hasProperty( CARS_DefaultMain.DEF_INTERFACECLASS )) {
+                    interfaceNode = node;
+                    final String clss = node.getProperty( CARS_DefaultMain.DEF_INTERFACECLASS ).getString();
+                    di = (CARS_Interface)Class.forName( clss ).newInstance();
                   } else {
-                    node.addNode( memberName, "jecars:datafolder" );
+                    interfaceNode = null;
+                    di = new CARS_DefaultInterface();
                   }
+                  final CARS_Main main = davSession.getActionContext().getMain();
+//                    final CARS_DefaultInterface di = new CARS_DefaultInterface();
+                  final Node cnode;
+                  if (node.isNodeType( "jecars:Dav_deftypes" ) && node.hasProperty( "jecars:Dav_DefaultFolderType" )) {
+//                    node.addNode( memberName, node.getProperty( "jecars:Dav_DefaultFolderType" ).getString() );
+                    cnode = di.addNode( main, interfaceNode, node, memberName, node.getProperty( "jecars:Dav_DefaultFolderType" ).getString(), null );
+                  } else {
+//                    node.addNode( memberName, "jecars:datafolder" );
+                    cnode = di.addNode( main, interfaceNode, node, memberName, "jecars:datafolder", null );
+                  }
+                  di.nodeAdded( main, interfaceNode, cnode, null );
+                  main.getSession().save();
+                  di.nodeAddedAndSaved( main, interfaceNode, cnode );
+
                 } else {
+                    // ***************
+                    // **** Add a file
                   if (node.isNodeType( "jecars:Dav_deftypes" ) && node.hasProperty( "jecars:Dav_DefaultFileType" )) {
-                    final CARS_DefaultInterface di = new CARS_DefaultInterface();
+                    final Node interfaceNode;
+                    final CARS_Interface di;
+                    if (node.hasProperty( CARS_DefaultMain.DEF_INTERFACECLASS )) {
+                      interfaceNode = node;
+                      final String clss = node.getProperty( CARS_DefaultMain.DEF_INTERFACECLASS ).getString();
+                      di = (CARS_Interface)Class.forName( clss ).newInstance();
+                    } else {
+                      interfaceNode = null;
+                      di = new CARS_DefaultInterface();
+                    }
+//                    final CARS_DefaultInterface di = new CARS_DefaultInterface();
                     final CARS_Main main = davSession.getActionContext().getMain();
                     final Node cnode = di.addNode( main, null, node, memberName, node.getProperty( "jecars:Dav_DefaultFileType" ).getString(), null );
                     di.setBodyStream( main, null, cnode, ctx.getInputStream(), "" );//ctx.getMimeType() ); // **** TODO
                     cnode.setProperty( "jecars:ContentLength", ctx.getContentLength() );
+                    di.nodeAdded( main, interfaceNode, cnode, null );
                     main.getSession().save();
-                    di.nodeAddedAndSaved( main, null, cnode );
+                    di.nodeAddedAndSaved( main, interfaceNode, cnode );
                   } else {
                     final Node interfaceNode;
                     final CARS_Interface di;
@@ -819,6 +853,7 @@ public class CARS_DavResource implements DavResource, BindableResource, JcrConst
 //                    cnode.setProperty( "jcr:data", bin );
 //                    cnode.setProperty( "jcr:data", ctx.getInputStream() );
                     cnode.setProperty( "jecars:ContentLength", ctx.getContentLength() );
+                    di.nodeAdded( main, interfaceNode, cnode, null );
                     main.getSession().save();
                     di.nodeAddedAndSaved( main, interfaceNode, cnode );
                   }
