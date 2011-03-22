@@ -66,7 +66,7 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
   
   static final public Pattern gPropPattern = Pattern.compile( "=" );
 
-  static public enum PROPS { NONE, NULL, FORCED_REMOVE, ERROR, SYNCHRONIZED, DESTROYED };
+  static public enum PROPS { NONE, NULL, FORCED_REMOVE, ERROR, SYNCHRONIZED, DESTROYED, GOTNODES };
 
   static final public String PROP_TITLE = "jecars:Title";
   static final public String PROP_BODY  = "jecars:Body";
@@ -336,8 +336,10 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     Collection<JC_Nodeable> nodes;
     if (isNew() && (mChildNodes==null)) {
       nodes = null;
-    } else if (mChildNodes==null) {
+//    } else if (mChildNodes==null) {
+    } else if (!mNodeProps.contains( PROPS.GOTNODES )) {
       mChildNodes = (ArrayList<JC_Nodeable>)getNodes( null, null, null );
+      mNodeProps.add( PROPS.GOTNODES );
     }
     if (mChildNodes==null) {
       nodes = null;
@@ -960,7 +962,11 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
   public JC_Nodeable resolve() throws JC_Exception {
     if (hasProperty( "jecars:Link"  )) {
       final JC_Nodeable n = getClient().getNode( getProperty( "jecars:Link" ).getValueString() );
-      return n.resolve();
+      if (n.getPath().equals( getPath() )) {
+        return n;
+      } else {
+        return n.resolve();
+      }
     }
     return morphToNodeType();
   }

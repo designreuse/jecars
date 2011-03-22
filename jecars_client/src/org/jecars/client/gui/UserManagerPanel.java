@@ -1331,7 +1331,11 @@ public class UserManagerPanel extends javax.swing.JPanel {
           final JC_DefaultNode permN = (JC_DefaultNode)user.getNode( "jecars:P_UserPermission" );
           final JC_PermissionNode perm = (JC_PermissionNode)permN.morphToNodeType();
           perm.setProperty( "jecars:Principal", "+" + user.getPath() );
-          perm.setRights( rights );
+          if (perm.hasProperty( "jecars:P_UserPermission" )) {
+            perm.setRights( rights );
+          } else {
+            perm.addRights( user, rights );
+          }
           perm.save();
         }
       } catch( JC_Exception je ) {
