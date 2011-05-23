@@ -15,6 +15,9 @@
  */
 package org.jecars.client.nt;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -229,6 +232,30 @@ public class JC_ToolNode extends JC_DefaultNode {
     }
     config.save();
     return config;
+  }
+
+  public JC_Nodeable addConfigUploadExternalTool( final String pWorkingDirectory, final String pExecPath, final boolean pGenerateUniqueWorkingDirectory ) throws JC_Exception, FileNotFoundException {
+    final File exeFile = new File( pExecPath );
+    if (exeFile.exists()) {
+      final JC_Nodeable config = addNode( "jecars:Config", "jecars:configresource" );
+      config.setProperty( "jecars:ExecPath", pExecPath );
+      if (pWorkingDirectory!=null) {
+        config.setProperty( "jecars:WorkingDirectory", pWorkingDirectory );
+        config.setProperty( "jecars:GenerateUniqueWorkingDirectory", true );
+      }
+      config.save();
+
+      final FileInputStream  fis = new FileInputStream( exeFile );
+      final JC_Nodeable  exeNode = addNode( exeFile.getName(), "jecars:parameterresource" );
+      final JC_Streamable stream = JC_DefaultStream.createStream( fis, "application/x-exe");
+      stream.setContentLength( exeFile.length() );
+      exeNode.setProperty(stream);
+      exeNode.save();
+
+      return config;
+    } else {
+      throw new JC_Exception( "Tool " + pExecPath + " not found" );
+    }
   }
 
   /** setAutoStartParameters

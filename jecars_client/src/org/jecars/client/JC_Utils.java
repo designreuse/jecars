@@ -20,6 +20,7 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -70,6 +71,33 @@ public class JC_Utils {
      return buf.toString();
  }
 
+ /** fillInServerMessage
+  * 
+  * @param pET
+  * @param pServerMessage 
+  */
+ static private void fillInServerMessage( final JC_ExceptionTags pET, final String pServerMessage ) {
+   pET.getErrorTags().putData( JC_ExceptionTags.ERRORTAG_XMLBODY, pServerMessage );
+   int ix = pServerMessage.indexOf( "<![CDATA[" );
+   if (ix!=-1) {
+     final String sm = pServerMessage.substring( ix + "<![CDATA[".length() );
+     if (sm.startsWith( "javax.jcr.PathNotFoundException")) {
+       pET.setJeCARSErrorCode( JC_ExceptionTags.JECARSERROR_PATHNOTFOUND );
+       int st  = sm.indexOf( ':' );
+       int end = sm.indexOf( '\n' );
+       final String path = sm.substring( st+1, end );
+       pET.getErrorTags().putData( JC_ExceptionTags.ERRORTAG_SERVERERROR, "Path not found" );
+       pET.getErrorTags().putData( JC_ExceptionTags.ERRORTAG_PATH, path );
+     }
+   } else {
+     if (pServerMessage.indexOf( "This request requires HTTP authentication" )!=-1) {
+       pET.setJeCARSErrorCode( JC_ExceptionTags.JECARSERROR_AUTHENTICATION_NEEDED );       
+       pET.getErrorTags().putData( JC_ExceptionTags.ERRORTAG_SERVERERROR, "Action needs authentication (or not enough rights)" );       
+     }
+   }
+   return;
+ }
+ 
  /** createCommException
   * @param pTags
   * @param pMessage
@@ -79,14 +107,28 @@ public class JC_Utils {
   */
  static public JC_HttpException createCommException( final JD_Taglist pTags, final String pMessage, final String pURL ) {
    int retCode = 0;
+   final EnumSet<JC_ClientOption> options = EnumSet.noneOf( JC_ClientOption.class );
    if (pTags!=null) {
      retCode = JC_RESTComm.getResponseCode( pTags );
-   }
+     final JC_Clientable client = (JC_Clientable)pTags.getData( "JC_Clientable" );
+     if (client!=null) {
+       options.addAll( client.getOptions() );
+     }
+   }   
    JC_HttpException e;
    if ((pTags!=null) && (pTags.getData( "ErrorStream" )!=null)) {
      try {
        final String error = JC_Utils.readAsString( JC_RESTComm.getErrorStream( pTags ) );
-       e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, error );
+       if (options.contains( JC_ClientOption.USE_EXCEPTIONS_V2 )) {
+         JC_ExceptionTags ets = new JC_ExceptionTags( "[ERROR " + retCode + "] " + pMessage + pURL + ": " + error );
+         ets.setHttpErrorCode( JC_HttpErrorCode.createHttpErrorCode( retCode ));
+         ets.mServerMessage = error;
+         fillInServerMessage( ets, error );
+         
+         e = ets;
+       } else {
+         e = JC_HttpException.createErrorHttpException( retCode, pMessage + pURL, error );
+       }
 //                          JC_Utils.readAsString( JC_RESTComm.getErrorStream( pTags ) ) );
 //                          JC_Utils.readAsString( (InputStream)pTags.getData( JC_RESTComm.ERRORSTREAM ) ) );
      } catch( IOException ioe ) {

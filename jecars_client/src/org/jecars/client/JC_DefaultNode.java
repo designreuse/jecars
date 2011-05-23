@@ -2435,6 +2435,8 @@ public class JC_DefaultNode extends JC_DefaultItem implements JC_Nodeable {
     @Override
     public void refresh() throws JC_Exception{
       destroy( true );
+      mNodeProps.remove( PROPS.GOTNODES );
+
 //      mProperties = null;
 //      mChildNodes = null;      
         

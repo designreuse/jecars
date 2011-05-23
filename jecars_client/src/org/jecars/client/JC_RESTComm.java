@@ -354,6 +354,7 @@ public class JC_RESTComm implements Serializable {
     boolean asGet = false;
     if (pClient!=null) asGet = pClient.getHttpOperation( JC_Clientable.DELETE_AS_GET );
     JD_Taglist tags = new JD_Taglist();
+    tags.putData( "JC_Clientable", pClient );
     if (asGet) {
 //      gLog.log( Level.INFO, "DELETE (AS GET): " + pConn.getURL() );
       pConn.setRequestMethod( GET );
@@ -372,6 +373,7 @@ public class JC_RESTComm implements Serializable {
   public JD_Taglist sendMessageGET( final JC_Clientable pClient, final HttpURLConnection pConn ) throws ProtocolException, IOException {
 //    gLog.log( Level.INFO, "GET: " + pConn.getURL() );
     JD_Taglist tags = new JD_Taglist();
+    tags.putData( "JC_Clientable", pClient );
     pConn.setRequestMethod( GET );
     pConn.setRequestProperty( "Accept", "application/atom+xml, */*" );
     tags = handleReply( pConn, tags );
@@ -400,6 +402,7 @@ public class JC_RESTComm implements Serializable {
       pConn.setRequestProperty( "Accept", "application/atom+xml, */*" );
     }
     JD_Taglist tags = new JD_Taglist();
+    tags.putData( "JC_Clientable", pClient );
     tags = handleReply( pConn, tags );
     return tags;
   }
@@ -418,6 +421,7 @@ public class JC_RESTComm implements Serializable {
       asGet = pClient.getHttpOperation( JC_Clientable.POST_AS_GET );
     }
     JD_Taglist tags = new JD_Taglist();
+    tags.putData( "JC_Clientable", pClient );
     if (asGet) {
 //      gLog.log( Level.INFO, "POST (AS GET): " + pConn.getURL() );
       pConn.setRequestMethod( GET );
@@ -457,6 +461,7 @@ public class JC_RESTComm implements Serializable {
     boolean asGet = false;
     if (pClient!=null) asGet = pClient.getHttpOperation( JC_Clientable.PUT_AS_GET );
     JD_Taglist tags = new JD_Taglist();
+    tags.putData( "JC_Clientable", pClient );
     if (asGet) {
 //      gLog.log( Level.INFO, "PUT (AS GET): " + pConn.getURL() );
       pConn.setRequestMethod( GET );
