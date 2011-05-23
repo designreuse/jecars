@@ -52,30 +52,24 @@ public class CARS_DefaultMain implements CARS_Main {
 
   static final public String SPECIAL_PREFIX           = "!_#_!";
   static final public String PREFIX_VALUE_REMOVE      = SPECIAL_PREFIX + "VREMOVE";
-  static final public String UNSTRUCT_PREFIX_DOUBLE    = SPECIAL_PREFIX + "UD";
-  static final public String UNSTRUCT_PREFIX_BOOLEAN  = SPECIAL_PREFIX  + "UB";
-  static final public String UNSTRUCT_PREFIX_MSTRINGS = SPECIAL_PREFIX  + "UMS";
+  static final public String UNSTRUCT_PREFIX_DOUBLE   = SPECIAL_PREFIX + "UD";
+  static final public String UNSTRUCT_PREFIX_BOOLEAN  = SPECIAL_PREFIX + "UB";
+  static final public String UNSTRUCT_PREFIX_MSTRINGS = SPECIAL_PREFIX + "UMS";
   static final private Value[] VALUE0 = new Value[0];
 
   private final transient CARS_Factory  mFactory;
   private final transient Session       mSession;
   private final transient Node          mUserNode;
   private Node                          mCurrentView = null;
-  private List<CARS_ActionContext>mContexts = new Vector<CARS_ActionContext>();
+  private final List<CARS_ActionContext>mContexts = new ArrayList<CARS_ActionContext>();
   
   static final private Object NODEMUTATION_LOCK = new Object();
 
-  private   static DocumentBuilderFactory gFactory = null;  
+  private final static DocumentBuilderFactory gFactory = DocumentBuilderFactory.newInstance();
 //  protected static DocumentBuilder        gBuilder = null;
   
   static {
-    try {
-      if (gFactory==null) gFactory = DocumentBuilderFactory.newInstance();
-      gFactory.setNamespaceAware( true );
-//      if (gBuilder==null) gBuilder = gFactory.newDocumentBuilder();
-    } catch (Exception e) {
-      LOG.log( Level.SEVERE, null, e );
-    }
+    gFactory.setNamespaceAware( true );
   }
 
   
@@ -205,11 +199,16 @@ public class CARS_DefaultMain implements CARS_Main {
   }
 
   
-     
+  /** addContext
+   *
+   * @param pContext
+   */
   @Override
-  public void addContext( CARS_ActionContext pContext ) {
-    mContexts.clear();
-    mContexts.add( pContext );
+  public void addContext( final CARS_ActionContext pContext ) {
+    synchronized( mContexts ) {
+      mContexts.clear();
+      mContexts.add( pContext );
+    }
     return;
   }
   
@@ -228,12 +227,18 @@ public class CARS_DefaultMain implements CARS_Main {
    */
   @Override
   public CARS_ActionContext getContext( final int pNo ) {
-    if (mContexts!=null) {
+    synchronized( mContexts ) {
       if (mContexts.size()>pNo) {
         return mContexts.get(pNo);
       }
     }
     return null;
+//    if (mContexts!=null) {
+//      if (mContexts.size()>pNo) {
+//        return mContexts.get(pNo);
+//      }
+//    }
+//    return null;
   }
 
   /** removeContext
@@ -242,9 +247,11 @@ public class CARS_DefaultMain implements CARS_Main {
    */
   @Override
   public void removeContext( final CARS_ActionContext pContext ) {
-    mContexts.remove( pContext );
-    if (mContexts.isEmpty()) {
-      destroy();
+    synchronized( mContexts ) {
+      mContexts.remove( pContext );
+      if (mContexts.isEmpty()) {
+        destroy();
+      }
     }
     return;
   }

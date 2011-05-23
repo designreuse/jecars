@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import javax.jcr.Binary;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -301,6 +302,25 @@ public class CARS_ExternalTool extends CARS_DefaultToolInterface {
     final Node config = getConfigNode();
     if (config.hasProperty( "jecars:ExecPath" )) {
       final String execPath = config.getProperty( "jecars:ExecPath" ).getString();
+      // **** Check if the tools is available
+      final File execFile = new File( execPath );
+      if (!execFile.exists()) {
+        // **** Check if the exec file is given
+        final Node toolTemplate = getToolTemplate( getTool() );
+        final NodeIterator ni = toolTemplate.getNodes();
+        while( ni.hasNext() ) {
+          final Node execn = ni.nextNode();
+          if ((execn.hasProperty( "jcr:mimeType" )) && ("application/x-exe".equals( execn.getProperty( "jcr:mimeType" ).getString() ))) {
+            execFile.getParentFile().mkdirs();
+            final Binary bin = execn.getProperty( "jcr:data" ).getBinary();
+            final FileOutputStream fos = new FileOutputStream( execFile );
+            final InputStream is = bin.getStream();
+            CARS_Utils.sendInputStreamToOutputStream( 10000, is, fos );
+            fos.close();
+            is.close();
+          }
+        }
+      }
       reportMessage( Level.CONFIG, "ExecPath=" + execPath, false );
       final String cmdParam = getParameterString( "commandLine", 0 );
       final List<String> commands = new ArrayList<String>();
