@@ -598,11 +598,12 @@ public class CARS_EventManager {
    * @return
    */
   static private String processLogRequest( final String pRequest ) {
-    if ((pRequest.startsWith( "GET " )) ||
-        (pRequest.startsWith( "HEAD " )) ||
-        (pRequest.startsWith( "PUT " )) ||
-        (pRequest.startsWith( "DELETE " )) ||
-        (pRequest.startsWith( "POST " ))) {
+    if ((pRequest!=null) &&
+        ((pRequest.startsWith( "GET " )) ||
+         (pRequest.startsWith( "HEAD " )) ||
+         (pRequest.startsWith( "PUT " )) ||
+         (pRequest.startsWith( "DELETE " )) ||
+         (pRequest.startsWith( "POST " )))) {
       return pRequest + " HTTP/1.0";
     }
     return  "GET " + pRequest + " HTTP/1.0";

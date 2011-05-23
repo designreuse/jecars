@@ -52,6 +52,7 @@ public class CARS_Factory {
   static final public int REPOSITORYTYPE_TRANSIENT = 1;
 
 //  static private HashMap<String, Session> gSessionPool = new HashMap<String, Session>();
+  static final public String JECARSPROP_ETAG = "PROP_ETAG";
   
   static final public String     JECARSPROPERTIESNAME = "jecars.properties";
   // **** If not null then gJecarsPropertiesPath overrules the properties location
@@ -93,6 +94,10 @@ public class CARS_Factory {
   static public void setJecarsPropertiesPath( final String pPath ) {
     gJecarsPropertiesPath = pPath;
     return;
+  }
+  
+  static public Properties getJecarsProperties() {
+    return gJecarsProperties;
   }
 
   /** setEnableFET
@@ -157,6 +162,8 @@ public class CARS_Factory {
    */
   static private void initJeCARSProperties() {
     try {
+        gJecarsProperties.put( JECARSPROP_ETAG, "false" );
+        
 //      if (gJecarsProperties.isEmpty()) {
         if (gJecarsPropertiesPath==null) {
           gLog.log( Level.INFO, "Trying to read jecars properties as system resource " + JECARSPROPERTIESNAME );

@@ -168,7 +168,7 @@ public class CARS_ActionContext {
 
   /** If true then the If-Modified-Since header is supported
    */
-  private boolean           mCanBeCachedResult = false;
+  private transient boolean mCanBeCachedResult = false;
 
 //  private StringBuilder     mReplyXML    = null;
 //  private InputStream       mReplyStream = null;

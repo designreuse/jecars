@@ -560,26 +560,28 @@ public class JeCARS_RESTServlet extends HttpServlet {
             ac.setBaseURL( baseurl );
             gCurrentFullContext = ac.getBaseContextURL();
             CARSFACTORY.performGetAction( ac, null );
-//            final long lastMod = ac.getLastModified();
             boolean getResult = true;
-//            if (ac.getIfNoneMatch()!=null) {
-              // **** Check for if the ETag is the same
-//              if (ac.getIfNoneMatch().compareTo( ac.getETag() )==0) {
-//                // **** Not changed
-//                pResponse.setStatus( HttpURLConnection.HTTP_NOT_MODIFIED );
-//                pResponse.setHeader( "ETag", ac.getETag() );
-//                getResult = false;
-//              }
-//            }
-//            if ((ac.canBeCachedResult()) && (lastMod!=0) && (ac.getIfModifiedSince()!=null)) {
-//              // **** Check for if modified since
-//              if (ac.getIfModifiedSince().getValue()/1000>=(lastMod/1000)) {
-//                // **** Not changed
-//                pResponse.setStatus( HttpURLConnection.HTTP_NOT_MODIFIED );
-//                pResponse.setHeader( "ETag", ac.getETag() );
-//                getResult = false;
-//              }
-//            }
+            if ("true".equals(CARS_Factory.getJecarsProperties().getProperty( CARS_Factory.JECARSPROP_ETAG, "false" ))) {
+                final long lastMod = ac.getLastModified();
+                if (ac.getIfNoneMatch()!=null) {
+                  // **** Check for if the ETag is the same
+                  if (ac.getIfNoneMatch().compareTo( ac.getETag() )==0) {
+                    // **** Not changed
+                    pResponse.setStatus( HttpURLConnection.HTTP_NOT_MODIFIED );
+                    pResponse.setHeader( "ETag", ac.getETag() );
+                    getResult = false;
+                  }
+                }
+                if ((ac.canBeCachedResult()) && (lastMod!=0) && (ac.getIfModifiedSince()!=null)) {
+                  // **** Check for if modified since
+                  if (ac.getIfModifiedSince().getValue()/1000>=(lastMod/1000)) {
+                    // **** Not changed
+                    pResponse.setStatus( HttpURLConnection.HTTP_NOT_MODIFIED );
+                    pResponse.setHeader( "ETag", ac.getETag() );
+                    getResult = false;
+                  }
+                }
+            }
             if (getResult) {
               final Object result = ac.getResult();
               pResponse.setContentType( ac.getContentType() );
