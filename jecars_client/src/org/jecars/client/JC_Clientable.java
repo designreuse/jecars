@@ -52,6 +52,8 @@ public interface JC_Clientable {
   final static int DELETE_AS_GET  = 22;
   final static int HEAD_AS_GET    = 23;
   
+  EnumSet<JC_ClientOption> getOptions();
+  
   /** setPostCreationMethod
    * 
    * @param pMethod

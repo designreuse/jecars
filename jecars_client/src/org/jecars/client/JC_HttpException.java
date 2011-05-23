@@ -110,6 +110,14 @@ public class JC_HttpException extends JC_Exception {
     return mHttpErrorCode;
   }
 
+  /** setHttpErrorCode
+   * 
+   */
+  public void setHttpErrorCode( final JC_HttpErrorCode pHEC ) {
+    mHttpErrorCode = pHEC;
+    return;
+  }
+  
   /** setErrorCode
    *
    * @param pErrorCode

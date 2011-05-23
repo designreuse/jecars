@@ -40,7 +40,9 @@ import org.jecars.client.observation.JC_ObservationManager;
 public class JC_DefaultClient implements JC_Clientable, Serializable {
 
   static final protected Logger gLog = Logger.getLogger( "org.jecars.client" );
-
+  
+  private final EnumSet<JC_ClientOption> mOptions = EnumSet.noneOf( JC_ClientOption.class );
+          
   private JC_RootNode  mRootNode             = null;
   private JC_GDataAuth mGDataAuth            = null;
   private String       mServerPath           = null;
@@ -82,6 +84,14 @@ public class JC_DefaultClient implements JC_Clientable, Serializable {
     return mObservationManager;
   }
 
+  /** getOptions
+   * 
+   * @return 
+   */
+  @Override  
+  public EnumSet<JC_ClientOption> getOptions() {
+    return mOptions;
+  }
 
   /** addNamespace
    * 
